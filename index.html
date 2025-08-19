@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebApp - Hono + Cloudflare Pages</title>
+    
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link href="style.css" rel="stylesheet">
+    
+    <!-- Axios for API calls -->
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="max-w-6xl mx-auto px-4 py-8">
+        <div>
+            <h1 class="text-4xl font-bold text-gray-800 mb-6">🚀 WebApp - Hono + Cloudflare Pages</h1>
+            
+            <div class="container">
+                <p class="text-lg text-gray-700 mb-6">¡Bienvenido a tu nueva aplicación web construida con Hono!</p>
+                
+                <div class="features">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">🎯 Características</h2>
+                    <ul class="space-y-2">
+                        <li class="flex items-center text-gray-700">
+                            <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                            <span>✅ Hono Framework - Rápido y ligero</span>
+                        </li>
+                        <li class="flex items-center text-gray-700">
+                            <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                            <span>✅ Cloudflare Pages - Desplegado en el edge</span>
+                        </li>
+                        <li class="flex items-center text-gray-700">
+                            <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                            <span>✅ TypeScript - Tipado seguro</span>
+                        </li>
+                        <li class="flex items-center text-gray-700">
+                            <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                            <span>✅ API REST - Endpoints funcionales</span>
+                        </li>
+                        <li class="flex items-center text-gray-700">
+                            <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                            <span>✅ JSX Renderer - Componentes React-like</span>
+                        </li>
+                        <li class="flex items-center text-gray-700">
+                            <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                            <span>✅ Hot Reload - Desarrollo ágil</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="api-test">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">🔗 Prueba la API</h2>
+                    <div class="flex flex-wrap gap-4 mb-4">
+                        <button id="test-api" class="btn bg-blue-500 hover:bg-blue-600 text-white">
+                            <i class="fas fa-play mr-2"></i>
+                            Probar API Hello
+                        </button>
+                        <button id="test-status" class="btn bg-green-500 hover:bg-green-600 text-white">
+                            <i class="fas fa-heartbeat mr-2"></i>
+                            Probar API Status
+                        </button>
+                        <button id="test-local" class="btn bg-purple-500 hover:bg-purple-600 text-white">
+                            <i class="fas fa-laptop mr-2"></i>
+                            Probar API Local
+                        </button>
+                    </div>
+                    <div id="api-result" class="p-4 bg-white border border-gray-200 rounded-lg min-h-16">
+                        <span class="text-gray-500">Haz clic en un botón para probar la API</span>
+                    </div>
+                </div>
+
+                <!-- Nueva sección de información del proyecto -->
+                <div class="project-info mt-8">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">📊 Información del Proyecto</h2>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="info-card p-6 bg-white rounded-lg border border-gray-200">
+                            <h3 class="font-semibold text-lg text-gray-800 mb-2">
+                                <i class="fas fa-code text-blue-500 mr-2"></i>
+                                Tecnologías
+                            </h3>
+                            <ul class="text-gray-600 space-y-1">
+                                <li>• Frontend: HTML5, TailwindCSS, JavaScript</li>
+                                <li>• Backend: Hono Framework + TypeScript</li>
+                                <li>• Deployment: Cloudflare Pages/Workers</li>
+                                <li>• Build Tools: Vite, Wrangler</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="info-card p-6 bg-white rounded-lg border border-gray-200">
+                            <h3 class="font-semibold text-lg text-gray-800 mb-2">
+                                <i class="fas fa-rocket text-green-500 mr-2"></i>
+                                Estado del Proyecto
+                            </h3>
+                            <ul class="text-gray-600 space-y-1">
+                                <li>• Status: <span class="text-green-600 font-semibold">Activo</span></li>
+                                <li>• Versión: 1.0.0</li>
+                                <li>• Última actualización: Agosto 2025</li>
+                                <li>• Ambiente: Desarrollo/Producción</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Enlaces útiles -->
+                <div class="links-section mt-8">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">🔗 Enlaces Útiles</h2>
+                    <div class="flex flex-wrap gap-4">
+                        <a href="https://hono.dev" target="_blank" class="link-btn">
+                            <i class="fas fa-external-link-alt mr-2"></i>
+                            Documentación Hono
+                        </a>
+                        <a href="https://pages.cloudflare.com" target="_blank" class="link-btn">
+                            <i class="fas fa-cloud mr-2"></i>
+                            Cloudflare Pages
+                        </a>
+                        <a href="https://tailwindcss.com" target="_blank" class="link-btn">
+                            <i class="fas fa-paint-brush mr-2"></i>
+                            TailwindCSS
+                        </a>
+                    </div>
+                </div>
+
+                <div class="footer mt-8 pt-6 border-t border-gray-200">
+                    <div class="text-center">
+                        <p class="text-gray-600">
+                            <i class="fas fa-wrench mr-2"></i>
+                            🔧 Desarrollado con Hono + Cloudflare Workers
+                        </p>
+                        <p class="text-sm text-gray-500 mt-2">
+                            Proyecto listo para despliegue en cualquier servicio de cloud
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom JavaScript -->
+    <script src="app.js"></script>
+</body>
+</html>
