@@ -1,14 +1,17 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
+<!-- saved from url=(0041)file:///C:/Users/Osk/Desktop/prueba.html# -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mundo Electrónico - Sistema de Gestión Completo</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="./Mundo Electrónico - Sistema de Gestión Completo_files/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="./Mundo Electrónico - Sistema de Gestión Completo_files/all.min.css">
+    <script src="./Mundo Electrónico - Sistema de Gestión Completo_files/chart.js.descarga"></script>
     <style>
-        body, html { height: 100%; overflow: auto; }
+        body, html {
+            height: 100%;
+            overflow: hidden;
+        }
         
         #mainApp {
             height: 100vh;
@@ -70,7 +73,7 @@
         .status-badge {
             padding: 4px 12px;
             border-radius: 20px;
-            font-size:15px;
+            font-size: 12px;
             font-weight: 600;
             text-transform: uppercase;
         }
@@ -115,7 +118,7 @@
             padding: 8px 12px;
             border-radius: 6px;
             margin-bottom: 10px;
-            font-size:17px;
+            font-size: 14px;
         }
         
         .edit-mode-indicator.show {
@@ -126,13 +129,13 @@
         .print-page {
             width: 210mm;
             min-height: 297mm;
-            padding: 10mm;
+            padding: 5mm;
             margin: 0 auto;
             background: white;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             font-family: Arial, sans-serif;
-            font-size:13px;
-            line-height: 1.5;
+            font-size: 7px;
+            line-height: 1.1;
         }
         
         .print-header {
@@ -143,70 +146,82 @@
         }
         
         .print-title {
-            font-size:18px;
+            font-size: 12px;
             font-weight: bold;
             margin-bottom: 2px;
         }
         
         .print-subtitle {
-            font-size:16px;
+            font-size: 10px;
             font-weight: bold;
             margin-bottom: 3px;
         }
         
         .print-order {
-            font-size:17px;
+            font-size: 11px;
             font-weight: bold;
             margin-bottom: 6px;
         }
         
         .print-section {
-            margin-bottom: 10px;
+            margin-bottom: 4px;
         }
         
         .print-row {
             display: flex;
-            margin-bottom: 6px;
+            margin-bottom: 2px;
         }
         
         .print-label {
             font-weight: bold;
             width: 60px;
             flex-shrink: 0;
-            font-size:13px;
+            font-size: 7px;
         }
         
         .print-value {
             flex: 1;
             margin-right: 8px;
-            font-size:13px;
+            font-size: 7px;
         }
         
-        .print-separator { display: none !important; }
+        .print-separator {
+            border-top: 1px dashed #000;
+            margin: 8px 0;
+            text-align: center;
+            position: relative;
+        }
         
         .print-separator::before {
-            content: "✂  ✂";
+            content: "✂ CORTAR AQUÍ ✂";
             background: white;
             padding: 0 5px;
             position: absolute;
             top: -6px;
             left: 50%;
             transform: translateX(-50%);
-            font-size:12px;
+            font-size: 6px;
         }
         
-        .print-signature { display: none !important; }
+        .print-signature {
+            margin: 8px 0;
+            border-bottom: 1px solid #000;
+            width: 150px;
+            text-align: center;
+            padding-bottom: 2px;
+            font-size: 7px;
+        }
         
         .print-footer {
             margin-top: 8px;
-            font-size:12px;
+            font-size: 6px;
             text-align: left;
             border-top: 1px solid #000;
             padding-top: 4px;
             line-height: 1.2;
         }
 
-        @media print {
+         {
             @page {
                 margin: 0;
                 size: A4;
@@ -225,7 +240,7 @@
                 width: 100%;
                 height: 100%;
                 margin: 0;
-                padding: 10mm;
+                padding: 5mm;
                 box-shadow: none;
             }
         }
@@ -242,10 +257,110 @@
             box-shadow: 0 6px 8px -1px rgba(249, 115, 22, 0.5) !important;
         }
     </style>
-</head>
+<style>
+    .genspark-notice-dialog {
+      display: flex;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 10001;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .genspark-notice-content {
+      background-color: white;
+      border-radius: 8px;
+      max-width: 600px;
+      width: 90%;
+      box-sizing: border-box;
+      padding: 10px 30px 30px 30px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      font-size: 16px;
+    }
+
+    .genspark-notice-title {
+      color: #000;
+      font-family: Arial;
+      font-size: 20px;
+      font-style: normal;
+      font-weight: 700;
+      line-height: 150%; 
+    }
+
+    .genspark-notice-list {
+      margin: 24px 0;
+      
+      color: #606366;
+      font-family: Arial;
+      font-size: 14px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 150%;
+      padding-left: 12px;
+    }
+
+    .genspark-notice-list li {
+      margin-bottom: 12px;
+      list-style-type: disc;
+    }
+
+    .genspark-notice-list li a {
+      color: #606366;
+      text-decoration: underline;
+    }
+
+    .genspark-notice-checkbox {
+      display: flex;
+      align-items: center;
+      margin-top: 20px;
+      gap: 10px;
+
+      color: #232425;
+
+      font-family: Arial;
+      font-size: 14px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: normal;
+    }
+
+    .genspark-notice-actions {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+      
+    .genspark-notice-ok {
+      color: #232425;
+
+      text-align: center;
+      font-family: Arial;
+      font-size: 16px;
+      font-style: normal;
+      font-weight: 700;
+      line-height: 150%; 
+
+      cursor: pointer;
+      display: flex;
+      height: 40px;
+      padding: 6px 14px;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      align-self: stretch;
+      border-radius: 8px;
+      border: 1px solid #000;
+      box-sizing: border-box;
+      width: 100%;
+    }
+  </style></head>
 <body class="bg-gray-100">
     <!-- Pantalla de Login -->
-    <div id="loginScreen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 hidden">
         <div class="bg-white p-8 rounded-xl shadow-2xl w-96">
             <div class="text-center mb-8">
                 <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -258,12 +373,12 @@
             <form id="loginForm">
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2">Usuario</label>
-                    <input type="text" id="username" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500" required>
+                    <input type="text" id="username" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500" required="">
                 </div>
                 
                 <div class="mb-6">
                     <label class="block text-gray-700 text-sm font-bold mb-2">Contraseña</label>
-                    <input type="password" id="password" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500" required>
+                    <input type="password" id="password" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500" required="">
                 </div>
                 
                 <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200">
@@ -279,7 +394,7 @@
     </div>
 
     <!-- Aplicación Principal -->
-    <div id="mainApp" class="hidden">
+    <div id="mainApp" class="">
         <div class="flex h-screen bg-gray-100">
             <!-- Sidebar -->
             <div class="w-64 bg-white shadow-lg">
@@ -296,25 +411,25 @@
                 </div>
                 
                 <nav class="mt-6">
-                    <a href="#" onclick="showSection(event,'dashboard')" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100">
+                    <a href="file:///C:/Users/Osk/Desktop/prueba.html#" onclick="showSection(&#39;dashboard&#39;)" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100">
                         <i class="fas fa-tachometer-alt mr-3"></i>Dashboard
                     </a>
-                    <a href="#" onclick="showSection(event,'reparaciones')" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100">
+                    <a href="file:///C:/Users/Osk/Desktop/prueba.html#" onclick="showSection(&#39;reparaciones&#39;)" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100 active">
                         <i class="fas fa-tools mr-3"></i>Reparaciones
                     </a>
-                    <a href="#" onclick="showSection(event,'historial')" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100">
+                    <a href="file:///C:/Users/Osk/Desktop/prueba.html#" onclick="showSection(&#39;historial&#39;)" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100">
                         <i class="fas fa-history mr-3"></i>Historial
                     </a>
-                    <a href="#" onclick="showSection(event,'clientes')" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100">
+                    <a href="file:///C:/Users/Osk/Desktop/prueba.html#" onclick="showSection(&#39;clientes&#39;)" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100">
                         <i class="fas fa-users mr-3"></i>Clientes
                     </a>
-                    <a href="#" onclick="showSection(event,'whatsapp')" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100">
+                    <a href="file:///C:/Users/Osk/Desktop/prueba.html#" onclick="showSection(&#39;whatsapp&#39;)" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100">
                         <i class="fab fa-whatsapp mr-3"></i>WhatsApp
                     </a>
-                    <a href="#" onclick="showSection(event,'pedidos')" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100">
+                    <a href="file:///C:/Users/Osk/Desktop/prueba.html#" onclick="showSection(&#39;pedidos&#39;)" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100">
                         <i class="fas fa-shopping-cart mr-3"></i>Formulario de Pedidos
                     </a>
-                    <a href="#" onclick="showSection(event,'configuracion')" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100">
+                    <a href="file:///C:/Users/Osk/Desktop/prueba.html#" onclick="showSection(&#39;configuracion&#39;)" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100">
                         <i class="fas fa-cog mr-3"></i>Configuración
                     </a>
                 </nav>
@@ -323,13 +438,13 @@
             <!-- Contenido Principal -->
             <div class="flex-1 main-content">
                 <!-- Dashboard -->
-                <div id="dashboard" class="section active p-8">
+                <div id="dashboard" class="section p-8">
                     <div class="dashboard-container">
                         <div class="flex justify-between items-center mb-8">
                             <h1 class="text-3xl font-bold text-gray-800">Dashboard</h1>
                             <div class="text-sm text-gray-600">
                                 <i class="fas fa-calendar mr-2"></i>
-                                <span id="fecha-actual"></span>
+                                <span id="fecha-actual">martes, 19 de agosto de 2025</span>
                             </div>
                         </div>
 
@@ -351,7 +466,7 @@
                                 <div class="flex items-center justify-between">
                                     <div>
                                         <p class="text-sm font-medium text-gray-600">En Proceso</p>
-                                        <p class="text-2xl font-bold text-gray-900" id="kpi-proceso">0</p>
+                                        <p class="text-2xl font-bold text-gray-900" id="kpi-proceso">1</p>
                                     </div>
                                     <div class="bg-yellow-100 p-3 rounded-full">
                                         <i class="fas fa-cog text-yellow-600"></i>
@@ -363,7 +478,7 @@
                                 <div class="flex items-center justify-between">
                                     <div>
                                         <p class="text-sm font-medium text-gray-600">Listos</p>
-                                        <p class="text-2xl font-bold text-gray-900" id="kpi-listos">0</p>
+                                        <p class="text-2xl font-bold text-gray-900" id="kpi-listos">1</p>
                                     </div>
                                     <div class="bg-green-100 p-3 rounded-full">
                                         <i class="fas fa-check text-green-600"></i>
@@ -375,7 +490,7 @@
                                 <div class="flex items-center justify-between">
                                     <div>
                                         <p class="text-sm font-medium text-gray-600">Clientes</p>
-                                        <p class="text-2xl font-bold text-gray-900" id="kpi-clientes">0</p>
+                                        <p class="text-2xl font-bold text-gray-900" id="kpi-clientes">3</p>
                                     </div>
                                     <div class="bg-purple-100 p-3 rounded-full">
                                         <i class="fas fa-users text-purple-600"></i>
@@ -389,14 +504,14 @@
                             <div class="card bg-white p-6 rounded-xl">
                                 <h3 class="text-lg font-semibold mb-4">Estados de Reparaciones</h3>
                                 <div class="chart-container">
-                                    <canvas id="statusChart"></canvas>
+                                    <canvas id="statusChart" height="300" style="display: block; box-sizing: border-box; height: 300px; width: 443px;" width="443"></canvas>
                                 </div>
                             </div>
 
                             <div class="card bg-white p-6 rounded-xl">
                                 <h3 class="text-lg font-semibold mb-4">Ingresos del Mes</h3>
                                 <div class="chart-container">
-                                    <canvas id="revenueChart"></canvas>
+                                    <canvas id="revenueChart" height="300" style="display: block; box-sizing: border-box; height: 300px; width: 443px;" width="443"></canvas>
                                 </div>
                             </div>
                         </div>
@@ -404,7 +519,7 @@
                 </div>
 
                 <!-- Reparaciones -->
-                <div id="reparaciones" class="section p-8">
+                <div id="reparaciones" class="section p-8 active">
                     <div class="flex justify-between items-center mb-8">
                         <h1 class="text-3xl font-bold text-gray-800">Reparaciones</h1>
                         <p class="text-gray-600">Gestión de órdenes de reparación</p>
@@ -427,7 +542,7 @@
                             
                             <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="filter-tecnico">
                                 <option value="">Todos los técnicos</option>
-                            </select>
+                            <option value="Ana Silva">Ana Silva - iPhone y Samsung</option><option value="Juan Pérez">Juan Pérez - Xiaomi y Motorola</option><option value="Luis Rodríguez">Luis Rodríguez - Tablets y Notebooks</option></select>
                         </div>
 
                         <div class="overflow-x-auto">
@@ -443,9 +558,57 @@
                                         <th class="text-left py-3 px-4 font-semibold text-gray-700">Acciones</th>
                                     </tr>
                                 </thead>
-                                <tbody id="tabla-reparaciones">
-                                    <!-- Se llena dinámicamente -->
-                                </tbody>
+                                <tbody id="tabla-reparaciones"><tr class="border-b hover:bg-gray-50">
+                    <td class="py-3 px-4 font-medium">#1001</td>
+                    <td class="py-3 px-4">María González</td>
+                    <td class="py-3 px-4">iPhone 13 Pro</td>
+                    <td class="py-3 px-4">
+                        <span class="status-badge status-diagnosticando">diagnosticando</span>
+                    </td>
+                    <td class="py-3 px-4">Ana Silva</td>
+                    <td class="py-3 px-4">08/11/2025</td>
+                    <td class="py-3 px-4">
+                        <div class="flex gap-2">
+                            <button onclick="imprimirComprobante(&#39;1001&#39;)" class="btn-print-orange text-white p-2 rounded" title="Imprimir">
+                                <i class="fas fa-print"></i>
+                            </button>
+                            <button onclick="editarReparacion(&#39;1001&#39;)" class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="enviarWhatsApp(&#39;1001&#39;)" class="bg-green-600 text-white p-2 rounded hover:bg-green-700" title="WhatsApp">
+                                <i class="fab fa-whatsapp"></i>
+                            </button>
+                            <button onclick="eliminarReparacion(&#39;1001&#39;)" class="bg-red-600 text-white p-2 rounded hover:bg-red-700" title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr><tr class="border-b hover:bg-gray-50">
+                    <td class="py-3 px-4 font-medium">#1002</td>
+                    <td class="py-3 px-4">Carlos López</td>
+                    <td class="py-3 px-4">Samsung Galaxy A54</td>
+                    <td class="py-3 px-4">
+                        <span class="status-badge status-listo">listo</span>
+                    </td>
+                    <td class="py-3 px-4">Ana Silva</td>
+                    <td class="py-3 px-4">07/11/2025</td>
+                    <td class="py-3 px-4">
+                        <div class="flex gap-2">
+                            <button onclick="imprimirComprobante(&#39;1002&#39;)" class="btn-print-orange text-white p-2 rounded" title="Imprimir">
+                                <i class="fas fa-print"></i>
+                            </button>
+                            <button onclick="editarReparacion(&#39;1002&#39;)" class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="enviarWhatsApp(&#39;1002&#39;)" class="bg-green-600 text-white p-2 rounded hover:bg-green-700" title="WhatsApp">
+                                <i class="fab fa-whatsapp"></i>
+                            </button>
+                            <button onclick="eliminarReparacion(&#39;1002&#39;)" class="bg-red-600 text-white p-2 rounded hover:bg-red-700" title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr></tbody>
                             </table>
                         </div>
                     </div>
@@ -481,7 +644,7 @@
                             
                             <select id="filtro-tecnico-historial" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                 <option value="">Todos los técnicos</option>
-                            </select>
+                            <option value="Ana Silva">Ana Silva - iPhone y Samsung</option><option value="Juan Pérez">Juan Pérez - Xiaomi y Motorola</option><option value="Luis Rodríguez">Luis Rodríguez - Tablets y Notebooks</option></select>
                         </div>
 
                         <div class="overflow-x-auto">
@@ -497,9 +660,24 @@
                                         <th class="text-left py-3 px-4 font-semibold text-gray-700">Acciones</th>
                                     </tr>
                                 </thead>
-                                <tbody id="tabla-historial">
-                                    <!-- Se llena dinámicamente -->
-                                </tbody>
+                                <tbody id="tabla-historial"><tr class="border-b hover:bg-gray-50">
+                    <td class="py-3 px-4 font-medium">#1000</td>
+                    <td class="py-3 px-4">Pedro Martínez</td>
+                    <td class="py-3 px-4">iPhone 12</td>
+                    <td class="py-3 px-4">Juan Pérez</td>
+                    <td class="py-3 px-4">01/11/2025</td>
+                    <td class="py-3 px-4">05/11/2025</td>
+                    <td class="py-3 px-4">
+                        <div class="flex gap-2">
+                            <button onclick="verDetalleHistorial(&#39;1000&#39;)" class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" title="Ver Detalles">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="imprimirComprobanteHistorial(&#39;1000&#39;)" class="btn-print-orange text-white p-2 rounded" title="Reimprimir">
+                                <i class="fas fa-print"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr></tbody>
                             </table>
                         </div>
                     </div>
@@ -529,17 +707,17 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Seleccionar Reparación</label>
                                     <select id="select-reparacion" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" onchange="cargarDatosReparacion()">
                                         <option value="">Seleccionar reparación</option>
-                                    </select>
+                                    <option value="1001">#1001 - María González - iPhone 13 Pro</option><option value="1002">#1002 - Carlos López - Samsung Galaxy A54</option></select>
                                 </div>
                                 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Cliente</label>
-                                    <input type="text" id="notif-cliente" class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50" readonly>
+                                    <input type="text" id="notif-cliente" class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50" readonly="">
                                 </div>
                                 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
-                                    <input type="text" id="notif-telefono" class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50" readonly>
+                                    <input type="text" id="notif-telefono" class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50" readonly="">
                                 </div>
                                 
                                 <div>
@@ -645,17 +823,17 @@
                             <form id="formNuevoPedido" class="space-y-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Cliente</label>
-                                    <input type="text" name="cliente" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Nombre del cliente" required>
+                                    <input type="text" name="cliente" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Nombre del cliente" required="">
                                 </div>
                                 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
-                                    <input type="tel" name="telefono" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Número de teléfono" required>
+                                    <input type="tel" name="telefono" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Número de teléfono" required="">
                                 </div>
                                 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Producto/Servicio</label>
-                                    <input type="text" name="producto" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Ej: Memoria SD 32GB" required>
+                                    <input type="text" name="producto" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Ej: Memoria SD 32GB" required="">
                                 </div>
                                 
                                 <div>
@@ -672,7 +850,7 @@
                                                 Sí
                                             </label>
                                             <label class="flex items-center">
-                                                <input type="radio" name="deja_sena" value="no" class="mr-2" checked onchange="toggleSena()">
+                                                <input type="radio" name="deja_sena" value="no" class="mr-2" checked="" onchange="toggleSena()">
                                                 No
                                             </label>
                                         </div>
@@ -686,7 +864,7 @@
                                 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Precio Total ($)</label>
-                                    <input type="number" name="precio_total" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="0" min="0" required>
+                                    <input type="number" name="precio_total" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="0" min="0" required="">
                                 </div>
                                 
                                 <button type="submit" class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center">
@@ -714,9 +892,29 @@
                                 </div>
                             </div>
                             
-                            <div class="space-y-3" id="lista-pedidos">
-                                <!-- Los pedidos se cargarán dinámicamente aquí -->
-                            </div>
+                            <div class="space-y-3" id="lista-pedidos"><div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <h4 class="font-semibold text-gray-800">#1 - oscar elias</h4>
+                            <p class="text-sm text-gray-600">hola chini</p>
+                        </div>
+                        <span class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">PENDIENTE</span>
+                    </div>
+                    <div class="text-sm text-gray-600 mb-3">
+                        <p><strong>Tel:</strong> 1123686414</p>
+                        <p><strong>Descripción:</strong> sdsdc</p>
+                        <p><strong>Total:</strong> $32.323 | <strong>Seña:</strong> $0 | <strong>Saldo:</strong> $32.323</p>
+                        <p><strong>Fecha:</strong> 19/08/2025</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="cambiarEstadoPedido(&#39;1&#39;)" class="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700">
+                            <i class="fas fa-edit mr-1"></i>Estado
+                        </button>
+                        <button onclick="eliminarPedido(&#39;1&#39;)" class="bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700">
+                            <i class="fas fa-trash mr-1"></i>Eliminar
+                        </button>
+                    </div>
+                </div></div>
                         </div>
                     </div>
                 </div>
@@ -741,22 +939,22 @@
                             <form id="formConfigTaller" class="space-y-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del Taller</label>
-                                    <input type="text" name="nombre_taller" value="Mundo Electrónico" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                    <input type="text" name="nombre_taller" value="Mundo Electrónico" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required="">
                                 </div>
                                 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Dirección</label>
-                                    <input type="text" name="direccion" value="Av. Corrientes 1234, CABA" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                    <input type="text" name="direccion" value="Av. Corrientes 1234, CABA" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required="">
                                 </div>
                                 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
-                                    <input type="tel" name="telefono" value="+54 11 1234-5678" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                    <input type="tel" name="telefono" value="+54 11 1234-5678" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required="">
                                 </div>
                                 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                                    <input type="email" name="email" value="info@mundoelectronico.com" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                    <input type="email" name="email" value="info@mundoelectronico.com" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required="">
                                 </div>
                                 
                                 <button type="submit" class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center">
@@ -779,9 +977,37 @@
                                 </button>
                             </div>
                             
-                            <div class="space-y-3" id="lista-tecnicos">
-                                <!-- Los técnicos se cargarán dinámicamente aquí -->
-                            </div>
+                            <div class="space-y-3" id="lista-tecnicos"><div class="border border-gray-200 rounded-lg p-3 hover:bg-gray-50">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h4 class="font-semibold text-gray-800">Ana Silva</h4>
+                            <p class="text-sm text-gray-600">iPhone y Samsung</p>
+                        </div>
+                        <button onclick="eliminarTecnico(0)" class="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div><div class="border border-gray-200 rounded-lg p-3 hover:bg-gray-50">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h4 class="font-semibold text-gray-800">Juan Pérez</h4>
+                            <p class="text-sm text-gray-600">Xiaomi y Motorola</p>
+                        </div>
+                        <button onclick="eliminarTecnico(1)" class="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div><div class="border border-gray-200 rounded-lg p-3 hover:bg-gray-50">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h4 class="font-semibold text-gray-800">Luis Rodríguez</h4>
+                            <p class="text-sm text-gray-600">Tablets y Notebooks</p>
+                        </div>
+                        <button onclick="eliminarTecnico(2)" class="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div></div>
                         </div>
                     </div>
 
@@ -861,7 +1087,7 @@
             <form id="formNuevaReparacion" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium mb-2">Cliente *</label>
-                    <input type="text" name="cliente" class="w-full px-4 py-2 border rounded-lg" required>
+                    <input type="text" name="cliente" class="w-full px-4 py-2 border rounded-lg" required="">
                 </div>
                 
                 <div>
@@ -871,7 +1097,7 @@
                 
                 <div>
                     <label class="block text-sm font-medium mb-2">Teléfono *</label>
-                    <input type="text" name="telefono" class="w-full px-4 py-2 border rounded-lg" required>
+                    <input type="text" name="telefono" class="w-full px-4 py-2 border rounded-lg" required="">
                 </div>
                 
                 <div>
@@ -886,7 +1112,7 @@
                 
                 <div>
                     <label class="block text-sm font-medium mb-2">Equipo *</label>
-                    <input type="text" name="equipo" class="w-full px-4 py-2 border rounded-lg" required>
+                    <input type="text" name="equipo" class="w-full px-4 py-2 border rounded-lg" required="">
                 </div>
                 
                 <div>
@@ -898,7 +1124,7 @@
                     <label class="block text-sm font-medium mb-2">Técnico Asignado</label>
                     <select name="tecnico" class="w-full px-4 py-2 border rounded-lg" id="select-tecnico">
                         <option value="">Seleccionar técnico</option>
-                    </select>
+                    <option value="Ana Silva">Ana Silva - iPhone y Samsung</option><option value="Juan Pérez">Juan Pérez - Xiaomi y Motorola</option><option value="Luis Rodríguez">Luis Rodríguez - Tablets y Notebooks</option></select>
                 </div>
                 
                 <div>
@@ -908,7 +1134,7 @@
                 
                 <div class="md:col-span-2">
                     <label class="block text-sm font-medium mb-2">Problema Reportado *</label>
-                    <textarea name="problema" class="w-full px-4 py-2 border rounded-lg" rows="3" required></textarea>
+                    <textarea name="problema" class="w-full px-4 py-2 border rounded-lg" rows="3" required=""></textarea>
                 </div>
                 
                 <div class="md:col-span-2">
@@ -943,17 +1169,17 @@
             <form id="formEditEstado" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium mb-2">Cliente</label>
-                    <input type="text" id="edit-cliente" class="w-full px-4 py-2 border rounded-lg bg-gray-50" readonly>
+                    <input type="text" id="edit-cliente" class="w-full px-4 py-2 border rounded-lg bg-gray-50" readonly="">
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium mb-2">Equipo</label>
-                    <input type="text" id="edit-equipo" class="w-full px-4 py-2 border rounded-lg bg-gray-50" readonly>
+                    <input type="text" id="edit-equipo" class="w-full px-4 py-2 border rounded-lg bg-gray-50" readonly="">
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium mb-2">Estado *</label>
-                    <select id="edit-estado" class="w-full px-4 py-2 border rounded-lg" required>
+                    <select id="edit-estado" class="w-full px-4 py-2 border rounded-lg" required="">
                         <option value="recibido">Recibido</option>
                         <option value="diagnosticando">Diagnosticando</option>
                         <option value="listo">Listo</option>
@@ -965,7 +1191,7 @@
                     <label class="block text-sm font-medium mb-2">Técnico Asignado</label>
                     <select id="edit-tecnico" class="w-full px-4 py-2 border rounded-lg">
                         <option value="">Seleccionar técnico</option>
-                    </select>
+                    <option value="Ana Silva">Ana Silva - iPhone y Samsung</option><option value="Juan Pérez">Juan Pérez - Xiaomi y Motorola</option><option value="Luis Rodríguez">Luis Rodríguez - Tablets y Notebooks</option></select>
                 </div>
                 
                 <div>
@@ -1019,7 +1245,7 @@
                     <button onclick="reingresarPorGarantia()" class="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700">
                         <i class="fas fa-redo mr-2"></i>Reingresar por Garantía
                     </button>
-                    <button onclick="imprimirHistorial(equipoDetalleActual?.id)" class="btn-print-orange text-white px-6 py-2 rounded-lg">
+                    <button onclick="imprimirComprobante()" class="btn-print-orange text-white px-6 py-2 rounded-lg">
                         <i class="fas fa-print mr-2"></i>Reimprimir Comprobante
                     </button>
                 </div>
@@ -1119,85 +1345,20 @@
             initializeCharts();
             configurarFiltros();
             mostrarFechaActual();
-
-        // --- Guard: asegurar que renderListaPedidos exista para evitar ReferenceError
-        function __ensureRenderListaPedidos(){
-            if (typeof window.renderListaPedidos !== 'function'){
-                window.renderListaPedidos = function(){ /* noop until funciones de pedidos se carguen */ };
-            }
-        }
-        __ensureRenderListaPedidos();
-    
-
-            // Configurar formulario de nuevo pedido
-            const formPedido = document.getElementById('formNuevoPedido');
-            if (formPedido){
-                formPedido.addEventListener('submit', function(e){
-                    e.preventDefault();
-                    crearNuevoPedido(new FormData(formPedido));
-                });
-            }
-            const buscarPedidos = document.getElementById('buscar-pedidos');
-            const filtroEstadoPedidos = document.getElementById('filtro-estado-pedidos');
-            if (buscarPedidos){ buscarPedidos.addEventListener('input', renderListaPedidos); }
-            if (filtroEstadoPedidos){ filtroEstadoPedidos.addEventListener('change', renderListaPedidos); }
-
-            try{ renderListaPedidos(); }catch(e){ console.warn('renderListaPedidos no disponible aún', e); }
             
             // Configurar formulario de login
-            
-// Login robusto con persistencia y credenciales fallback
-(function(){
-  const form = document.getElementById('loginForm');
-  const loginScreen = document.getElementById('loginScreen');
-  const mainApp = document.getElementById('mainApp');
-
-  function showMain(){
-    if (loginScreen) loginScreen.classList.add('hidden');
-    if (mainApp) mainApp.classList.remove('hidden');
-    try { localStorage.setItem('mundoElectronicoLoggedIn', '1'); } catch(e){}
-  }
-
-  // Autologin si ya inició sesión
-  try {
-    if (localStorage.getItem('mundoElectronicoLoggedIn') === '1') {
-      showMain();
-      return;
-    }
-  } catch(e){}
-
-  if (!form) return;
-  form.addEventListener('submit', function(e){
-    e.preventDefault();
-    const username = (document.getElementById('username')?.value || '').trim();
-    const password = (document.getElementById('password')?.value || '').trim();
-
-    // Credenciales desde config si existen
-    let cfgUser = 'admin', cfgPass = 'admin123';
-    try {
-      const raw = localStorage.getItem('mundoElectronicoData');
-      if (raw) {
-        const d = JSON.parse(raw);
-        if (d && d.config) {
-          cfgUser = d.config.usuario || cfgUser;
-          cfgPass = d.config.contrasena || cfgPass;
-        }
-      }
-    } catch(e){}
-
-    // Aceptamos también admin/admin por compatibilidad
-    const ok =
-      (username === cfgUser && password === cfgPass) ||
-      (username === 'admin' && password === 'admin') ||
-      (username === 'admin' && password === 'admin123');
-
-    if (ok) {
-      showMain();
-    } else {
-      alert('Usuario o contraseña incorrectos');
-    }
-  });
-})();
+            document.getElementById('loginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                
+                if (username === 'admin' && password === 'admin123') {
+                    document.getElementById('loginScreen').classList.add('hidden');
+                    document.getElementById('mainApp').classList.remove('hidden');
+                } else {
+                    alert('Usuario o contraseña incorrectos');
+                }
+            });
 
             // Configurar formulario de nueva reparación
             document.getElementById('formNuevaReparacion').addEventListener('submit', function(e) {
@@ -1213,7 +1374,7 @@
         });
 
         // FUNCIONES DE NAVEGACIÓN Y SECCIONES
-        function showSection(event, sectionName) {
+        function showSection(sectionName) {
             // Ocultar todas las secciones
             document.querySelectorAll('.section').forEach(section => {
                 section.classList.remove('active');
@@ -1227,7 +1388,7 @@
                 item.classList.remove('active');
             });
             
-            (event && event.target ? event.target : document.querySelector(`[onclick*="'${sectionName}'"]`))?.classList?.add('active');
+            event.target.classList.add('active');
             currentSection = sectionName;
         }
 
@@ -1246,7 +1407,7 @@
             const datosGuardados = localStorage.getItem('mundoElectronicoData');
             if (datosGuardados) {
                 const datos = JSON.parse(datosGuardados);
-                pedidos = datos.pedidos || [];reparaciones = datos.reparaciones || datosIniciales.reparaciones;
+                reparaciones = datos.reparaciones || datosIniciales.reparaciones;
                 tecnicos = datos.tecnicos || datosIniciales.tecnicos;
                 proximoOrden = datos.proximoOrden || 1003;
                 historialEntregados = datos.historialEntregados || datosIniciales.historialEntregados;
@@ -1257,7 +1418,6 @@
                 proximoOrden = 1003;
                 historialEntregados = [...datosIniciales.historialEntregados];
                 historialMensajes = [];
-                pedidos = [];
                 guardarDatos();
             }
         }
@@ -1270,7 +1430,6 @@
                 historialEntregados: historialEntregados,
                 historialMensajes: historialMensajes
             };
-            datos.pedidos = pedidos;
             localStorage.setItem('mundoElectronicoData', JSON.stringify(datos));
         }
 
@@ -1440,7 +1599,8 @@
                 const row = document.createElement('tr');
                 row.className = 'border-b hover:bg-gray-50';
                 
-                row.innerHTML = `                    <td class="py-3 px-4 font-medium">#${equipo.id}</td>
+                row.innerHTML = `
+                    <td class="py-3 px-4 font-medium">#${equipo.id}</td>
                     <td class="py-3 px-4">${equipo.cliente}</td>
                     <td class="py-3 px-4">${equipo.equipo}</td>
                     <td class="py-3 px-4">${equipo.tecnico}</td>
@@ -1451,12 +1611,12 @@
                             <button onclick="verDetalleHistorial('${equipo.id}')" class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" title="Ver Detalles">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button onclick="imprimirHistorial(${equipo.id})" class="btn-print-orange text-white p-2 rounded" title="Reimprimir">
+                            <button onclick="imprimirComprobanteHistorial('${equipo.id}')" class="btn-print-orange text-white p-2 rounded" title="Reimprimir">
                                 <i class="fas fa-print"></i>
                             </button>
                         </div>
                     </td>
-            `;
+                `;
                 
                 tbody.appendChild(row);
             });
@@ -1826,19 +1986,19 @@
                 <head>
                     <title>Comprobante #${reparacion.id}</title>
                     <style>
-                        body { font-family: Arial, sans-serif; margin: 0; padding: 15mm; font-size:12px; line-height: 1.1; }
+                        body { font-family: Arial, sans-serif; margin: 0; padding: 15mm; font-size: 9px; line-height: 1.1; }
                         .print-header { text-align: center; margin-bottom: 8px; border-bottom: 1px solid #000; padding-bottom: 4px; }
-                        .print-title { font-size:18px; font-weight: bold; margin-bottom: 2px; }
-                        .print-subtitle { font-size:16px; font-weight: bold; margin-bottom: 3px; }
-                        .print-order { font-size:17px; font-weight: bold; margin-bottom: 6px; }
-                        .print-section { margin-bottom: 10px; }
-                        .print-row { display: flex; margin-bottom: 8px; }
-                        .print-label { font-weight: bold; width: 60px; flex-shrink: 0; font-size:13px; }
-                        .print-value { flex: 1; margin-right: 8px; font-size:13px; }
-                        .print-separator { display: none !important; }
-                        .print-separator::before { content: "✂  ✂"; background: white; padding: 0 5px; position: absolute; top: -6px; left: 50%; transform: translateX(-50%); font-size:12px; }
-                        .print-signature { display: none !important; }
-                        .print-footer { margin-top: 8px; font-size:12px; text-align: left; border-top: 1px solid #000; padding-top: 4px; line-height: 1.2; }
+                        .print-title { font-size: 12px; font-weight: bold; margin-bottom: 4px; }
+                        .print-subtitle { font-size: 10px; font-weight: bold; margin-bottom: 5px; }
+                        .print-order { font-size: 11px; font-weight: bold; margin-bottom: 8px; }
+                        .print-section { margin-bottom: 6px; }
+                        .print-row { display: flex; margin-bottom: 6px; }
+                        .print-label { font-weight: bold; width: 60px; flex-shrink: 0; font-size: 7px; }
+                        .print-value { flex: 1; margin-right: 8px; font-size: 7px; }
+                        .print-separator { border-top: 1px dashed #000; margin: 10px 0; text-align: center; position: relative; }
+                        .print-separator::before { content: "✂ CORTAR AQUÍ ✂"; background: white; padding: 0 7px; position: absolute; top: -4px; left: 50%; transform: translateX(-50%); font-size: 6px; }
+                        .print-signature { margin: 8px 0; border-bottom: 1px solid #000; width: 150px; text-align: center; padding-bottom: 2px; font-size: 7px; }
+                        .print-footer { margin-top: 8px; font-size: 6px; text-align: left; border-top: 1px solid #000; padding-top: 4px; line-height: 1.2; }
                     </style>
                 </head>
                 <body>
@@ -1890,7 +2050,7 @@
                         </div>
                     </div>
                     
-                    
+                    <div class="print-signature">Recibo de conformidad</div>
                     
                     <div class="print-separator"></div>
                     
@@ -1966,15 +2126,6 @@ ventanaImpresion.document.close();
             ventanaImpresion.focus();
             ventanaImpresion.print();
         }
-        function enviarWhatsAppPedido(pedidoId){
-           const p = (typeof pedidos!=='undefined' && Array.isArray(pedidos)) 
-              ? pedidos.find(x=>String(x.id)===String(pedidoId)) : null;
-        if(!p){ alert('Pedido no encontrado'); return; }
-           const saldo = (Number(p.precio_total||0) - Number(p.sena||0)) || 0;
-           const msg = `Hola ${p.cliente||''}, tu pedido: ${p.producto||''}. Total $${p.precio_total||0}. Seña $${p.sena||0}. Saldo $${saldo}. ${p.descripcion?('Notas: '+p.descripcion):''}`;
-           const phone = normalizarTelefonoAR(p.telefono||'');
-           window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
-}
 
         function imprimirComprobanteHistorial(equipoId) {
             imprimirComprobante(equipoId);
@@ -1983,15 +2134,6 @@ ventanaImpresion.document.close();
         function editarReparacion(ordenId) {
             showEditEstado(ordenId);
         }
-function imprimirComprobantePedido(pedidoId){
-  const p = (typeof pedidos!=='undefined' && Array.isArray(pedidos)) 
-              ? pedidos.find(x=>String(x.id)===String(pedidoId)) : null;
-  if(!p){ alert('Pedido no encontrado'); return; }
-  _imprimirTicketBase({ 
-    id: p.id, cliente: p.cliente, telefono: p.telefono, producto: p.producto,
-    fecha: p.fecha, sena: p.sena, precio_total: p.precio_total, descripcion: p.descripcion
-  }, 'PEDIDO');
-}
 
         function enviarWhatsApp(ordenId) {
             // Cambiar a la sección de WhatsApp
@@ -2289,8 +2431,7 @@ function imprimirComprobantePedido(pedidoId){
         function actualizarListaPedidos() {
             const lista = document.getElementById('lista-pedidos');
             const busqueda = document.getElementById('buscar-pedidos').value.toLowerCase();
-            const filtroEstadoPedidos = document.getElementById('filtro-estado-pedidos');
-            const filtroEstado = filtroEstadoPedidos ? filtroEstadoPedidos.value : '';
+            const filtroEstado = document.getElementById('filtro-estado-pedidos').value;
             
             lista.innerHTML = '';
             
@@ -2337,12 +2478,6 @@ function imprimirComprobantePedido(pedidoId){
                         </button>
                         <button onclick="eliminarPedido('${pedido.id}')" class="bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700">
                             <i class="fas fa-trash mr-1"></i>Eliminar
-                        </button>
-                        <button onclick="imprimirComprobantePedido('${pedido.id}')" class="btn-print-orange text-white px-3 py-1 rounded text-xs" title="Imprimir">
-                            <i class="fas fa-print mr-1"></i>Imprimir
-                        </button>
-                        <button onclick="enviarWhatsAppPedido('${pedido.id}')" class="bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700" title="WhatsApp">
-                            <i class="fab fa-whatsapp mr-1"></i>WhatsApp
                         </button>
                     </div>
                 `;
@@ -2608,8 +2743,8 @@ function imprimirComprobantePedido(pedidoId){
             cargarConfiguracion();
         });
     </script>
-</body>
-</html>
+
+
     <script id="html_badge_script1">
         window.__genspark_remove_badge_link = "https://www.genspark.ai/api/html_badge/" +
             "remove_badge?token=To%2FBnjzloZ3UfQdcSaYfDuUXOJHRBty4VZVnGULVxJUWI0WDGypcKqoKyoaQT5GzhVwUEVoPGE1Ww0JI1fxjBDdPDETQcgOdf9TBSwVHO9PANzDwZpOZx2nFB2xRwcwPN2LSei862hJqpbl3qo5HL95T8ktHIu1X2NnmEkZlh8eWh4rWtTEvA1JA460KFjOaWVBo22dAd7La60y1xkXa%2FjqTgjfI0BME5Em3Xys9ahuK3wqViTw%2BWW6LlIkerxKnbVqr2GQHaBN0r9yDhsWkmt7REl1Y4gEZVEsc%2BmFKDfuMCKVsdK1mXcpyezIIOja%2Fnmqt1finOu3njhP0qtyjGoqcYctwwt%2B6Q1cxYOeUsPDqpu9LGiYR40pNL5nNMiVENIGpoa3KK%2BIpQhh7yhU243GwghGS1iSLYckk1xcgBuWg2f8jPv9SQq%2Bs%2BhHosmc1De9q%2BA1BRtMneDuGKkVqCSqZDDkTzU81lq1wDtNvXrz85PaZ9syC7yrENRTIFF74WrY8PGiz1mdY4Gyyi8qyMg%3D%3D";
@@ -2617,891 +2752,5 @@ function imprimirComprobantePedido(pedidoId){
         window.__genspark_token = "To/BnjzloZ3UfQdcSaYfDuUXOJHRBty4VZVnGULVxJUWI0WDGypcKqoKyoaQT5GzhVwUEVoPGE1Ww0JI1fxjBDdPDETQcgOdf9TBSwVHO9PANzDwZpOZx2nFB2xRwcwPN2LSei862hJqpbl3qo5HL95T8ktHIu1X2NnmEkZlh8eWh4rWtTEvA1JA460KFjOaWVBo22dAd7La60y1xkXa/jqTgjfI0BME5Em3Xys9ahuK3wqViTw+WW6LlIkerxKnbVqr2GQHaBN0r9yDhsWkmt7REl1Y4gEZVEsc+mFKDfuMCKVsdK1mXcpyezIIOja/nmqt1finOu3njhP0qtyjGoqcYctwwt+6Q1cxYOeUsPDqpu9LGiYR40pNL5nNMiVENIGpoa3KK+IpQhh7yhU243GwghGS1iSLYckk1xcgBuWg2f8jPv9SQq+s+hHosmc1De9q+A1BRtMneDuGKkVqCSqZDDkTzU81lq1wDtNvXrz85PaZ9syC7yrENRTIFF74WrY8PGiz1mdY4Gyyi8qyMg==";
     </script>
     
-    <script id="html_notice_dialog_script" src="https://www.genspark.ai/notice_dialog.js">
-         || (typeof reparaciones!=='undefined' ? reparaciones.find(e=>e.id===ordenId) : null);
-  if(!r) return;
-
-  const w = window.open('', '_blank');
-  w.document.write(`<!DOCTYPE html>
-  <html><head>
-    <meta charset="utf-8">
-    <style>
-      body{font-family:Arial,sans-serif;padding:10mm;font-size:13px;line-height:1.5}
-      .titulo{font-size:19px;font-weight:700;text-align:center;margin-bottom:12px}
-      .bloque{margin-bottom:10px}
-      .fila{margin-bottom:5px}
-      .label{font-weight:700;display:inline-block;width:100px}
-      .garantia{margin-top:16px;font-size:14px;font-weight:700;line-height:1.6;border-top:1px solid #000;padding-top:10px}
-      .gracias{margin-top:22px;text-align:center;font-size:17px;font-weight:700}
-    </style>
-  </head><body>
-    <div class="titulo">Mundo Electrónico — Copia para el Cliente</div>
-
-    <div class="bloque">
-      <div class="fila"><span class="label">Orden:</span> #${r.id}</div>
-      <div class="fila"><span class="label">Cliente:</span> ${r.cliente || r.nombre || ''}</div>
-      <div class="fila"><span class="label">Teléfono:</span> ${r.telefono || ''}</div>
-      <div class="fila"><span class="label">Equipo:</span> ${r.equipo || r.dispositivo || ''}</div>
-      <div class="fila"><span class="label">Problema:</span> ${r.problema || r.falla || ''}</div>
-      <div class="fila"><span class="label">Técnico:</span> ${r.tecnico || ''}</div>
-      <div class="fila"><span class="label">Fecha Entrega:</span> ${r.fechaEntrega || r.fecha || ''}</div>
-    </div>
-
-    <div class="garantia">
-      Las reparaciones tienen una garantía de 60 días únicamente por la misma falla reparada.<br>
-      Los repuestos están garantizados solo por defectos de fábrica.<br>
-      La garantía no cubre daños ocasionados por golpes, roturas, líquidos o uso indebido.<br>
-      Los trabajos de software y configuraciones no tienen garantía.
-    </div>
-
-    <div class="gracias">GRACIAS POR ELEGIRNOS</div>
-  </body></html>`);
-  w.document.close();
-  const cerrar = ()=>{ try{ w.close(); }catch(e){} };
-  try{ w.addEventListener('afterprint', cerrar); }catch(e){}
-  setTimeout(()=>{ try{ w.print(); }catch(e){} setTimeout(cerrar,1200); }, 100);
-}
-
-
-// ==== Stubs y mejoras para evitar errores de runtime ====
-function editarReparacion(id){ try { showEditEstado(id); } catch(e){ console.warn('showEditEstado no disponible', e); } }
-function imprimirComprobante(id){ 
-    try {
-        const rep = reparaciones.find(r=>r.id===id);
-        if(!rep){ alert('No se encontró la reparación #' + id); return; }
-        const w = window.open('', '_blank');
-        w.document.write('<html><head><title>Comprobante #' + id + '</title></head><body>');
-        w.document.write('<div class="print-page"><div class="print-header"><div class="print-title">Mundo Electrónico</div><div class="print-subtitle">Comprobante de Ingreso</div><div class="print-order">Orden #' + rep.id + '</div></div>');
-        w.document.write('<div class="print-section"><div class="print-row"><span class="print-label">Cliente:</span><span class="print-value">'+rep.cliente+'</span></div>');
-        w.document.write('<div class="print-row"><span class="print-label">Equipo:</span><span class="print-value">'+rep.equipo+'</span></div>');
-        w.document.write('<div class="print-row"><span class="print-label">Problema:</span><span class="print-value">'+rep.problema+'</span></div>');
-        w.document.write('<div class="print-row"><span class="print-label">Fecha:</span><span class="print-value">'+rep.fecha+'</span></div></div>');
-        w.document.write('');
-        w.document.write('<div class="print-footer">Las reparaciones tienen una garantía de 60 días únicamente por la misma falla reparada. Los repuestos están garantizados solo por defectos de fábrica. La garantía no cubre daños ocasionados por golpes, roturas, líquidos o uso indebido. Los trabajos de software y configuraciones no tienen garantía.</div>');
-        w.document.write('</div></body></html>');
-        w.document.close();
-        w.focus();
-        w.print();
-        w.close();
-    } catch(e){ console.error(e); alert('No se pudo imprimir.'); }
-}
-function imprimirHistorial(id){ 
-    try{
-        const eq = historialEntregados.find(e=>String(e.id)===String(id));
-        if(!eq){ alert('No se encontró en historial #' + id); return; }
-        const w = window.open('', '_blank');
-        w.document.write('<html><head><title>Historial #' + id + '</title></head><body>');
-        w.document.write('<div class="print-page"><div class="print-header"><div class="print-title">Mundo Electrónico</div><div class="print-subtitle">Comprobante de Entrega</div><div class="print-order">Orden #' + eq.id + '</div></div>');
-        w.document.write('<div class="print-section"><div class="print-row"><span class="print-label">Cliente:</span><span class="print-value">'+eq.cliente+'</span></div>');
-        w.document.write('<div class="print-row"><span class="print-label">Equipo:</span><span class="print-value">'+eq.equipo+'</span></div>');
-        w.document.write('<div class="print-row"><span class="print-label">Problema:</span><span class="print-value">'+eq.problema+'</span></div>');
-        w.document.write('<div class="print-row"><span class="print-label">Fecha Entrega:</span><span class="print-value">'+eq.fechaEntrega+'</span></div></div>');
-        w.document.write('');
-        w.document.write('<div class="print-footer">Gracias por elegirnos.</div>');
-        w.document.write('</div></body></html>');
-        w.document.close(); w.focus(); w.print(); w.close();
-    } catch(e){ console.error(e); alert('No se pudo imprimir historial.'); }
-}
-function enviarWhatsApp(id){
-    try{
-        const rep = reparaciones.find(r=>r.id===id);
-        if(!rep){ alert('No se encontró la reparación #' + id); return; }
-        const tel = (rep.telefono || '').replace(/[^0-9]/g,'');
-        const msg = encodeURIComponent(lineas.join('
-'));
-        const url = `https://wa.me/${tel}?text=${msg}`;
-        window.open(url, '_blank');
-    } catch(e){ console.error(e); alert('No se pudo abrir WhatsApp.'); }
-}
-function eliminarReparacion(id){
-    const idx = reparaciones.findIndex(r=>r.id===id);
-    if(idx===-1){ alert('No se encontró la reparación #' + id); return; }
-    if(confirm('¿Eliminar la reparación #' + id + '?')){
-        reparaciones.splice(idx,1);
-        guardarDatos();
-        cargarTablaReparaciones();
-        actualizarKPIs();
-    }
-}
-
-
-// ==== Gestión de Pedidos ====
-function toggleSena(){
-    const radios = document.querySelectorAll('input[name="deja_sena"]');
-    const cont = document.getElementById('sena-container');
-    if(!cont || radios.length===0) return;
-    const si = Array.from(radios).find(r=>r.value==='si');
-    const no = Array.from(radios).find(r=>r.value==='no');
-    const seleccionado = Array.from(radios).find(r=>r.checked)?.value;
-    cont.style.display = (seleccionado==='si') ? 'block' : 'none';
-}
-
-function crearNuevoPedido(fd){
-    const pedido = {
-        id: 'P' + String(Date.now()).slice(-6),
-        cliente: fd.get('cliente')?.trim(),
-        telefono: fd.get('telefono')?.trim(),
-        producto: fd.get('producto')?.trim(),
-        descripcion: fd.get('descripcion')?.trim() || '',
-        deja_sena: fd.get('deja_sena') === 'si',
-        sena: Number(fd.get('sena') || 0),
-        precio_total: Number(fd.get('precio_total') || 0),
-        estado: 'pendiente',
-        fecha: obtenerFechaActual()
-    };
-    pedidos.unshift(pedido);
-    guardarDatos();
-    // limpiar form y UI
-    const form = document.getElementById('formNuevoPedido');
-    if(form){ form.reset(); toggleSena(); }
-    const contMsg = document.getElementById('pedidos-messages');
-    if(contMsg){ contMsg.innerHTML = '<div class="p-2 text-green-700 bg-green-50 rounded">Pedido creado: #' + pedido.id + '</div>'; setTimeout(()=>contMsg.innerHTML='',2500); }
-    try{ renderListaPedidos(); }catch(e){ console.warn('renderListaPedidos no disponible aún', e); }
-}
-
-function renderListaPedidos(){
-    const cont = document.getElementById('lista-pedidos');
-    if(!cont) return;
-    const q = (document.getElementById('buscar-pedidos')?.value || '').toLowerCase();
-    const est = (document.getElementById('filtro-estado-pedidos')?.value || '');
-    cont.innerHTML = '';
-    const fil = pedidos.filter(p => {
-        const matchQ = (p.cliente + ' ' + p.producto + ' ' + p.descripcion).toLowerCase().includes(q);
-        const matchE = !est || p.estado === est;
-        return matchQ && matchE;
-    });
-    if(fil.length===0){
-        cont.innerHTML = '<div class="text-gray-500 text-sm">Sin pedidos.</div>';
-        return;
-    }
-    fil.forEach(p => {
-        const badge = p.estado==='pendiente' ? 'bg-yellow-100 text-yellow-800' : (p.estado==='listo' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700');
-        const senaTxt = p.deja_sena ? ('$' + p.sena.toLocaleString()) : 'No';
-        cont.insertAdjacentHTML('beforeend', `
-            <div class="border rounded-lg p-4 flex items-start justify-between gap-4 hover:bg-gray-50">
-                <div class="flex-1">
-                    <div class="text-sm text-gray-500">Pedido <span class="font-semibold">#${p.id}</span> • ${p.fecha}</div>
-                    <div class="font-semibold">${p.cliente}</div>
-                    <div class="text-sm text-gray-700">${p.producto}</div>
-                    ${p.descripcion ? `<div class="text-xs text-gray-500 mt-1">${p.descripcion}</div>` : ''}
-                    <div class="mt-2 text-xs text-gray-600">Seña: <strong>${senaTxt}</strong> • Total: <strong>$${p.precio_total.toLocaleString()}</strong></div>
-                </div>
-                <div class="flex flex-col items-end gap-2">
-                    <span class="px-2 py-1 rounded-full text-xs ${badge}">${p.estado}</span>
-                    <div class="flex gap-2">
-                        <button class="btn-print-orange text-white px-3 py-2 rounded" title="Imprimir" onclick="imprimirPedido('${p.id}')">
-                            <i class="fas fa-print"></i>
-                        </button>
-                        <button class="bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700" title="WhatsApp" onclick="whatsappPedido('${p.id}')">
-                            <i class="fab fa-whatsapp"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `);
-    });
-}
-
-function getPedido(id){
-    return pedidos.find(pp => String(pp.id)===String(id));
-}
-
-function whatsappPedido(id){
-    const p = getPedido(id);
-    if(!p){ alert('No se encontró el pedido ' + id); return; }
-    const tel = (p.telefono || '').replace(/[^0-9]/g,'');
-    if(!tel || tel.length < 6){
-        alert('El teléfono del cliente está vacío o es inválido.');
-        return;
-    }
-    const senaLine = p.deja_sena ? `Seña: $${p.sena.toLocaleString()}. ` : '';
-    const msg = `Hola ${p.cliente}, tu pedido #${p.id} (${p.producto}) está *${p.estado}*. ${senaLine}Total: $${p.precio_total.toLocaleString()}. Fecha: ${p.fecha}.`;
-    const url = 'https://wa.me/' + tel + '?text=' + encodeURIComponent(msg);
-    // Usar un <a> temporal para evitar bloqueos de popups
-    const a = document.createElement('a');
-    a.href = url;
-    a.target = '_blank';
-    a.rel = 'noopener';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-}
-    const tel = (p.telefono || '').replace(/[^0-9]/g,'');
-    const senaLine = p.deja_sena ? `Seña: $${p.sena.toLocaleString()}. ` : '';
-    const msg = `Hola ${p.cliente}, tu pedido #${p.id} (${p.producto}) está *${p.estado}*. ${senaLine}Total: $${p.precio_total.toLocaleString()}. Fecha: ${p.fecha}.`;
-    const url = 'https://wa.me/' + tel + '?text=' + encodeURIComponent(msg);
-    window.open(url, '_blank');
-}
-
-
-function imprimirPedido(id){
-    const p = (window.pedidos||[]).find(x=>x.id===id);
-    if (!p) return;
-
-    // Datos del taller (si existen)
-    let nombre_taller='Mundo Electrónico', direccion='', telefono='', email='';
-    try{
-        const raw = localStorage.getItem('mundoElectronicoData');
-        if (raw){
-            const d = JSON.parse(raw);
-            if (d && d.config){
-                nombre_taller = d.config.nombre_taller || nombre_taller;
-                direccion = d.config.direccion || '';
-                telefono = d.config.telefono || '';
-                email = d.config.email || '';
-            }
-        }
-    }catch(e){}
-
-    const fecha = p.fecha || new Date().toLocaleString('es-AR');
-
-    const htmlComprobante = `
-    <div class="comprobante">
-      <h2>${nombre_taller}</h2>
-      <div class="info-local">
-        ${direccion ? `📍 ${direccion}` : ''} ${telefono ? `– ${telefono}` : ''} ${email ? `– ${email}` : ''}<br>
-        📅 Fecha: ${fecha}
-      </div>
-
-      <h3>Comprobante de Pedido</h3>
-      <p class="nro"><strong>N° Pedido:</strong> ${p.id}</p>
-
-      <div class="detalle"><strong>Cliente:</strong> ${p.cliente||''}</div>
-      <div class="detalle"><strong>Producto/Servicio:</strong> ${p.producto||''}</div>
-      <div class="detalle"><strong>Descripción:</strong> ${p.descripcion||'-'}</div>
-      <div class="detalle"><strong>Precio Total:</strong> $${Number(p.precio_total||0).toLocaleString()}</div>
-      <div class="detalle"><strong>Seña:</strong> $${Number(p.deja_sena ? (p.sena||0) : 0).toLocaleString()}</div>
-      <div class="detalle"><strong>Saldo:</strong> $${Number(p.saldo||0).toLocaleString()}</div>
-      <div class="detalle"><strong>Estado:</strong> ${(p.estado ? p.estado.toUpperCase() : 'PENDIENTE')}</div>
-
-      <div class="footer">
-        ✅ Gracias por confiar en <strong>${nombre_taller}</strong><br>
-        Cualquier consulta, estamos a disposición.
-      </div>
-    </div>`;
-
-    const style = `
-      @page { size: A4; margin: 12mm; }
-      body { font-family: Arial, sans-serif; color:#000; }
-      .comprobante {
-        width: 100%;
-        max-width: 700px;
-        margin: 0 auto;
-        border: 1px solid #333;
-        padding: 20px;
-        border-radius: 8px;
-      }
-      .comprobante h2 { text-align:center; margin:0 0 10px; }
-      .info-local { text-align:center; margin-bottom: 15px; font-size:17px; }
-      h3 { text-align:center; margin: 15px 0; }
-      .nro { text-align:center; margin: 0 0 10px; }
-      .detalle { margin: 6px 0; font-size:18px; }
-      .detalle strong { display:inline-block; width: 180px; }
-      .footer { text-align:center; margin-top: 20px; font-size:17px; border-top: 1px dashed #555; padding-top: 10px; }
-      @media print {
-        body { margin:0;  margin-top: 15mm; margin-bottom: 15mm; line-height: 1.6; }
-      }
-    `;
-
-    const win = window.open('', '_blank');
-    win.document.write(`<!doctype html><html><head><meta charset="UTF-8"><title>Imprimir Pedido ${p.id}</title><style>${style}</style></head><body>${htmlComprobante}</body></html>`);
-    win.document.close();
-    win.focus();
-    try { win.print(); } catch(e){}
-    // No cerramos automáticamente por si se quiere reintentar
-}
-function enviarWhatsAppPedido(pedidoId){
-    try{
-        let p = null;
-        if (typeof getPedido === 'function') {
-            p = getPedido(pedidoId);
-        } else if (Array.isArray(window.pedidos)) {
-            p = window.pedidos.find(x=>String(x.id)===String(pedidoId));
-        }
-        if(!p){
-            alert('Pedido no encontrado (#' + pedidoId + ')');
-            return;
-        }
-        const tel = normalizarTelefonoAR(p.telefono);
-        if(!tel || tel.length < 10){
-            alert('El teléfono del cliente está vacío o es inválido.');
-            return;
-        }
-        const senaLine = p.deja_sena ? `Seña: $${Number(p.sena||0).toLocaleString()}. ` : '';
-        const msg = `Hola ${p.cliente}, tu pedido #${p.id} (${p.producto}) está *${p.estado}*. ${senaLine}Total: $${Number(p.precio_total||0).toLocaleString()}. Fecha: ${p.fecha}.`;
-        const url = 'https://wa.me/' + tel + '?text=' + encodeURIComponent(msg);
-        const a = document.createElement('a');
-        a.href = url; a.target = '_blank'; a.rel = 'noopener';
-        document.body.appendChild(a); a.click(); a.remove();
-    }catch(e){
-        console.error('enviarWhatsAppPedido error', e);
-        alert('No se pudo abrir WhatsApp para este pedido.');
-    }
-}
-
-
-// === Impresión robusta para Pedidos ===
-function _imprimirTicketBase(htmlBody){
-    try{
-        let iframe = document.getElementById('print_iframe_me');
-        if(!iframe){
-            iframe = document.createElement('iframe');
-            iframe.id = 'print_iframe_me';
-            iframe.style.position = 'fixed';
-            iframe.style.right = '0'; iframe.style.bottom = '0';
-            iframe.style.width = '0'; iframe.style.height = '0';
-            iframe.style.border = '0';
-            document.body.appendChild(iframe);
-        }
-        const styles = (document.querySelector('style')?.innerHTML || '');
-        const doc = iframe.contentWindow.document;
-        doc.open();
-        doc.write(`<html><head><title>Impresión</title><style>${styles}</style></head><body>${htmlBody}</body></html>`);
-        doc.close();
-        iframe.contentWindow.focus();
-        iframe.contentWindow.print();
-    }catch(err){
-        console.error('Error al imprimir:', err);
-        alert('No se pudo imprimir el comprobante.');
-    }
-}
-
-function imprimirComprobantePedido(pedidoId){
-    try{
-        let p = null;
-        if (typeof getPedido === 'function') { p = getPedido(pedidoId); }
-        else if (Array.isArray(window.pedidos)) { p = window.pedidos.find(x=>String(x.id)===String(pedidoId)); }
-        if(!p){ alert('Pedido no encontrado (#' + pedidoId + ')'); return; }
-        const cuerpo = `
-        <div class="print-page">
-            <div class="print-header">
-                <div class="print-title">Mundo Electrónico</div>
-                <div class="print-subtitle">Comprobante de Pedido</div>
-                <div class="print-order">Pedido #${p.id}</div>
-            </div>
-            <div class="print-section">
-                <div class="print-row"><span class="print-label">Cliente:</span><span class="print-value">${p.cliente||''}</span></div>
-                <div class="print-row"><span class="print-label">Teléfono:</span><span class="print-value">${p.telefono||''}</span></div>
-                <div class="print-row"><span class="print-label">Producto:</span><span class="print-value">${p.producto||''}</span></div>
-                ${p.descripcion ? `<div class="print-row"><span class="print-label">Descripción:</span><span class="print-value">${p.descripcion}</span></div>` : ''}
-                <div class="print-row"><span class="print-label">Estado:</span><span class="print-value">${p.estado||'pendiente'}</span></div>
-                <div class="print-row"><span class="print-label">Seña:</span><span class="print-value">${p.deja_sena ? ('$'+Number(p.sena||0).toLocaleString()) : 'No'}</span></div>
-                <div class="print-row"><span class="print-label">Total:</span><span class="print-value">$${Number(p.precio_total||0).toLocaleString()}</span></div>
-                <div class="print-row"><span class="print-label">Fecha:</span><span class="print-value">${p.fecha||''}</span></div>
-            </div>
-            
-            <div class="print-footer">
-                Las reparaciones tienen una garantía de 60 días únicamente por la misma falla reparada. Los repuestos están garantizados solo por defectos de fábrica. La garantía no cubre daños ocasionados por golpes, roturas, líquidos o uso indebido. Los trabajos de software y configuraciones no tienen garantía.
-            </div>
-        </div>`;
-        _imprimirTicketBase(cuerpo);
-    }catch(e){
-        console.error('imprimirComprobantePedido error', e);
-        alert('No se pudo imprimir el pedido.');
-    }
-}
-
-</script>
-    
-<script>
-// ================== MÓDULO DE PEDIDOS (v7 STRICT) ==================
-(function(){
-    const KEY = 'mundoElectronicoPedidos';
-    window.pedidos = Array.isArray(window.pedidos) ? window.pedidos : [];
-
-    function loadFromOwnKey(){
-        try{
-            const raw = localStorage.getItem(KEY);
-            if (raw){ const arr = JSON.parse(raw); if (Array.isArray(arr)) window.pedidos = arr; }
-        }catch(e){ console.warn('No se pudo leer pedidos propios', e); }
-    }
-    function saveToOwnKey(){
-        try{ localStorage.setItem(KEY, JSON.stringify(window.pedidos||[])); }catch(e){ console.warn('No se pudo guardar pedidos', e); }
-    }
-    function maybeMergeWithMain(){
-        try{
-            const raw = localStorage.getItem('mundoElectronicoData');
-            if (!raw) return;
-            const data = JSON.parse(raw);
-            if (!data || !Array.isArray(data.pedidos)) return;
-            if ((window.pedidos||[]).length === 0 && data.pedidos.length > 0){
-                window.pedidos = data.pedidos;
-                saveToOwnKey();
-            }
-        }catch(e){ console.warn('No se pudo sincronizar con data general', e); }
-    }
-
-    window.obtenerFechaActual = window.obtenerFechaActual || function(){
-        const d = new Date();
-        const pad = n => String(n).padStart(2,'0');
-        return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-    };
-    function normalizarTelefono(t){
-        if(!t) return '';
-        return (''+t).replace(/\\D+/g,'');
-    }
-
-    window.crearNuevoPedido = function(fd){
-        try{
-            const obj = (fd instanceof FormData) ? Object.fromEntries(fd.entries()) : (fd||{});
-            const id = 'P' + String(Date.now()).slice(-8);
-            const dejaSena = (obj.deja_sena === 'si');
-            const senaNum = Number(obj.sena || 0);
-            const totalNum = Number(obj.precio_total || 0);
-            const saldo = Math.max(totalNum - senaNum, 0);
-            const pedido = {
-                id,
-                cliente: (obj.cliente || '').trim(),
-                telefono: (obj.telefono || '').trim(),
-                producto: (obj.producto || '').trim(),
-                descripcion: (obj.descripcion || '').trim(),
-                deja_sena: dejaSena,
-                sena: senaNum,
-                precio_total: totalNum,
-                saldo,
-                estado: 'pendiente',
-                fecha: window.obtenerFechaActual()
-            };
-            window.pedidos.unshift(pedido);
-            saveToOwnKey();
-            renderListaPedidos();
-            const box = document.getElementById('pedidos-messages');
-            if (box){
-                box.innerHTML = `<div class="mb-3 p-3 rounded-lg bg-green-50 text-green-700 border border-green-200">
-                    <i class="fas fa-check mr-1"></i> Pedido creado (#${id}).
-                </div>`;
-                setTimeout(()=> box.innerHTML='', 2000);
-            }
-        }catch(e){
-            console.error('crearNuevoPedido error', e);
-            alert('No se pudo crear el pedido.');
-        }
-    };
-
-    window.cambiarEstadoPedido = function(id, nuevo){
-        const i = (window.pedidos||[]).findIndex(p=>p.id===id);
-        if (i>=0){
-            window.pedidos[i].estado = nuevo;
-            saveToOwnKey();
-            renderListaPedidos();
-        }
-    };
-
-    window.eliminarPedido = function(id){
-        if (!confirm('¿Eliminar este pedido?')) return;
-        window.pedidos = (window.pedidos||[]).filter(p=>p.id!==id);
-        saveToOwnKey();
-        renderListaPedidos();
-    };
-
-    window.enviarWhatsAppPedido = function(id){
-        const p = (window.pedidos||[]).find(x=>x.id===id);
-        if (!p) return;
-        let nombreTaller = 'Mundo Electrónico', direccion='', telefono='', email='';
-        try{
-            const raw = localStorage.getItem('mundoElectronicoData');
-            if (raw){
-                const d = JSON.parse(raw);
-                if (d && d.config){
-                    nombreTaller = d.config.nombre_taller || nombreTaller;
-                    direccion = d.config.direccion || '';
-                    telefono = d.config.telefono || '';
-                    email = d.config.email || '';
-                }
-            }
-        }catch(e){}
-        const lineas = [
-            `¡Hola ${p.cliente}! 👋`,
-        `Gracias por confiar en ${nombreTaller} 🙌`,
-        `Te compartimos el detalle de tu pedido:`,
-            `Tu pedido #${p.id}`,
-            `• Producto/Servicio: ${p.producto}`,
-            p.descripcion ? `• Descripción: ${p.descripcion}` : null,
-            `• Precio total: $${(p.precio_total||0).toLocaleString()}`,
-            p.deja_sena ? `• Seña: $${(p.sena||0).toLocaleString()}` : null,
-            p.deja_sena ? `• Saldo: $${(p.saldo||0).toLocaleString()}` : null,
-            `• Estado: ${(p.estado ? p.estado.toUpperCase() : 'PENDIENTE')}`,
-            `Fecha: ${p.fecha}`,
-            `Cualquier consulta, estamos a disposición 👍`
-        ].filter(Boolean);
-        const msg = encodeURIComponent(lineas.join('\n'));
-        const tel = normalizarTelefono(p.telefono);
-        if (!tel){ alert('El pedido no tiene teléfono válido.'); return; }
-        window.open(`https://wa.me/${tel}?text=${msg}`, '_blank');
-    };
-
-    window.imprimirPedido = function(id){
-        const p = (window.pedidos||[]).find(x=>x.id===id);
-        if (!p) return;
-        let nombre_taller='Mundo Electrónico', direccion='', telefono='', email='';
-        try{
-            const raw = localStorage.getItem('mundoElectronicoData');
-            if (raw){
-                const d = JSON.parse(raw);
-                if (d && d.config){
-                    nombre_taller = d.config.nombre_taller || nombre_taller;
-                    direccion = d.config.direccion || '';
-                    telefono = d.config.telefono || '';
-                    email = d.config.email || '';
-                }
-            }
-        }catch(e){}
-        const copia = (titulo) => `
-        <div class="print-header">
-            <div class="print-title">${nombre_taller}</div>
-            <div class="print-subtitle">Pedido - ${titulo}</div>
-            <div class="print-order">N.º ${p.id} - ${p.fecha}</div>
-            <div style="font-size:10px">${direccion} • ${telefono} • ${email}</div>
-        </div>
-        <div class="print-section">
-            <div class="print-row"><div class="print-label">Cliente:</div><div class="print-value">${p.cliente||''}</div></div>
-            <div class="print-row"><div class="print-label">Teléfono:</div><div class="print-value">${p.telefono||''}</div></div>
-        </div>
-        <div class="print-section">
-            <div class="print-row"><div class="print-label">Producto:</div><div class="print-value">${p.producto||''}</div></div>
-            <div class="print-row"><div class="print-label">Descripción:</div><div class="print-value">${p.descripcion||'-'}</div></div>
-            <div class="print-row"><div class="print-label">Estado:</div><div class="print-value" style="text-transform:uppercase">${p.estado||'PENDIENTE'}</div></div>
-        </div>
-        <div class="print-section">
-            <div class="print-row"><div class="print-label">Precio Total:</div><div class="print-value">$${Number(p.precio_total||0).toLocaleString()}</div></div>
-            <div class="print-row"><div class="print-label">Seña:</div><div class="print-value">$${Number(p.deja_sena ? (p.sena||0) : 0).toLocaleString()}</div></div>
-            <div class="print-row"><div class="print-label">Saldo:</div><div class="print-value">$${Number(p.saldo||0).toLocaleString()}</div></div>
-        </div>
-        
-        <div class="print-footer">
-            * Los pedidos se reservan durante 7 días corridos salvo acuerdo distinto. Pasado ese plazo podrán liberarse los productos. Precios sujetos a disponibilidad.
-        </div>`;
-        const styleTag = document.querySelector('style') ? document.querySelector('style').innerHTML : '';
-        const win = window.open('', '_blank');
-        win.document.write(`<html><head><title>Imprimir Pedido ${p.id}</title><style>${styleTag}</style></head><body><div class="print-page">${copia('')}<div class="print-separator"></div>${copia('')}</div></body></html>`);
-        win.document.close(); win.focus(); try{ win.print(); }catch(e){}
-    };
-
-    window.renderListaPedidos = function(){
-        const cont = document.getElementById('lista-pedidos');
-        if (!cont) return;
-        const q = (document.getElementById('buscar-pedidos')?.value || '').toLowerCase();
-        const estado = (document.getElementById('filtro-estado-pedidos')?.value || '').toLowerCase();
-        const filtrados = (window.pedidos || []).filter(p => {
-            const t = (p.cliente + ' ' + p.producto + ' ' + (p.descripcion||'') + ' ' + p.id).toLowerCase();
-            const okQ = !q || t.includes(q);
-            const okE = !estado || (String(p.estado||'').toLowerCase() === estado);
-            return okQ && okE;
-        });
-        if (filtrados.length === 0){
-            cont.innerHTML = `<div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-sm">
-                <i class="fas fa-info-circle mr-1"></i>No hay pedidos que coincidan.
-            </div>`;
-            return;
-        }
-        cont.innerHTML = filtrados.map(p => `
-            <div class="p-4 rounded-lg border border-gray-200 bg-white flex items-start justify-between gap-4">
-                <div class="flex-1">
-                    <div class="flex items-center gap-2 text-sm text-gray-500">
-                        <span class="font-semibold text-gray-800">#${p.id}</span>
-                        <span>• ${p.fecha}</span>
-                        <span class="px-2 py-0.5 rounded-full text-xs ${p.estado==='listo'?'bg-green-100 text-green-700':(p.estado==='entregado'?'bg-gray-100 text-gray-700':'bg-blue-100 text-blue-700')}">
-                            ${String(p.estado||'pendiente').toUpperCase()}
-                        </span>
-                    </div>
-                    <div class="mt-1 font-medium">${p.cliente||''} • ${p.telefono||''}</div>
-                    <div class="text-sm text-gray-700 mt-1">
-                        <div><span class="font-semibold">Producto:</span> ${p.producto||''}</div>
-                        ${p.descripcion ? `<div><span class="font-semibold">Descripción:</span> ${p.descripcion}</div>` : ''}
-                        <div class="mt-1">
-                            <span class="font-semibold">Total:</span> $${Number(p.precio_total||0).toLocaleString()}
-                            ${p.deja_sena ? ` • <span class="font-semibold">Seña:</span> $${Number(p.sena||0).toLocaleString()} • <span class="font-semibold">Saldo:</span> $${Number(p.saldo||0).toLocaleString()}` : ''}
-                        </div>
-                    </div>
-                </div>
-                <div class="flex flex-col gap-2 shrink-0">
-                    <div class="flex gap-2">
-                        <button onclick="imprimirPedido('${p.id}')" class="btn-print-orange text-white px-3 py-2 rounded-lg" title="Imprimir">
-                            <i class="fas fa-print"></i>
-                        </button>
-                        <button onclick="enviarWhatsAppPedido('${p.id}')" class="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700" title="WhatsApp">
-                            <i class="fab fa-whatsapp"></i>
-                        </button>
-                        <button onclick="eliminarPedido('${p.id}')" class="bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700" title="Eliminar">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                    <div class="flex gap-2">
-                        <select onchange="cambiarEstadoPedido('${p.id}', this.value)" class="px-2 py-1 border border-gray-300 rounded-lg text-sm">
-                            <option value="pendiente" ${'pendiente'===(p.estado||'')?'selected':''}>Pendiente</option>
-                            <option value="listo" ${'listo'===(p.estado||'')?'selected':''}>Listo</option>
-                            <option value="entregado" ${'entregado'===(p.estado||'')?'selected':''}>Entregado</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    };
-
-    function boot(){
-        try{
-            loadFromOwnKey();
-            maybeMergeWithMain();
-            const formPedido = document.getElementById('formNuevoPedido');
-            if (formPedido && !formPedido.__wired){
-                formPedido.addEventListener('submit', function(e){
-                    e.preventDefault();
-                    window.crearNuevoPedido(new FormData(formPedido));
-                });
-                formPedido.__wired = true;
-            }
-            const buscar = document.getElementById('buscar-pedidos');
-            const filtro = document.getElementById('filtro-estado-pedidos');
-            if (buscar && !buscar.__wired){ buscar.addEventListener('input', window.renderListaPedidos); buscar.__wired = true; }
-            if (filtro && !filtro.__wired){ filtro.addEventListener('change', window.renderListaPedidos); filtro.__wired = true; }
-            window.renderListaPedidos();
-        }catch(e){ console.error('boot pedidos error', e); }
-    }
-    if (document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', boot); }
-    else { boot(); }
-})();
-// ================== FIN MÓDULO DE PEDIDOS (v7) ==================
-
-</script>
-
-<script>
-// ==== OVERRIDE DURO: imprimirPedido = 1 sola copia (cliente) ====
-window.imprimirPedido = function(id){
-  const p = (window.pedidos||[]).find(x=>x.id===id);
-  if (!p) return;
-
-  let nombre_taller='Mundo Electrónico', direccion='', telefono='', email='';
-  try{
-    const raw = localStorage.getItem('mundoElectronicoData');
-    if (raw){
-      const d = JSON.parse(raw);
-      if (d && d.config){
-        nombre_taller = d.config.nombre_taller || nombre_taller;
-        direccion = d.config.direccion || '';
-        telefono = d.config.telefono || '';
-        email = d.config.email || '';
-      }
-    }
-  }catch(e){}
-
-  const fecha = p.fecha || new Date().toLocaleString('es-AR');
-
-  const comprobante = `
-    <div id="comprobante" class="comprobante">
-      <div style="text-align:center;border-bottom:1px solid #000;padding-bottom:6px;margin-bottom:8px;">
-        <div style="font-weight:700;font-size:21px;">${nombre_taller}</div>
-        <div style="font-weight:600;font-size:19px;margin-top:3px;">Comprobante de Pedido</div>
-        <div style="font-size:17px;margin-top:3px;">N.º ${p.id} - ${fecha}</div>
-        <div style="font-size:16px;margin-top:3px;">${[direccion, telefono, email].filter(Boolean).join(' • ')}</div>
-      </div>
-      <div style="margin:8px 0;">
-        <div style="display:flex;gap:10px;font-size:16px;"><div style="width:160px;font-weight:600;">Cliente:</div><div>${p.cliente||''}</div></div>
-        <div style="display:flex;gap:10px;font-size:16px;"><div style="width:160px;font-weight:600;">Teléfono:</div><div>${p.telefono||''}</div></div>
-      </div>
-      <div style="margin:8px 0;">
-        <div style="display:flex;gap:10px;font-size:16px;"><div style="width:160px;font-weight:600;">Producto/Servicio:</div><div>${p.producto||''}</div></div>
-        <div style="display:flex;gap:10px;font-size:16px;"><div style="width:160px;font-weight:600;">Descripción:</div><div>${p.descripcion||'-'}</div></div>
-        <div style="display:flex;gap:10px;font-size:16px;"><div style="width:160px;font-weight:600;">Estado:</div><div>${(p.estado ? p.estado.toUpperCase() : 'PENDIENTE')}</div></div>
-      </div>
-      <div style="margin:8px 0;">
-        <div style="display:flex;gap:10px;font-size:16px;"><div style="width:160px;font-weight:600;">Precio Total:</div><div>$${Number(p.precio_total||0).toLocaleString()}</div></div>
-        <div style="display:flex;gap:10px;font-size:16px;"><div style="width:160px;font-weight:600;">Seña:</div><div>$${Number(p.deja_sena ? (p.sena||0) : 0).toLocaleString()}</div></div>
-        <div style="display:flex;gap:10px;font-size:16px;"><div style="width:160px;font-weight:600;">Saldo:</div><div>$${Number(p.saldo||0).toLocaleString()}</div></div>
-      </div>
-     <div style="margin-top:10px;font-size:13px;border-top:1px dashed #000;padding-top:6px;text-align:center;">
-        * Gracias por confiar en ${nombre_taller}. Cualquier consulta, estamos a disposición.
-      </div>
-    </div>`;
-
-  const styles = `
-    @page { size: A4; margin: 12mm; }
-    body { font-family: Arial, sans-serif; color:#000; }
-    @media print {
-      body * { visibility: hidden; }
-      #comprobante, #comprobante * { visibility: visible; }
-      #comprobante { position:absolute; left:0; top:0; width:100%; }
-    }
-  `;
-
-  const win = window.open('', '_blank');
-  win.document.write(`<!doctype html><html><head><meta charset="UTF-8"><title>Imprimir Pedido ${p.id}</title><style>${styles}</style></head><body>${comprobante}</body></html>`);
-  win.document.close();
-  win.focus();
-  try { win.print(); } catch(e){}
-};
-</script>
-
-
-<script>
-// ======== LOGIN ESTRICTO (sin auto-ingreso) ========
-(function(){
-  // Contenedores (con fallbacks)
-  var form = document.getElementById('loginForm') || document.querySelector('form[data-login], form#formLogin, form.login-form');
-  var loginScreen = document.getElementById('loginScreen') || document.querySelector('#login, .login, .login-screen');
-  var mainApp = document.getElementById('mainApp') || document.querySelector('#app, .main-app, #main');
-
-  // Siempre forzar estado inicial: mostrar login, ocultar app
-  try { localStorage.removeItem('mundoElectronicoLoggedIn'); } catch(e){}
-  if (loginScreen) loginScreen.classList.remove('hidden');
-  if (mainApp) mainApp.classList.add('hidden');
-
-  // Handler de login que pisa cualquier otro
-  function __doLogin(e){
-    if (e) { e.preventDefault(); e.stopImmediatePropagation(); }
-    var uEl = document.getElementById('username') || document.querySelector('input[name=username], #user, [data-username]');
-    var pEl = document.getElementById('password') || document.querySelector('input[type=password], [data-password]');
-    var username = (uEl && uEl.value ? uEl.value : '').trim();
-    var password = (pEl && pEl.value ? pEl.value : '').trim();
-
-    // Credenciales por defecto + desde config si existe
-    var cfgUser = 'admin', cfgPass = 'admin123';
-    try {
-      var raw = localStorage.getItem('mundoElectronicoData');
-      if (raw) {
-        var d = JSON.parse(raw);
-        if (d && d.config) {
-          if (d.config.usuario) cfgUser = d.config.usuario;
-          if (d.config.contrasena) cfgPass = d.config.contrasena;
-        }
-      }
-    } catch(e){}
-
-    var ok = (username === cfgUser && password === cfgPass) ||
-             (username === 'admin' && password === 'admin') ||
-             (username === 'admin' && password === 'admin123');
-
-    if (!ok) {
-      alert('Usuario o contraseña incorrectos');
-      return false;
-    }
-
-    try { localStorage.setItem('mundoElectronicoLoggedIn', '1'); } catch(e){}
-    if (loginScreen) loginScreen.classList.add('hidden');
-    if (mainApp) mainApp.classList.remove('hidden');
-    return false;
-  }
-
-  // Si el form tenía onsubmit inline, lo redirigimos al nuestro
-  if (form) {
-    form.setAttribute('onsubmit', 'return window.__loginOverride(event)');
-  }
-
-  // Escucha en captura para anular otros handlers previos
-  document.addEventListener('submit', function(ev){
-    if (!form || !ev.target) return;
-    if (ev.target === form) { __doLogin(ev); }
-  }, true);
-
-  // Exponer para onsubmit
-  window.__loginOverride = __doLogin;
-
-  // Evitar cualquier auto-login previo que intente ejecutarse después
-  window.addEventListener('load', function(){
-    try { localStorage.removeItem('mundoElectronicoLoggedIn'); } catch(e){}
-    if (loginScreen) loginScreen.classList.remove('hidden');
-    if (mainApp) mainApp.classList.add('hidden');
-  });
-})();
-</script>
-
-
-<script>
-// === FIX: Contador desde P001 y evitar duplicados al guardar ===
-(function(){
-  const COUNTER_KEY = 'pedidoCounter_v3';
-
-  function nextPedidoId(){
-    try {
-      let n = parseInt(localStorage.getItem(COUNTER_KEY) || '1', 10);
-      if (!Number.isFinite(n) || n < 1) n = 1;
-      const id = 'P' + String(n).padStart(3, '0');
-      localStorage.setItem(COUNTER_KEY, String(n + 1));
-      return id;
-    } catch (e){
-      return 'P' + String(Math.floor(Math.random()*999)).padStart(3,'0');
-    }
-  }
-
-  // Capturar SUBMIT del form de pedidos en fase de captura y manejar nosotros (así evitamos handlers duplicados)
-  document.addEventListener('submit', function(ev){
-    const form = ev.target;
-    if (!form || form.id !== 'formNuevoPedido') return;
-    ev.preventDefault();
-    ev.stopPropagation();
-    ev.stopImmediatePropagation();
-
-    if (window.__savingPedido) return;
-    window.__savingPedido = true;
-    setTimeout(() => { window.__savingPedido = false; }, 500);
-
-    const fd = new FormData(form);
-    const dejaSena = (fd.get('deja_sena') === 'si');
-    const senaNum = dejaSena ? Number(fd.get('sena') || 0) : 0;
-    const totalNum = Number(fd.get('precio_total') || 0);
-    const saldoNum = Math.max(0, totalNum - senaNum);
-
-    const pedido = {
-      id: nextPedidoId(),
-      cliente: (fd.get('cliente')||'').trim(),
-      telefono: (fd.get('telefono')||'').trim(),
-      producto: (fd.get('producto')||'').trim(),
-      descripcion: (fd.get('descripcion')||'').trim(),
-      deja_sena: dejaSena,
-      sena: senaNum,
-      precio_total: totalNum,
-      saldo: saldoNum,
-      estado: 'pendiente',
-      fecha: (typeof obtenerFechaActual === 'function') ? obtenerFechaActual() : new Date().toLocaleDateString('es-AR')
-    };
-
-    // Guardar en memoria y localStorage
-    window.pedidos = Array.isArray(window.pedidos) ? window.pedidos : [];
-    window.pedidos.unshift(pedido);
-    try {
-      localStorage.setItem('mundoElectronicoPedidos', JSON.stringify(window.pedidos));
-    } catch(e){ console.warn('No se pudo guardar pedidos', e); }
-
-    // Refrescar lista (compatibilidad con dos UIs)
-    if (typeof renderListaPedidos === 'function') renderListaPedidos();
-    if (typeof actualizarListaPedidos === 'function') try { actualizarListaPedidos(); } catch(e){}
-
-    // Reset UI
-    try { form.reset(); } catch(e){}
-    const senaContainer = document.getElementById('sena-container');
-    if (senaContainer) senaContainer.style.display = 'none';
-    if (typeof mostrarMensaje === 'function') mostrarMensaje('success','Pedido creado exitosamente.','pedidos-messages');
-  }, true); // <= CAPTURA
-})();
-</script>
-
-
-<script>
-// === Render inmediato tras crear el pedido (sin recargar ni reingresar) ===
-(function(){
-  // Redibuja la lista con la mejor función disponible o recarga como último recurso
-  function repaintPedidos(){
-    try {
-      if (typeof renderListaPedidos === 'function') { renderListaPedidos(); return; }
-      if (typeof actualizarListaPedidos === 'function') { actualizarListaPedidos(); return; }
-      // Si existe un inicializador global
-      if (typeof initPedidos === 'function') { initPedidos(); return; }
-      // Último recurso: recarga suave
-      setTimeout(function(){ location.reload(); }, 50);
-    } catch(e){
-      setTimeout(function(){ location.reload(); }, 50);
-    }
-  }
-
-  // Si nuestro FIX de submit ya existe, lo ampliamos para repintar siempre
-  document.addEventListener('submit', function(ev){
-    const form = ev.target;
-    if (!form || form.id !== 'formNuevoPedido') return;
-    // Nuestro manejador principal ya corre en otra IIFE; acá solo añadimos el repaint post-guardado
-    // Esperamos un tick para asegurar que localStorage y window.pedidos se actualizaron
-    setTimeout(repaintPedidos, 80);
-  }, true);
-
-  // Además escuchamos un evento custom por si otras partes lo disparan
-  window.addEventListener('pedidos:actualizado', repaintPedidos);
-})();
-</script>
+    <script id="html_notice_dialog_script" src="./Mundo Electrónico - Sistema de Gestión Completo_files/notice_dialog.js.descarga"></script>
+    </body></html>
