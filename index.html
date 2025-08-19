@@ -3,146 +3,3505 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebApp - Hono + Cloudflare Pages</title>
-    
-    <!-- TailwindCSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- FontAwesome -->
-    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
-    
-    <!-- Custom CSS -->
-    <link href="style.css" rel="stylesheet">
-    
-    <!-- Axios for API calls -->
-    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
-</head>
-<body class="bg-gray-100 min-h-screen">
-    <div class="max-w-6xl mx-auto px-4 py-8">
-        <div>
-            <h1 class="text-4xl font-bold text-gray-800 mb-6">🚀 WebApp - Hono + Cloudflare Pages</h1>
+    <title>Mundo Electrónico - Sistema de Gestión Completo</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body, html { height: 100%; overflow: auto; }
+        
+        #mainApp {
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .main-content {
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        
+        .dashboard-container {
+            height: calc(100vh - 2rem);
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 1rem;
+        }
+        
+        .chart-container {
+            height: 300px !important;
+            position: relative;
+        }
+        
+        .chart-container canvas {
+            height: 300px !important;
+            max-height: 300px !important;
+        }
+        
+        .sidebar-item {
+            transition: all 0.3s ease;
+        }
+        .sidebar-item:hover {
+            background-color: #f3f4f6;
+            transform: translateX(2px);
+        }
+        
+        .sidebar-item.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+        
+        .sidebar-item.active:hover {
+            background-color: #2563eb;
+        }
+        
+        .section {
+            display: none;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        .card {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size:15px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-recibido { background-color: #fef3c7; color: #d97706; }
+        .status-diagnosticando { background-color: #dbeafe; color: #2563eb; }
+        .status-listo { background-color: #d1fae5; color: #059669; }
+        .status-entregado { background-color: #e5e7eb; color: #6b7280; }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .edit-mode-indicator {
+            display: none;
+            background-color: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-size:17px;
+        }
+        
+        .edit-mode-indicator.show {
+            display: block;
+        }
+
+        /* Estilos para la hoja de impresión - ULTRA COMPACTO */
+        .print-page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 10mm;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            font-family: Arial, sans-serif;
+            font-size:13px;
+            line-height: 1.5;
+        }
+        
+        .print-header {
+            text-align: center;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 4px;
+        }
+        
+        .print-title {
+            font-size:18px;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        
+        .print-subtitle {
+            font-size:16px;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        
+        .print-order {
+            font-size:17px;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+        
+        .print-section {
+            margin-bottom: 10px;
+        }
+        
+        .print-row {
+            display: flex;
+            margin-bottom: 6px;
+        }
+        
+        .print-label {
+            font-weight: bold;
+            width: 60px;
+            flex-shrink: 0;
+            font-size:13px;
+        }
+        
+        .print-value {
+            flex: 1;
+            margin-right: 8px;
+            font-size:13px;
+        }
+        
+        .print-separator { display: none !important; }
+        
+        .print-separator::before {
+            content: "✂  ✂";
+            background: white;
+            padding: 0 5px;
+            position: absolute;
+            top: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size:12px;
+        }
+        
+        .print-signature { display: none !important; }
+        
+        .print-footer {
+            margin-top: 8px;
+            font-size:12px;
+            text-align: left;
+            border-top: 1px solid #000;
+            padding-top: 4px;
+            line-height: 1.2;
+        }
+
+        @media print {
+            @page {
+                margin: 0;
+                size: A4;
+            }
             
-            <div class="container">
-                <p class="text-lg text-gray-700 mb-6">¡Bienvenido a tu nueva aplicación web construida con Hono!</p>
+            body * {
+                visibility: hidden;
+            }
+            .print-page, .print-page * {
+                visibility: visible;
+            }
+            .print-page {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 10mm;
+                box-shadow: none;
+            }
+        }
+
+        /* Botón de impresión naranja sin sombra */
+        .btn-print-orange {
+            background-color: #f97316 !important;
+            color: white !important;
+            box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.4) !important;
+        }
+        
+        .btn-print-orange:hover {
+            background-color: #ea580c !important;
+            box-shadow: 0 6px 8px -1px rgba(249, 115, 22, 0.5) !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Pantalla de Login -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">
+        <div class="bg-white p-8 rounded-xl shadow-2xl w-96">
+            <div class="text-center mb-8">
+                <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-mobile-alt text-blue-600 text-2xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-800">Mundo Electrónico</h1>
+                <p class="text-gray-600">Sistema de Gestión</p>
+            </div>
+            
+            <form id="loginForm">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Usuario</label>
+                    <input type="text" id="username" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500" required>
+                </div>
                 
-                <div class="features">
-                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">🎯 Características</h2>
-                    <ul class="space-y-2">
-                        <li class="flex items-center text-gray-700">
-                            <i class="fas fa-check-circle text-green-500 mr-3"></i>
-                            <span>✅ Hono Framework - Rápido y ligero</span>
-                        </li>
-                        <li class="flex items-center text-gray-700">
-                            <i class="fas fa-check-circle text-green-500 mr-3"></i>
-                            <span>✅ Cloudflare Pages - Desplegado en el edge</span>
-                        </li>
-                        <li class="flex items-center text-gray-700">
-                            <i class="fas fa-check-circle text-green-500 mr-3"></i>
-                            <span>✅ TypeScript - Tipado seguro</span>
-                        </li>
-                        <li class="flex items-center text-gray-700">
-                            <i class="fas fa-check-circle text-green-500 mr-3"></i>
-                            <span>✅ API REST - Endpoints funcionales</span>
-                        </li>
-                        <li class="flex items-center text-gray-700">
-                            <i class="fas fa-check-circle text-green-500 mr-3"></i>
-                            <span>✅ JSX Renderer - Componentes React-like</span>
-                        </li>
-                        <li class="flex items-center text-gray-700">
-                            <i class="fas fa-check-circle text-green-500 mr-3"></i>
-                            <span>✅ Hot Reload - Desarrollo ágil</span>
-                        </li>
-                    </ul>
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Contraseña</label>
+                    <input type="password" id="password" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500" required>
                 </div>
+                
+                <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Iniciar Sesión
+                </button>
+            </form>
+            
+            <div class="mt-4 text-center text-sm text-gray-600">
+                <p>Usuario por defecto: <strong>admin</strong></p>
+                <p>Contraseña: <strong>admin123</strong></p>
+            </div>
+        </div>
+    </div>
 
-                <div class="api-test">
-                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">🔗 Prueba la API</h2>
-                    <div class="flex flex-wrap gap-4 mb-4">
-                        <button id="test-api" class="btn bg-blue-500 hover:bg-blue-600 text-white">
-                            <i class="fas fa-play mr-2"></i>
-                            Probar API Hello
-                        </button>
-                        <button id="test-status" class="btn bg-green-500 hover:bg-green-600 text-white">
-                            <i class="fas fa-heartbeat mr-2"></i>
-                            Probar API Status
-                        </button>
-                        <button id="test-local" class="btn bg-purple-500 hover:bg-purple-600 text-white">
-                            <i class="fas fa-laptop mr-2"></i>
-                            Probar API Local
-                        </button>
-                    </div>
-                    <div id="api-result" class="p-4 bg-white border border-gray-200 rounded-lg min-h-16">
-                        <span class="text-gray-500">Haz clic en un botón para probar la API</span>
-                    </div>
-                </div>
-
-                <!-- Nueva sección de información del proyecto -->
-                <div class="project-info mt-8">
-                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">📊 Información del Proyecto</h2>
-                    <div class="grid md:grid-cols-2 gap-6">
-                        <div class="info-card p-6 bg-white rounded-lg border border-gray-200">
-                            <h3 class="font-semibold text-lg text-gray-800 mb-2">
-                                <i class="fas fa-code text-blue-500 mr-2"></i>
-                                Tecnologías
-                            </h3>
-                            <ul class="text-gray-600 space-y-1">
-                                <li>• Frontend: HTML5, TailwindCSS, JavaScript</li>
-                                <li>• Backend: Hono Framework + TypeScript</li>
-                                <li>• Deployment: Cloudflare Pages/Workers</li>
-                                <li>• Build Tools: Vite, Wrangler</li>
-                            </ul>
+    <!-- Aplicación Principal -->
+    <div id="mainApp" class="hidden">
+        <div class="flex h-screen bg-gray-100">
+            <!-- Sidebar -->
+            <div class="w-64 bg-white shadow-lg">
+                <div class="p-6 border-b">
+                    <div class="flex items-center">
+                        <div class="bg-blue-100 w-10 h-10 rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-mobile-alt text-blue-600"></i>
                         </div>
-                        
-                        <div class="info-card p-6 bg-white rounded-lg border border-gray-200">
-                            <h3 class="font-semibold text-lg text-gray-800 mb-2">
-                                <i class="fas fa-rocket text-green-500 mr-2"></i>
-                                Estado del Proyecto
-                            </h3>
-                            <ul class="text-gray-600 space-y-1">
-                                <li>• Status: <span class="text-green-600 font-semibold">Activo</span></li>
-                                <li>• Versión: 1.0.0</li>
-                                <li>• Última actualización: Agosto 2025</li>
-                                <li>• Ambiente: Desarrollo/Producción</li>
-                            </ul>
+                        <div>
+                            <h1 class="text-lg font-bold text-gray-800">Mundo</h1>
+                            <h1 class="text-lg font-bold text-blue-600">Electrónico</h1>
                         </div>
                     </div>
                 </div>
+                
+                <nav class="mt-6">
+                    <a href="#" onclick="showSection(event,'dashboard')" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100">
+                        <i class="fas fa-tachometer-alt mr-3"></i>Dashboard
+                    </a>
+                    <a href="#" onclick="showSection(event,'reparaciones')" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100">
+                        <i class="fas fa-tools mr-3"></i>Reparaciones
+                    </a>
+                    <a href="#" onclick="showSection(event,'historial')" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100">
+                        <i class="fas fa-history mr-3"></i>Historial
+                    </a>
+                    <a href="#" onclick="showSection(event,'clientes')" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100">
+                        <i class="fas fa-users mr-3"></i>Clientes
+                    </a>
+                    <a href="#" onclick="showSection(event,'whatsapp')" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100">
+                        <i class="fab fa-whatsapp mr-3"></i>WhatsApp
+                    </a>
+                    <a href="#" onclick="showSection(event,'pedidos')" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100">
+                        <i class="fas fa-shopping-cart mr-3"></i>Formulario de Pedidos
+                    </a>
+                    <a href="#" onclick="showSection(event,'configuracion')" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100">
+                        <i class="fas fa-cog mr-3"></i>Configuración
+                    </a>
+                </nav>
+            </div>
 
-                <!-- Enlaces útiles -->
-                <div class="links-section mt-8">
-                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">🔗 Enlaces Útiles</h2>
-                    <div class="flex flex-wrap gap-4">
-                        <a href="https://hono.dev" target="_blank" class="link-btn">
-                            <i class="fas fa-external-link-alt mr-2"></i>
-                            Documentación Hono
-                        </a>
-                        <a href="https://pages.cloudflare.com" target="_blank" class="link-btn">
-                            <i class="fas fa-cloud mr-2"></i>
-                            Cloudflare Pages
-                        </a>
-                        <a href="https://tailwindcss.com" target="_blank" class="link-btn">
-                            <i class="fas fa-paint-brush mr-2"></i>
-                            TailwindCSS
-                        </a>
+            <!-- Contenido Principal -->
+            <div class="flex-1 main-content">
+                <!-- Dashboard -->
+                <div id="dashboard" class="section active p-8">
+                    <div class="dashboard-container">
+                        <div class="flex justify-between items-center mb-8">
+                            <h1 class="text-3xl font-bold text-gray-800">Dashboard</h1>
+                            <div class="text-sm text-gray-600">
+                                <i class="fas fa-calendar mr-2"></i>
+                                <span id="fecha-actual"></span>
+                            </div>
+                        </div>
+
+                        <!-- KPIs -->
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                            <div class="card bg-white p-6 rounded-xl">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-600">Reparaciones Hoy</p>
+                                        <p class="text-2xl font-bold text-gray-900" id="kpi-hoy">0</p>
+                                    </div>
+                                    <div class="bg-blue-100 p-3 rounded-full">
+                                        <i class="fas fa-calendar-day text-blue-600"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card bg-white p-6 rounded-xl">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-600">En Proceso</p>
+                                        <p class="text-2xl font-bold text-gray-900" id="kpi-proceso">0</p>
+                                    </div>
+                                    <div class="bg-yellow-100 p-3 rounded-full">
+                                        <i class="fas fa-cog text-yellow-600"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card bg-white p-6 rounded-xl">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-600">Listos</p>
+                                        <p class="text-2xl font-bold text-gray-900" id="kpi-listos">0</p>
+                                    </div>
+                                    <div class="bg-green-100 p-3 rounded-full">
+                                        <i class="fas fa-check text-green-600"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card bg-white p-6 rounded-xl">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-600">Clientes</p>
+                                        <p class="text-2xl font-bold text-gray-900" id="kpi-clientes">0</p>
+                                    </div>
+                                    <div class="bg-purple-100 p-3 rounded-full">
+                                        <i class="fas fa-users text-purple-600"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Gráficos -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div class="card bg-white p-6 rounded-xl">
+                                <h3 class="text-lg font-semibold mb-4">Estados de Reparaciones</h3>
+                                <div class="chart-container">
+                                    <canvas id="statusChart"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="card bg-white p-6 rounded-xl">
+                                <h3 class="text-lg font-semibold mb-4">Ingresos del Mes</h3>
+                                <div class="chart-container">
+                                    <canvas id="revenueChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="footer mt-8 pt-6 border-t border-gray-200">
-                    <div class="text-center">
-                        <p class="text-gray-600">
-                            <i class="fas fa-wrench mr-2"></i>
-                            🔧 Desarrollado con Hono + Cloudflare Workers
-                        </p>
-                        <p class="text-sm text-gray-500 mt-2">
-                            Proyecto listo para despliegue en cualquier servicio de cloud
-                        </p>
+                <!-- Reparaciones -->
+                <div id="reparaciones" class="section p-8">
+                    <div class="flex justify-between items-center mb-8">
+                        <h1 class="text-3xl font-bold text-gray-800">Reparaciones</h1>
+                        <p class="text-gray-600">Gestión de órdenes de reparación</p>
+                        <button onclick="showNuevaReparacion()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200">
+                            <i class="fas fa-plus mr-2"></i>Nueva Reparación
+                        </button>
+                    </div>
+
+                    <!-- Lista de Reparaciones -->
+                    <div class="card bg-white p-6 rounded-xl">
+                        <div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <input type="text" placeholder="Buscar por cliente, equipo o orden..." class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="filtro-busqueda">
+                            
+                            <select id="filtro-estado" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Todos los estados</option>
+                                <option value="recibido">Recibido</option>
+                                <option value="diagnosticando">Diagnosticando</option>
+                                <option value="listo">Listo</option>
+                            </select>
+                            
+                            <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="filter-tecnico">
+                                <option value="">Todos los técnicos</option>
+                            </select>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b">
+                                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Orden</th>
+                                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Cliente</th>
+                                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Equipo</th>
+                                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Estado</th>
+                                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Técnico</th>
+                                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Fecha</th>
+                                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-reparaciones">
+                                    <!-- Se llena dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HISTORIAL -->
+                <div id="historial" class="section p-8">
+                    <div class="flex justify-between items-center mb-8">
+                        <h1 class="text-3xl font-bold text-gray-800">Historial</h1>
+                        <p class="text-gray-600">Equipos entregados y archivados</p>
+                    </div>
+
+                    <!-- Lista de Historial -->
+                    <div class="card bg-white p-6 rounded-xl">
+                        <div class="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <input type="text" placeholder="Buscar en historial..." class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="filtro-historial">
+                            
+                            <select id="filtro-mes" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Todos los meses</option>
+                                <option value="01">Enero</option>
+                                <option value="02">Febrero</option>
+                                <option value="03">Marzo</option>
+                                <option value="04">Abril</option>
+                                <option value="05">Mayo</option>
+                                <option value="06">Junio</option>
+                                <option value="07">Julio</option>
+                                <option value="08">Agosto</option>
+                                <option value="09">Septiembre</option>
+                                <option value="10">Octubre</option>
+                                <option value="11">Noviembre</option>
+                                <option value="12">Diciembre</option>
+                            </select>
+                            
+                            <select id="filtro-tecnico-historial" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Todos los técnicos</option>
+                            </select>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b">
+                                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Orden</th>
+                                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Cliente</th>
+                                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Equipo</th>
+                                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Técnico</th>
+                                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Fecha Ingreso</th>
+                                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Fecha Entrega</th>
+                                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-historial">
+                                    <!-- Se llena dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clientes -->
+                <div id="clientes" class="section p-8">
+                    <h1 class="text-3xl font-bold text-gray-800 mb-8">Clientes</h1>
+                    <div class="card bg-white p-6 rounded-xl">
+                        <p class="text-gray-600">Módulo de clientes en desarrollo...</p>
+                    </div>
+                </div>
+
+                <!-- WhatsApp -->
+                <div id="whatsapp" class="section p-8">
+                    <h1 class="text-3xl font-bold text-gray-800 mb-8">WhatsApp</h1>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Notificar Cliente -->
+                        <div class="card bg-white p-6 rounded-xl">
+                            <h3 class="text-xl font-semibold mb-6">Notificar Cliente</h3>
+                            
+                            <div id="whatsapp-messages"></div>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Seleccionar Reparación</label>
+                                    <select id="select-reparacion" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" onchange="cargarDatosReparacion()">
+                                        <option value="">Seleccionar reparación</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Cliente</label>
+                                    <input type="text" id="notif-cliente" class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50" readonly>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
+                                    <input type="text" id="notif-telefono" class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50" readonly>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Mensaje</label>
+                                    <select id="tipo-mensaje" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" onchange="generarMensaje()">
+                                        <option value="">Seleccionar tipo</option>
+                                        <option value="recibido">Equipo Recibido</option>
+                                        <option value="diagnostico">Diagnóstico Listo</option>
+                                        <option value="listo">Equipo Listo</option>
+                                        <option value="recordatorio">Recordatorio - Equipo Listo</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Mensaje</label>
+                                    <!-- Indicador de modo de edición -->
+                                    <div id="edit-mode-indicator" class="edit-mode-indicator">
+                                        <i class="fas fa-edit mr-2"></i>Modo edición activado - Puedes modificar el mensaje
+                                    </div>
+                                    <textarea id="mensaje-preview" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" rows="4" placeholder="El mensaje se generará automáticamente..."></textarea>
+                                    
+                                    <div id="mensaje-controls" class="mt-2 flex gap-2" style="display: none;">
+                                        <button onclick="restaurarMensaje()" class="text-sm bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600">
+                                            <i class="fas fa-undo mr-1"></i>Restaurar Original
+                                        </button>
+                                        <button onclick="toggleModoEdicion()" class="text-sm bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">
+                                            <i class="fas fa-edit mr-1"></i>Modo Edición
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <button onclick="enviarMensajeWhatsApp()" class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition duration-200">
+                                    <i class="fab fa-whatsapp mr-2"></i>Enviar por WhatsApp
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Plantillas de Mensajes -->
+                        <div class="card bg-white p-6 rounded-xl">
+                            <h3 class="text-xl font-semibold mb-6">Plantillas de Mensajes</h3>
+                            
+                            <div class="space-y-4">
+                                <div class="border-l-4 border-blue-500 pl-4">
+                                    <h4 class="font-semibold text-green-600">Equipo Recibido</h4>
+                                    <p class="text-sm text-gray-600">Hola [Nombre], hemos recibido su [Equipo]. Le mantendremos informado del progreso. Ticket: [Ticket]</p>
+                                </div>
+                                
+                                <div class="border-l-4 border-yellow-500 pl-4">
+                                    <h4 class="font-semibold text-green-600">Diagnóstico Listo</h4>
+                                    <p class="text-sm text-gray-600">Hola [Nombre], hemos diagnosticado su [Equipo]. [Problema]. Costo estimado: $[Costo]. ¿Autoriza la reparación?</p>
+                                </div>
+                                
+                                <div class="border-l-4 border-green-500 pl-4">
+                                    <h4 class="font-semibold text-green-600">Equipo Listo</h4>
+                                    <p class="text-sm text-gray-600">¡Buenas noticias! Su [Equipo] está listo para retirar. Costo total: $[Costo]. Horario: Lun-Vie 9-18hs, Sáb 9-13hs</p>
+                                </div>
+                                
+                                <div class="border-l-4 border-red-500 pl-4">
+                                    <h4 class="font-semibold text-green-600">Recordatorio - Equipo Listo</h4>
+                                    <p class="text-sm text-gray-600">Hola [Nombre], su [Equipo] está listo para retirar desde hace varios días. Por favor coordine su retiro. Gracias.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-8">
+                                <h4 class="font-semibold mb-4">Historial de Envíos</h4>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-sm">
+                                        <thead>
+                                            <tr class="border-b">
+                                                <th class="text-left py-2">Cliente</th>
+                                                <th class="text-left py-2">Mensaje</th>
+                                                <th class="text-left py-2">Estado</th>
+                                                <th class="text-left py-2">Fecha</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="historial-mensajes">
+                                            <!-- Se llena dinámicamente -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulario de Pedidos -->
+                <div id="pedidos" class="section p-8">
+                    <div class="flex justify-between items-center mb-8">
+                        <h1 class="text-3xl font-bold text-gray-800">Formulario de Pedidos</h1>
+                        <p class="text-gray-600">Gestión de pedidos de productos y servicios</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Nuevo Pedido -->
+                        <div class="card bg-white p-6 rounded-xl">
+                            <h3 class="text-xl font-semibold mb-6 flex items-center">
+                                <i class="fas fa-plus-circle text-blue-600 mr-2"></i>
+                                Nuevo Pedido
+                            </h3>
+                            
+                            <div id="pedidos-messages"></div>
+                            
+                            <form id="formNuevoPedido" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Cliente</label>
+                                    <input type="text" name="cliente" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Nombre del cliente" required>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
+                                    <input type="tel" name="telefono" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Número de teléfono" required>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Producto/Servicio</label>
+                                    <input type="text" name="producto" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Ej: Memoria SD 32GB" required>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
+                                    <textarea name="descripcion" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Detalles adicionales del pedido"></textarea>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">¿Deja seña?</label>
+                                        <div class="flex gap-4">
+                                            <label class="flex items-center">
+                                                <input type="radio" name="deja_sena" value="si" class="mr-2" onchange="toggleSena()">
+                                                Sí
+                                            </label>
+                                            <label class="flex items-center">
+                                                <input type="radio" name="deja_sena" value="no" class="mr-2" checked onchange="toggleSena()">
+                                                No
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="sena-container" style="display: none;">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Seña ($)</label>
+                                        <input type="number" name="sena" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="0" min="0">
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Precio Total ($)</label>
+                                    <input type="number" name="precio_total" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="0" min="0" required>
+                                </div>
+                                
+                                <button type="submit" class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center">
+                                    <i class="fas fa-plus mr-2"></i>
+                                    Crear Pedido
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Lista de Pedidos -->
+                        <div class="card bg-white p-6 rounded-xl">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="text-xl font-semibold flex items-center">
+                                    <i class="fas fa-list text-green-600 mr-2"></i>
+                                    Lista de Pedidos
+                                </h3>
+                                <div class="flex gap-2">
+                                    <input type="text" id="buscar-pedidos" placeholder="Buscar cliente o producto..." class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <select id="filtro-estado-pedidos" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="">Todos</option>
+                                        <option value="pendiente">Pendiente</option>
+                                        <option value="listo">Listo</option>
+                                        <option value="entregado">Entregado</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-3" id="lista-pedidos">
+                                <!-- Los pedidos se cargarán dinámicamente aquí -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Configuración -->
+                <div id="configuracion" class="section p-8">
+                    <div class="flex justify-between items-center mb-8">
+                        <h1 class="text-3xl font-bold text-gray-800">Configuración</h1>
+                        <p class="text-gray-600">Ajustes del sistema y gestión de técnicos</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Información del Taller -->
+                        <div class="card bg-white p-6 rounded-xl">
+                            <h3 class="text-xl font-semibold mb-6 flex items-center">
+                                <i class="fas fa-store text-blue-600 mr-2"></i>
+                                Información del Taller
+                            </h3>
+                            
+                            <div id="config-messages"></div>
+                            
+                            <form id="formConfigTaller" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del Taller</label>
+                                    <input type="text" name="nombre_taller" value="Mundo Electrónico" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Dirección</label>
+                                    <input type="text" name="direccion" value="Av. Corrientes 1234, CABA" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
+                                    <input type="tel" name="telefono" value="+54 11 1234-5678" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                                    <input type="email" name="email" value="info@mundoelectronico.com" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                </div>
+                                
+                                <button type="submit" class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center">
+                                    <i class="fas fa-save mr-2"></i>
+                                    Guardar Información
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Gestión de Técnicos -->
+                        <div class="card bg-white p-6 rounded-xl">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="text-xl font-semibold flex items-center">
+                                    <i class="fas fa-users-cog text-green-600 mr-2"></i>
+                                    Técnicos
+                                </h3>
+                                <button onclick="showAgregarTecnico()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-200 text-sm">
+                                    <i class="fas fa-plus mr-1"></i>
+                                    Agregar
+                                </button>
+                            </div>
+                            
+                            <div class="space-y-3" id="lista-tecnicos">
+                                <!-- Los técnicos se cargarán dinámicamente aquí -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+                        <!-- Sistema y Seguridad -->
+                        <div class="card bg-white p-6 rounded-xl">
+                            <h3 class="text-xl font-semibold mb-6 flex items-center">
+                                <i class="fas fa-shield-alt text-orange-600 mr-2"></i>
+                                Sistema y Seguridad
+                            </h3>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Cambiar Contraseña</label>
+                                    <input type="password" id="nueva-password" placeholder="Nueva contraseña" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Confirmar Contraseña</label>
+                                    <input type="password" id="confirmar-password" placeholder="Confirmar nueva contraseña" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                                </div>
+                                
+                                <button onclick="cambiarPassword()" class="w-full bg-orange-600 text-white py-3 px-4 rounded-lg hover:bg-orange-700 transition duration-200 flex items-center justify-center">
+                                    <i class="fas fa-key mr-2"></i>
+                                    Cambiar Contraseña
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Respaldo y Datos -->
+                        <div class="card bg-white p-6 rounded-xl">
+                            <h3 class="text-xl font-semibold mb-6 flex items-center">
+                                <i class="fas fa-database text-purple-600 mr-2"></i>
+                                Respaldo y Datos
+                            </h3>
+                            
+                            <div class="space-y-4">
+                                <button onclick="exportarDatos()" class="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition duration-200 flex items-center justify-center">
+                                    <i class="fas fa-download mr-2"></i>
+                                    Exportar Datos
+                                </button>
+                                
+                                <button onclick="importarDatos()" class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center">
+                                    <i class="fas fa-upload mr-2"></i>
+                                    Importar Datos
+                                </button>
+                                
+                                <button onclick="limpiarTodosLosDatos()" class="w-full bg-red-600 text-white py-3 px-4 rounded-lg hover:bg-red-700 transition duration-200 flex items-center justify-center">
+                                    <i class="fas fa-trash mr-2"></i>
+                                    Limpiar Todos los Datos
+                                </button>
+                                
+                                <div class="text-xs text-gray-500 mt-4">
+                                    <p><strong>Nota:</strong> El respaldo incluye todas las reparaciones, historial, técnicos y configuraciones.</p>
+                                    <p>Se recomienda hacer respaldos periódicos de los datos.</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Custom JavaScript -->
-    <script src="app.js"></script>
+    <!-- Modal Nueva Reparación -->
+    <div id="nueva-reparacion-modal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Nueva Reparación</h2>
+                <button onclick="hideNuevaReparacion()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div id="nueva-messages"></div>
+            
+            <form id="formNuevaReparacion" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Cliente *</label>
+                    <input type="text" name="cliente" class="w-full px-4 py-2 border rounded-lg" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">DNI</label>
+                    <input type="text" name="dni" class="w-full px-4 py-2 border rounded-lg">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">Teléfono *</label>
+                    <input type="text" name="telefono" class="w-full px-4 py-2 border rounded-lg" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">Email</label>
+                    <input type="email" name="email" class="w-full px-4 py-2 border rounded-lg">
+                </div>
+                
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium mb-2">Dirección</label>
+                    <input type="text" name="direccion" class="w-full px-4 py-2 border rounded-lg">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">Equipo *</label>
+                    <input type="text" name="equipo" class="w-full px-4 py-2 border rounded-lg" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">IMEI</label>
+                    <input type="text" name="imei" class="w-full px-4 py-2 border rounded-lg">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">Técnico Asignado</label>
+                    <select name="tecnico" class="w-full px-4 py-2 border rounded-lg" id="select-tecnico">
+                        <option value="">Seleccionar técnico</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">Anticipo</label>
+                    <input type="number" name="anticipo" class="w-full px-4 py-2 border rounded-lg" min="0">
+                </div>
+                
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium mb-2">Problema Reportado *</label>
+                    <textarea name="problema" class="w-full px-4 py-2 border rounded-lg" rows="3" required></textarea>
+                </div>
+                
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium mb-2">Accesorios</label>
+                    <textarea name="accesorios" class="w-full px-4 py-2 border rounded-lg" rows="2"></textarea>
+                </div>
+                
+                <div class="md:col-span-2 flex gap-4 mt-6">
+                    <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                        <i class="fas fa-save mr-2"></i>Guardar Reparación
+                    </button>
+                    <button type="button" onclick="hideNuevaReparacion()" class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600">
+                        <i class="fas fa-times mr-2"></i>Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Editar Estado -->
+    <div id="edit-estado-modal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Editar Estado de Reparación</h2>
+                <button onclick="hideEditEstado()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div id="edit-messages"></div>
+            
+            <form id="formEditEstado" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Cliente</label>
+                    <input type="text" id="edit-cliente" class="w-full px-4 py-2 border rounded-lg bg-gray-50" readonly>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">Equipo</label>
+                    <input type="text" id="edit-equipo" class="w-full px-4 py-2 border rounded-lg bg-gray-50" readonly>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">Estado *</label>
+                    <select id="edit-estado" class="w-full px-4 py-2 border rounded-lg" required>
+                        <option value="recibido">Recibido</option>
+                        <option value="diagnosticando">Diagnosticando</option>
+                        <option value="listo">Listo</option>
+                        <option value="entregado">Entregado</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">Técnico Asignado</label>
+                    <select id="edit-tecnico" class="w-full px-4 py-2 border rounded-lg">
+                        <option value="">Seleccionar técnico</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">Costo Final</label>
+                    <input type="number" id="edit-costo" class="w-full px-4 py-2 border rounded-lg" min="0">
+                </div>
+                
+                <div class="flex gap-4 mt-6">
+                    <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                        <i class="fas fa-save mr-2"></i>Guardar Cambios
+                    </button>
+                    <button type="button" onclick="hideEditEstado()" class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600">
+                        <i class="fas fa-times mr-2"></i>Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Ver Detalles del Historial -->
+    <div id="detalle-historial-modal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Detalles del Historial</h2>
+                <button onclick="hideDetalleHistorial()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div id="detalle-content">
+                <!-- Se llena dinámicamente -->
+            </div>
+            
+            <div class="mt-6 border-t pt-6">
+                <h3 class="text-lg font-semibold mb-4">Notas Adicionales</h3>
+                <div id="notas-historial" class="mb-4">
+                    <!-- Se llenan dinámicamente -->
+                </div>
+                
+                <div class="flex gap-2">
+                    <input type="text" id="nueva-nota" class="flex-1 px-4 py-2 border rounded-lg" placeholder="Agregar nota...">
+                    <button onclick="agregarNota()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="mt-6 border-t pt-6">
+                <h3 class="text-lg font-semibold mb-4">Garantía</h3>
+                <div class="flex gap-4">
+                    <button onclick="reingresarPorGarantia()" class="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700">
+                        <i class="fas fa-redo mr-2"></i>Reingresar por Garantía
+                    </button>
+                    <button onclick="imprimirHistorial(equipoDetalleActual?.id)" class="btn-print-orange text-white px-6 py-2 rounded-lg">
+                        <i class="fas fa-print mr-2"></i>Reimprimir Comprobante
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let currentSection = 'dashboard';
+        let reparaciones = [];
+        let tecnicos = [];
+        let proximoOrden = 1003;
+        let statusChart, revenueChart;
+        let reparacionSeleccionada = null;
+        let mensajeOriginal = '';
+        let modoEdicion = false;
+        let reparacionEditando = null;
+        let historialEntregados = [];
+        let historialMensajes = [];
+        let equipoDetalleActual = null;
+
+        // Datos iniciales
+        const datosIniciales = {
+            reparaciones: [
+                {
+                    id: '1001',
+                    cliente: 'María González',
+                    dni: '12345678',
+                    telefono: '+54 11 1234-5678',
+                    email: 'maria@email.com',
+                    direccion: 'Av. Corrientes 1234',
+                    equipo: 'iPhone 13 Pro',
+                    imei: '123456789012345',
+                    estado: 'diagnosticando',
+                    tecnico: 'Ana Silva',
+                    fecha: '08/11/2025',
+                    problema: 'Pantalla rota',
+                    anticipo: 15000,
+                    costoEstimado: 45000,
+                    accesorios: 'Funda, cargador'
+                },
+                {
+                    id: '1002',
+                    cliente: 'Carlos López',
+                    dni: '87654321',
+                    telefono: '+54 11 8765-4321',
+                    email: 'carlos@email.com',
+                    direccion: 'Av. Santa Fe 5678',
+                    equipo: 'Samsung Galaxy A54',
+                    imei: '987654321098765',
+                    estado: 'listo',
+                    tecnico: 'Ana Silva',
+                    fecha: '07/11/2025',
+                    problema: 'Batería no carga',
+                    anticipo: 8000,
+                    costoEstimado: 18000,
+                    accesorios: 'Cargador original'
+                }
+            ],
+            tecnicos: [
+                { id: '1', nombre: 'Ana Silva', especialidad: 'iPhone y Samsung' },
+                { id: '2', nombre: 'Juan Pérez', especialidad: 'Xiaomi y Motorola' },
+                { id: '3', nombre: 'Luis Rodríguez', especialidad: 'Tablets y Notebooks' }
+            ],
+            historialEntregados: [
+                {
+                    id: '1000',
+                    cliente: 'Pedro Martínez',
+                    dni: '11223344',
+                    telefono: '+54 11 9999-8888',
+                    email: 'pedro@email.com',
+                    direccion: 'Av. Rivadavia 1000',
+                    equipo: 'iPhone 12',
+                    imei: '111222333444555',
+                    estado: 'entregado',
+                    tecnico: 'Juan Pérez',
+                    fecha: '01/11/2025',
+                    fechaEntrega: '05/11/2025',
+                    problema: 'Cambio de batería',
+                    anticipo: 10000,
+                    costoEstimado: 25000,
+                    accesorios: 'Cargador',
+                    notas: ['Reparación completada sin problemas', 'Cliente satisfecho con el servicio']
+                }
+            ]
+        };
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarDatos();
+            cargarTecnicos();
+            cargarTablaReparaciones();
+            cargarTablaHistorial();
+            cargarReparacionesEnSelect();
+            actualizarKPIs();
+            initializeCharts();
+            configurarFiltros();
+            mostrarFechaActual();
+
+        // --- Guard: asegurar que renderListaPedidos exista para evitar ReferenceError
+        function __ensureRenderListaPedidos(){
+            if (typeof window.renderListaPedidos !== 'function'){
+                window.renderListaPedidos = function(){ /* noop until funciones de pedidos se carguen */ };
+            }
+        }
+        __ensureRenderListaPedidos();
+    
+
+            // Configurar formulario de nuevo pedido
+            const formPedido = document.getElementById('formNuevoPedido');
+            if (formPedido){
+                formPedido.addEventListener('submit', function(e){
+                    e.preventDefault();
+                    crearNuevoPedido(new FormData(formPedido));
+                });
+            }
+            const buscarPedidos = document.getElementById('buscar-pedidos');
+            const filtroEstadoPedidos = document.getElementById('filtro-estado-pedidos');
+            if (buscarPedidos){ buscarPedidos.addEventListener('input', renderListaPedidos); }
+            if (filtroEstadoPedidos){ filtroEstadoPedidos.addEventListener('change', renderListaPedidos); }
+
+            try{ renderListaPedidos(); }catch(e){ console.warn('renderListaPedidos no disponible aún', e); }
+            
+            // Configurar formulario de login
+            
+// Login robusto con persistencia y credenciales fallback
+(function(){
+  const form = document.getElementById('loginForm');
+  const loginScreen = document.getElementById('loginScreen');
+  const mainApp = document.getElementById('mainApp');
+
+  function showMain(){
+    if (loginScreen) loginScreen.classList.add('hidden');
+    if (mainApp) mainApp.classList.remove('hidden');
+    try { localStorage.setItem('mundoElectronicoLoggedIn', '1'); } catch(e){}
+  }
+
+  // Autologin si ya inició sesión
+  try {
+    if (localStorage.getItem('mundoElectronicoLoggedIn') === '1') {
+      showMain();
+      return;
+    }
+  } catch(e){}
+
+  if (!form) return;
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    const username = (document.getElementById('username')?.value || '').trim();
+    const password = (document.getElementById('password')?.value || '').trim();
+
+    // Credenciales desde config si existen
+    let cfgUser = 'admin', cfgPass = 'admin123';
+    try {
+      const raw = localStorage.getItem('mundoElectronicoData');
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (d && d.config) {
+          cfgUser = d.config.usuario || cfgUser;
+          cfgPass = d.config.contrasena || cfgPass;
+        }
+      }
+    } catch(e){}
+
+    // Aceptamos también admin/admin por compatibilidad
+    const ok =
+      (username === cfgUser && password === cfgPass) ||
+      (username === 'admin' && password === 'admin') ||
+      (username === 'admin' && password === 'admin123');
+
+    if (ok) {
+      showMain();
+    } else {
+      alert('Usuario o contraseña incorrectos');
+    }
+  });
+})();
+
+            // Configurar formulario de nueva reparación
+            document.getElementById('formNuevaReparacion').addEventListener('submit', function(e) {
+                e.preventDefault();
+                guardarNuevaReparacion();
+            });
+
+            // Configurar formulario de edición de estado
+            document.getElementById('formEditEstado').addEventListener('submit', function(e) {
+                e.preventDefault();
+                guardarCambiosEstado();
+            });
+        });
+
+        // FUNCIONES DE NAVEGACIÓN Y SECCIONES
+        function showSection(event, sectionName) {
+            // Ocultar todas las secciones
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Mostrar la sección seleccionada
+            document.getElementById(sectionName).classList.add('active');
+            
+            // Actualizar sidebar
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            (event && event.target ? event.target : document.querySelector(`[onclick*="'${sectionName}'"]`))?.classList?.add('active');
+            currentSection = sectionName;
+        }
+
+        function mostrarFechaActual() {
+            const fecha = new Date().toLocaleDateString('es-ES', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('fecha-actual').textContent = fecha;
+        }
+
+        // FUNCIONES DE DATOS
+        function cargarDatos() {
+            const datosGuardados = localStorage.getItem('mundoElectronicoData');
+            if (datosGuardados) {
+                const datos = JSON.parse(datosGuardados);
+                pedidos = datos.pedidos || [];reparaciones = datos.reparaciones || datosIniciales.reparaciones;
+                tecnicos = datos.tecnicos || datosIniciales.tecnicos;
+                proximoOrden = datos.proximoOrden || 1003;
+                historialEntregados = datos.historialEntregados || datosIniciales.historialEntregados;
+                historialMensajes = datos.historialMensajes || [];
+            } else {
+                reparaciones = [...datosIniciales.reparaciones];
+                tecnicos = [...datosIniciales.tecnicos];
+                proximoOrden = 1003;
+                historialEntregados = [...datosIniciales.historialEntregados];
+                historialMensajes = [];
+                pedidos = [];
+                guardarDatos();
+            }
+        }
+
+        function guardarDatos() {
+            const datos = {
+                reparaciones: reparaciones,
+                tecnicos: tecnicos,
+                proximoOrden: proximoOrden,
+                historialEntregados: historialEntregados,
+                historialMensajes: historialMensajes
+            };
+            datos.pedidos = pedidos;
+            localStorage.setItem('mundoElectronicoData', JSON.stringify(datos));
+        }
+
+        function obtenerFechaActual() {
+            return new Date().toLocaleDateString('es-ES', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+
+        function actualizarKPIs() {
+            const hoy = new Date().toLocaleDateString('es-ES', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+            
+            const reparacionesHoy = reparaciones.filter(r => r.fecha === hoy).length;
+            const enProceso = reparaciones.filter(r => ['recibido', 'diagnosticando'].includes(r.estado)).length;
+            const listos = reparaciones.filter(r => r.estado === 'listo').length;
+            const totalClientes = new Set([...reparaciones.map(r => r.cliente), ...historialEntregados.map(r => r.cliente)]).size;
+            
+            document.getElementById('kpi-hoy').textContent = reparacionesHoy;
+            document.getElementById('kpi-proceso').textContent = enProceso;
+            document.getElementById('kpi-listos').textContent = listos;
+            document.getElementById('kpi-clientes').textContent = totalClientes;
+        }
+
+        function cargarTecnicos() {
+            const selectTecnico = document.getElementById('select-tecnico');
+            const editTecnico = document.getElementById('edit-tecnico');
+            const filterTecnico = document.getElementById('filter-tecnico');
+            const filtroTecnicoHistorial = document.getElementById('filtro-tecnico-historial');
+            
+            [selectTecnico, editTecnico, filterTecnico, filtroTecnicoHistorial].forEach(select => {
+                if (select) {
+                    // Limpiar opciones existentes (excepto la primera)
+                    while (select.children.length > 1) {
+                        select.removeChild(select.lastChild);
+                    }
+                    
+                    tecnicos.forEach(tecnico => {
+                        const option = document.createElement('option');
+                        option.value = tecnico.nombre;
+                        option.textContent = `${tecnico.nombre} - ${tecnico.especialidad}`;
+                        select.appendChild(option);
+                    });
+                }
+            });
+        }
+
+        function initializeCharts() {
+            // Gráfico de estados
+            const statusCtx = document.getElementById('statusChart');
+            if (statusCtx) {
+                const estadosCount = {
+                    recibido: reparaciones.filter(r => r.estado === 'recibido').length,
+                    diagnosticando: reparaciones.filter(r => r.estado === 'diagnosticando').length,
+                    listo: reparaciones.filter(r => r.estado === 'listo').length,
+                    entregado: historialEntregados.length
+                };
+
+                statusChart = new Chart(statusCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Recibido', 'Diagnosticando', 'Listo', 'Entregado'],
+                        datasets: [{
+                            data: [estadosCount.recibido, estadosCount.diagnosticando, estadosCount.listo, estadosCount.entregado],
+                            backgroundColor: ['#fef3c7', '#dbeafe', '#d1fae5', '#e5e7eb']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Gráfico de ingresos
+            const revenueCtx = document.getElementById('revenueChart');
+            if (revenueCtx) {
+                revenueChart = new Chart(revenueCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+                        datasets: [{
+                            label: 'Ingresos',
+                            data: [120000, 150000, 180000, 140000, 200000, 250000],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '$' + value.toLocaleString();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function cargarTablaReparaciones() {
+            const tbody = document.getElementById('tabla-reparaciones');
+            tbody.innerHTML = '';
+            
+            reparaciones.forEach(reparacion => {
+                const row = document.createElement('tr');
+                row.className = 'border-b hover:bg-gray-50';
+                
+                row.innerHTML = `
+                    <td class="py-3 px-4 font-medium">#${reparacion.id}</td>
+                    <td class="py-3 px-4">${reparacion.cliente}</td>
+                    <td class="py-3 px-4">${reparacion.equipo}</td>
+                    <td class="py-3 px-4">
+                        <span class="status-badge status-${reparacion.estado}">${reparacion.estado}</span>
+                    </td>
+                    <td class="py-3 px-4">${reparacion.tecnico}</td>
+                    <td class="py-3 px-4">${reparacion.fecha}</td>
+                    <td class="py-3 px-4">
+                        <div class="flex gap-2">
+                            <button onclick="imprimirComprobante('${reparacion.id}')" class="btn-print-orange text-white p-2 rounded" title="Imprimir">
+                                <i class="fas fa-print"></i>
+                            </button>
+                            <button onclick="editarReparacion('${reparacion.id}')" class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="enviarWhatsApp('${reparacion.id}')" class="bg-green-600 text-white p-2 rounded hover:bg-green-700" title="WhatsApp">
+                                <i class="fab fa-whatsapp"></i>
+                            </button>
+                            <button onclick="eliminarReparacion('${reparacion.id}')" class="bg-red-600 text-white p-2 rounded hover:bg-red-700" title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        function cargarTablaHistorial() {
+            const tbody = document.getElementById('tabla-historial');
+            tbody.innerHTML = '';
+            
+            historialEntregados.forEach(equipo => {
+                const row = document.createElement('tr');
+                row.className = 'border-b hover:bg-gray-50';
+                
+                row.innerHTML = `                    <td class="py-3 px-4 font-medium">#${equipo.id}</td>
+                    <td class="py-3 px-4">${equipo.cliente}</td>
+                    <td class="py-3 px-4">${equipo.equipo}</td>
+                    <td class="py-3 px-4">${equipo.tecnico}</td>
+                    <td class="py-3 px-4">${equipo.fecha}</td>
+                    <td class="py-3 px-4">${equipo.fechaEntrega}</td>
+                    <td class="py-3 px-4">
+                        <div class="flex gap-2">
+                            <button onclick="verDetalleHistorial('${equipo.id}')" class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" title="Ver Detalles">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="imprimirHistorial(${equipo.id})" class="btn-print-orange text-white p-2 rounded" title="Reimprimir">
+                                <i class="fas fa-print"></i>
+                            </button>
+                        </div>
+                    </td>
+            `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        function configurarFiltros() {
+            const filtroBusqueda = document.getElementById('filtro-busqueda');
+            const filtroEstado = document.getElementById('filtro-estado');
+            const filtroTecnico = document.getElementById('filter-tecnico');
+            
+            [filtroBusqueda, filtroEstado, filtroTecnico].forEach(filtro => {
+                if (filtro) {
+                    filtro.addEventListener('input', aplicarFiltros);
+                    filtro.addEventListener('change', aplicarFiltros);
+                }
+            });
+
+            // Filtros para historial
+            const filtroHistorial = document.getElementById('filtro-historial');
+            const filtroMes = document.getElementById('filtro-mes');
+            const filtroTecnicoHistorial = document.getElementById('filtro-tecnico-historial');
+            
+            [filtroHistorial, filtroMes, filtroTecnicoHistorial].forEach(filtro => {
+                if (filtro) {
+                    filtro.addEventListener('input', aplicarFiltrosHistorial);
+                    filtro.addEventListener('change', aplicarFiltrosHistorial);
+                }
+            });
+        }
+
+        function aplicarFiltros() {
+            const busqueda = document.getElementById('filtro-busqueda').value.toLowerCase();
+            const estado = document.getElementById('filtro-estado').value;
+            const tecnico = document.getElementById('filter-tecnico').value;
+            
+            const filas = document.querySelectorAll('#tabla-reparaciones tr');
+            
+            filas.forEach(fila => {
+                const texto = fila.textContent.toLowerCase();
+                const estadoFila = fila.querySelector('.status-badge').textContent.toLowerCase();
+                const tecnicoFila = fila.cells[4].textContent;
+                
+                const coincideBusqueda = texto.includes(busqueda);
+                const coincideEstado = !estado || estadoFila === estado;
+                const coincideTecnico = !tecnico || tecnicoFila === tecnico;
+                
+                if (coincideBusqueda && coincideEstado && coincideTecnico) {
+                    fila.style.display = '';
+                } else {
+                    fila.style.display = 'none';
+                }
+            });
+        }
+
+        function aplicarFiltrosHistorial() {
+            const busqueda = document.getElementById('filtro-historial').value.toLowerCase();
+            const mes = document.getElementById('filtro-mes').value;
+            const tecnico = document.getElementById('filtro-tecnico-historial').value;
+            
+            const filas = document.querySelectorAll('#tabla-historial tr');
+            
+            filas.forEach(fila => {
+                const texto = fila.textContent.toLowerCase();
+                const fechaEntrega = fila.cells[5].textContent;
+                const tecnicoFila = fila.cells[3].textContent;
+                
+                const coincideBusqueda = texto.includes(busqueda);
+                const coincideMes = !mes || fechaEntrega.includes('/' + mes + '/');
+                const coincideTecnico = !tecnico || tecnicoFila === tecnico;
+                
+                if (coincideBusqueda && coincideMes && coincideTecnico) {
+                    fila.style.display = '';
+                } else {
+                    fila.style.display = 'none';
+                }
+            });
+        }
+
+        // FUNCIONES DE MODALES
+        function showNuevaReparacion() {
+            document.getElementById('nueva-reparacion-modal').classList.add('show');
+            // Resetear scroll del modal
+            const modalContent = document.querySelector('#nueva-reparacion-modal .modal-content');
+            modalContent.scrollTop = 0;
+        }
+
+        function hideNuevaReparacion() {
+            document.getElementById('nueva-reparacion-modal').classList.remove('show');
+            document.getElementById('formNuevaReparacion').reset();
+            document.getElementById('nueva-messages').innerHTML = '';
+        }
+
+        function showEditEstado(ordenId) {
+            const reparacion = reparaciones.find(r => r.id === ordenId);
+            if (!reparacion) return;
+
+            reparacionEditando = reparacion;
+            
+            document.getElementById('edit-cliente').value = reparacion.cliente;
+            document.getElementById('edit-equipo').value = reparacion.equipo;
+            document.getElementById('edit-estado').value = reparacion.estado;
+            document.getElementById('edit-tecnico').value = reparacion.tecnico;
+            document.getElementById('edit-costo').value = reparacion.costoEstimado;
+            
+            // Resetear mensajes
+            document.getElementById('edit-messages').innerHTML = '';
+            
+            document.getElementById('edit-estado-modal').classList.add('show');
+        }
+
+        function hideEditEstado() {
+            document.getElementById('edit-estado-modal').classList.remove('show');
+            reparacionEditando = null;
+        }
+
+        function verDetalleHistorial(equipoId) {
+            const equipo = historialEntregados.find(e => e.id === equipoId);
+            if (!equipo) return;
+
+            equipoDetalleActual = equipo;
+
+            const detalleContent = document.getElementById('detalle-content');
+            detalleContent.innerHTML = `
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-semibold text-gray-700">Información del Cliente</h4>
+                        <p><strong>Cliente:</strong> ${equipo.cliente}</p>
+                        <p><strong>DNI:</strong> ${equipo.dni}</p>
+                        <p><strong>Teléfono:</strong> ${equipo.telefono}</p>
+                        <p><strong>Email:</strong> ${equipo.email}</p>
+                        <p><strong>Dirección:</strong> ${equipo.direccion}</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-700">Información del Equipo</h4>
+                        <p><strong>Orden:</strong> #${equipo.id}</p>
+                        <p><strong>Equipo:</strong> ${equipo.equipo}</p>
+                        <p><strong>IMEI:</strong> ${equipo.imei}</p>
+                        <p><strong>Problema:</strong> ${equipo.problema}</p>
+                        <p><strong>Accesorios:</strong> ${equipo.accesorios}</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-700">Información de Reparación</h4>
+                        <p><strong>Técnico:</strong> ${equipo.tecnico}</p>
+                        <p><strong>Fecha Ingreso:</strong> ${equipo.fecha}</p>
+                        <p><strong>Fecha Entrega:</strong> ${equipo.fechaEntrega}</p>
+                        <p><strong>Estado:</strong> <span class="status-badge status-entregado">Entregado</span></p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-700">Información Económica</h4>
+                        <p><strong>Anticipo:</strong> $${equipo.anticipo.toLocaleString()}</p>
+                        <p><strong>Costo Final:</strong> $${equipo.costoEstimado.toLocaleString()}</p>
+                        <p><strong>Saldo:</strong> $${(equipo.costoEstimado - equipo.anticipo).toLocaleString()}</p>
+                    </div>
+                </div>
+            `;
+
+            cargarNotasHistorial();
+            document.getElementById('detalle-historial-modal').classList.add('show');
+        }
+
+        function hideDetalleHistorial() {
+            document.getElementById('detalle-historial-modal').classList.remove('show');
+            equipoDetalleActual = null;
+        }
+
+        function cargarNotasHistorial() {
+            if (!equipoDetalleActual) return;
+
+            const notasContainer = document.getElementById('notas-historial');
+            notasContainer.innerHTML = '';
+
+            if (equipoDetalleActual.notas && equipoDetalleActual.notas.length > 0) {
+                equipoDetalleActual.notas.forEach((nota, index) => {
+                    const notaDiv = document.createElement('div');
+                    notaDiv.className = 'bg-gray-50 p-3 rounded-lg mb-2 flex justify-between items-center';
+                    notaDiv.innerHTML = `
+                        <span>${nota}</span>
+                        <button onclick="eliminarNota(${index})" class="text-red-600 hover:text-red-800">
+                            <i class="fas fa-trash text-sm"></i>
+                        </button>
+                    `;
+                    notasContainer.appendChild(notaDiv);
+                });
+            } else {
+                notasContainer.innerHTML = '<p class="text-gray-500 italic">No hay notas adicionales</p>';
+            }
+        }
+
+        function agregarNota() {
+            if (!equipoDetalleActual) return;
+
+            const nuevaNota = document.getElementById('nueva-nota').value.trim();
+            if (!nuevaNota) return;
+
+            if (!equipoDetalleActual.notas) {
+                equipoDetalleActual.notas = [];
+            }
+
+            equipoDetalleActual.notas.push(nuevaNota);
+            
+            // Actualizar en historialEntregados
+            const index = historialEntregados.findIndex(e => e.id === equipoDetalleActual.id);
+            if (index !== -1) {
+                historialEntregados[index] = equipoDetalleActual;
+            }
+
+            guardarDatos();
+            cargarNotasHistorial();
+            document.getElementById('nueva-nota').value = '';
+        }
+
+        function eliminarNota(index) {
+            if (!equipoDetalleActual || !equipoDetalleActual.notas) return;
+
+            if (confirm('¿Estás seguro de que deseas eliminar esta nota?')) {
+                equipoDetalleActual.notas.splice(index, 1);
+                
+                // Actualizar en historialEntregados
+                const equipoIndex = historialEntregados.findIndex(e => e.id === equipoDetalleActual.id);
+                if (equipoIndex !== -1) {
+                    historialEntregados[equipoIndex] = equipoDetalleActual;
+                }
+
+                guardarDatos();
+                cargarNotasHistorial();
+            }
+        }
+
+        function reingresarPorGarantia() {
+            if (!equipoDetalleActual) return;
+
+            if (confirm('¿Deseas reingresar este equipo por garantía? Se creará una nueva orden de reparación.')) {
+                const nuevaReparacion = {
+                    ...equipoDetalleActual,
+                    id: proximoOrden.toString(),
+                    estado: 'recibido',
+                    fecha: obtenerFechaActual(),
+                    problema: 'Reingreso por garantía - ' + equipoDetalleActual.problema,
+                    anticipo: 0,
+                    costoEstimado: 0,
+                    fechaEntrega: null
+                };
+
+                delete nuevaReparacion.notas;
+
+                reparaciones.push(nuevaReparacion);
+                proximoOrden++;
+
+                guardarDatos();
+                cargarTablaReparaciones();
+                cargarReparacionesEnSelect();
+                actualizarKPIs();
+
+                hideDetalleHistorial();
+                showSection('reparaciones');
+
+                mostrarMensaje('success', `Equipo reingresado por garantía con orden #${nuevaReparacion.id}`, 'nueva-messages');
+            }
+        }
+
+        // Cerrar modales al hacer clic fuera de ellos
+        document.addEventListener('click', function(event) {
+            const modalNueva = document.getElementById('nueva-reparacion-modal');
+            const modalEdit = document.getElementById('edit-estado-modal');
+            const modalDetalle = document.getElementById('detalle-historial-modal');
+            
+            if (event.target === modalNueva) {
+                hideNuevaReparacion();
+            }
+            if (event.target === modalEdit) {
+                hideEditEstado();
+            }
+            if (event.target === modalDetalle) {
+                hideDetalleHistorial();
+            }
+        });
+
+        // FUNCIONES DE GUARDADO
+        function guardarNuevaReparacion() {
+            const formData = new FormData(document.getElementById('formNuevaReparacion'));
+            
+            const nuevaReparacion = {
+                id: proximoOrden.toString(),
+                cliente: formData.get('cliente'),
+                dni: formData.get('dni') || '',
+                telefono: formData.get('telefono'),
+                email: formData.get('email') || '',
+                direccion: formData.get('direccion') || '',
+                equipo: formData.get('equipo'),
+                imei: formData.get('imei') || '',
+                estado: 'recibido',
+                tecnico: formData.get('tecnico') || '',
+                fecha: obtenerFechaActual(),
+                problema: formData.get('problema'),
+                anticipo: parseInt(formData.get('anticipo')) || 0,
+                costoEstimado: 0,
+                accesorios: formData.get('accesorios') || ''
+            };
+            
+            reparaciones.push(nuevaReparacion);
+            proximoOrden++;
+            
+            guardarDatos();
+            cargarTablaReparaciones();
+            cargarReparacionesEnSelect();
+            actualizarKPIs();
+            
+            mostrarMensaje('success', 'Reparación guardada exitosamente.', 'nueva-messages');
+            
+            setTimeout(() => {
+                hideNuevaReparacion();
+            }, 1500);
+        }
+
+        function guardarCambiosEstado() {
+            if (!reparacionEditando) return;
+
+            const nuevoEstado = document.getElementById('edit-estado').value;
+            const nuevoTecnico = document.getElementById('edit-tecnico').value;
+            const nuevoCosto = parseInt(document.getElementById('edit-costo').value) || reparacionEditando.costoEstimado;
+
+            // Actualizar la reparación
+            reparacionEditando.estado = nuevoEstado;
+            if (nuevoTecnico) reparacionEditando.tecnico = nuevoTecnico;
+            reparacionEditando.costoEstimado = nuevoCosto;
+
+            // Si el estado cambia a 'entregado', mover al historial
+            if (nuevoEstado === 'entregado') {
+                // Agregar fecha de entrega
+                reparacionEditando.fechaEntrega = obtenerFechaActual();
+                
+                // Mover al historial
+                historialEntregados.push({...reparacionEditando});
+                
+                // Remover de reparaciones activas
+                const index = reparaciones.findIndex(r => r.id === reparacionEditando.id);
+                if (index !== -1) {
+                    reparaciones.splice(index, 1);
+                }
+                
+                mostrarMensaje('success', 'Reparación marcada como entregada y archivada en el historial.', 'edit-messages');
+            } else {
+                mostrarMensaje('success', 'Estado actualizado exitosamente.', 'edit-messages');
+            }
+
+            guardarDatos();
+            cargarTablaReparaciones();
+            cargarTablaHistorial();
+            cargarReparacionesEnSelect();
+            actualizarKPIs();
+            
+            setTimeout(() => {
+                hideEditEstado();
+            }, 1500);
+        }
+
+        // FUNCIONES DE ACCIONES DE REPARACIÓN
+        
+        function imprimirComprobante(ordenId) {
+            const reparacion = reparaciones.find(r => r.id === ordenId) || historialEntregados.find(r => r.id === ordenId);
+            if (!reparacion) return;
+
+            const ventanaImpresion = window.open('', '_blank');
+            ventanaImpresion.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Comprobante #${reparacion.id}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 0; padding: 15mm; font-size:12px; line-height: 1.1; }
+                        .print-header { text-align: center; margin-bottom: 8px; border-bottom: 1px solid #000; padding-bottom: 4px; }
+                        .print-title { font-size:18px; font-weight: bold; margin-bottom: 2px; }
+                        .print-subtitle { font-size:16px; font-weight: bold; margin-bottom: 3px; }
+                        .print-order { font-size:17px; font-weight: bold; margin-bottom: 6px; }
+                        .print-section { margin-bottom: 10px; }
+                        .print-row { display: flex; margin-bottom: 8px; }
+                        .print-label { font-weight: bold; width: 60px; flex-shrink: 0; font-size:13px; }
+                        .print-value { flex: 1; margin-right: 8px; font-size:13px; }
+                        .print-separator { display: none !important; }
+                        .print-separator::before { content: "✂  ✂"; background: white; padding: 0 5px; position: absolute; top: -6px; left: 50%; transform: translateX(-50%); font-size:12px; }
+                        .print-signature { display: none !important; }
+                        .print-footer { margin-top: 8px; font-size:12px; text-align: left; border-top: 1px solid #000; padding-top: 4px; line-height: 1.2; }
+                    </style>
+                </head>
+                <body>
+                    <div class="print-header">
+                        <div class="print-title">Mundo Electrónico</div>
+                        <div class="print-subtitle">ORIGINAL</div>
+                        <div class="print-order">ORDEN #${reparacion.id}</div>
+                    </div>
+                    
+                    <div class="print-section">
+                        <div class="print-row">
+                            <div class="print-label">Cliente:</div>
+                            <div class="print-value">${reparacion.cliente}</div>
+                            <div class="print-label">Equipo:</div>
+                            <div class="print-value">${reparacion.equipo}</div>
+                        </div>
+                        <div class="print-row">
+                            <div class="print-label">DNI:</div>
+                            <div class="print-value">${reparacion.dni}</div>
+                            <div class="print-label">IMEI:</div>
+                            <div class="print-value">${reparacion.imei}</div>
+                        </div>
+                        <div class="print-row">
+                            <div class="print-label">Tel:</div>
+                            <div class="print-value">${reparacion.telefono}</div>
+                            <div class="print-label">Problema:</div>
+                            <div class="print-value">${reparacion.problema}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="print-section">
+                        <div class="print-row">
+                            <div class="print-label">Técnico:</div>
+                            <div class="print-value">${reparacion.tecnico}</div>
+                            <div class="print-label">Anticipo:</div>
+                            <div class="print-value">$${reparacion.anticipo.toLocaleString()}</div>
+                        </div>
+                        <div class="print-row">
+                            <div class="print-label">Estado:</div>
+                            <div class="print-value">${reparacion.estado.toUpperCase()}</div>
+                            <div class="print-label">Total:</div>
+                            <div class="print-value">$${reparacion.costoEstimado.toLocaleString()}</div>
+                        </div>
+                        <div class="print-row">
+                            <div class="print-label">Fecha:</div>
+                            <div class="print-value">${reparacion.fecha}</div>
+                            <div class="print-label">SALDO:</div>
+                            <div class="print-value">$${(reparacion.costoEstimado - reparacion.anticipo).toLocaleString()}</div>
+                        </div>
+                    </div>
+                    
+                    
+                    
+                    <div class="print-separator"></div>
+                    
+                    <div class="print-header">
+                        <div class="print-title">Mundo Electrónico</div>
+                        <div class="print-subtitle">COPIA CLIENTE</div>
+                        <div class="print-order">ORDEN #${reparacion.id}</div>
+                    </div>
+                    
+                    <div class="print-section">
+                        <div class="print-row">
+                            <div class="print-label">Cliente:</div>
+                            <div class="print-value">${reparacion.cliente}</div>
+                            <div class="print-label">Equipo:</div>
+                            <div class="print-value">${reparacion.equipo}</div>
+                        </div>
+                        <div class="print-row">
+                            <div class="print-label">DNI:</div>
+                            <div class="print-value">${reparacion.dni}</div>
+                            <div class="print-label">IMEI:</div>
+                            <div class="print-value">${reparacion.imei}</div>
+                        </div>
+                        <div class="print-row">
+                            <div class="print-label">Tel:</div>
+                            <div class="print-value">${reparacion.telefono}</div>
+                            <div class="print-label">Problema:</div>
+                            <div class="print-value">${reparacion.problema}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="print-section">
+                        <div class="print-row">
+                            <div class="print-label">Técnico:</div>
+                            <div class="print-value">${reparacion.tecnico}</div>
+                            <div class="print-label">Anticipo:</div>
+                            <div class="print-value">$${reparacion.anticipo.toLocaleString()}</div>
+                        </div>
+                        <div class="print-row">
+                            <div class="print-label">Estado:</div>
+                            <div class="print-value">${reparacion.estado.toUpperCase()}</div>
+                            <div class="print-label">Total:</div>
+                            <div class="print-value">$${reparacion.costoEstimado.toLocaleString()}</div>
+                        </div>
+                        <div class="print-row">
+                            <div class="print-label">Fecha:</div>
+                            <div class="print-value">${reparacion.fecha}</div>
+                            <div class="print-label">SALDO:</div>
+                            <div class="print-value">$${(reparacion.costoEstimado - reparacion.anticipo).toLocaleString()}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="print-footer">
+                        <strong>Mundo Electrónico - Moreno 1878 - Tel 11 3030-1162</strong><br>
+                        Las reparaciones tienen una garantía de 90 días únicamente por la misma falla reparada.<br>
+                        Los repuestos están garantizados solo por defectos de fábrica.<br>
+                        La garantía no cubre daños ocasionados por golpes, roturas, líquidos o uso indebido.<br>
+                        Los trabajos de software y configuraciones no tienen garantía.
+                    </div>
+                </body>
+                </html>
+            `);
+            
+            ventanaImpresion.document.close();
+const cerrar = () => { try { ventanaImpresion.close(); } catch(e){} };
+try { ventanaImpresion.addEventListener('afterprint', cerrar); } catch(e){}
+ventanaImpresion.onafterprint = cerrar;
+setTimeout(() => {
+  try { ventanaImpresion.focus(); } catch(e){}
+  try { ventanaImpresion.print(); } catch(e){}
+  setTimeout(cerrar, 1200);
+}, 100);
+ventanaImpresion.document.close();
+            ventanaImpresion.focus();
+            ventanaImpresion.print();
+        }
+        function enviarWhatsAppPedido(pedidoId){
+           const p = (typeof pedidos!=='undefined' && Array.isArray(pedidos)) 
+              ? pedidos.find(x=>String(x.id)===String(pedidoId)) : null;
+        if(!p){ alert('Pedido no encontrado'); return; }
+           const saldo = (Number(p.precio_total||0) - Number(p.sena||0)) || 0;
+           const msg = `Hola ${p.cliente||''}, tu pedido: ${p.producto||''}. Total $${p.precio_total||0}. Seña $${p.sena||0}. Saldo $${saldo}. ${p.descripcion?('Notas: '+p.descripcion):''}`;
+           const phone = normalizarTelefonoAR(p.telefono||'');
+           window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+        function imprimirComprobanteHistorial(equipoId) {
+            imprimirComprobante(equipoId);
+        }
+
+        function editarReparacion(ordenId) {
+            showEditEstado(ordenId);
+        }
+function imprimirComprobantePedido(pedidoId){
+  const p = (typeof pedidos!=='undefined' && Array.isArray(pedidos)) 
+              ? pedidos.find(x=>String(x.id)===String(pedidoId)) : null;
+  if(!p){ alert('Pedido no encontrado'); return; }
+  _imprimirTicketBase({ 
+    id: p.id, cliente: p.cliente, telefono: p.telefono, producto: p.producto,
+    fecha: p.fecha, sena: p.sena, precio_total: p.precio_total, descripcion: p.descripcion
+  }, 'PEDIDO');
+}
+
+        function enviarWhatsApp(ordenId) {
+            // Cambiar a la sección de WhatsApp
+            showSection('whatsapp');
+            
+            // Preseleccionar la reparación
+            const selectReparacion = document.getElementById('select-reparacion');
+            if (selectReparacion) {
+                selectReparacion.value = ordenId;
+                
+                // Cargar datos de la reparación
+                const reparacion = reparaciones.find(r => r.id === ordenId);
+                if (reparacion) {
+                    reparacionSeleccionada = reparacion;
+                    
+                    // Llenar datos del cliente
+                    document.getElementById('notif-cliente').value = reparacion.cliente;
+                    document.getElementById('notif-telefono').value = reparacion.telefono;
+                    
+                    // Configurar tipo de mensaje según el estado actual
+                    const tipoMensaje = document.getElementById('tipo-mensaje');
+                    let tipoSeleccionado = 'recibido'; // default
+                    
+                    switch (reparacion.estado) {
+                        case 'recibido':
+                            tipoSeleccionado = 'recibido';
+                            break;
+                        case 'diagnosticando':
+                            tipoSeleccionado = 'diagnostico';
+                            break;
+                        case 'listo':
+                            tipoSeleccionado = 'listo';
+                            break;
+                        case 'entregado':
+                            tipoSeleccionado = 'recordatorio';
+                            break;
+                        default:
+                            tipoSeleccionado = 'recibido';
+                    }
+                    
+                    tipoMensaje.value = tipoSeleccionado;
+                    
+                    // Generar mensaje inmediatamente
+                    generarMensaje();
+                    
+                    // Mostrar mensaje de confirmación
+                    mostrarMensaje('success', `Reparación cargada en WhatsApp con tipo de mensaje "${tipoMensaje.options[tipoMensaje.selectedIndex].text}" según el estado "${reparacion.estado}".`, 'whatsapp-messages');
+                }
+            }
+        }
+
+        function eliminarReparacion(ordenId) {
+            if (confirm('¿Estás seguro de que deseas eliminar esta reparación? Esta acción no se puede deshacer.')) {
+                const index = reparaciones.findIndex(r => r.id === ordenId);
+                if (index !== -1) {
+                    reparaciones.splice(index, 1);
+                    guardarDatos();
+                    cargarTablaReparaciones();
+                    cargarReparacionesEnSelect();
+                    actualizarKPIs();
+                    
+                    mostrarMensaje('success', 'Reparación eliminada exitosamente.', 'nueva-messages');
+                }
+            }
+        }
+
+        // FUNCIONES DE WHATSAPP
+        function cargarReparacionesEnSelect() {
+            const select = document.getElementById('select-reparacion');
+            
+            // Limpiar opciones existentes (excepto la primera)
+            while (select.children.length > 1) {
+                select.removeChild(select.lastChild);
+            }
+            
+            reparaciones.forEach(reparacion => {
+                const option = document.createElement('option');
+                option.value = reparacion.id;
+                option.textContent = `#${reparacion.id} - ${reparacion.cliente} - ${reparacion.equipo}`;
+                select.appendChild(option);
+            });
+        }
+
+        function cargarDatosReparacion() {
+            const selectReparacion = document.getElementById('select-reparacion');
+            const ordenId = selectReparacion.value;
+            
+            if (!ordenId) {
+                document.getElementById('notif-cliente').value = '';
+                document.getElementById('notif-telefono').value = '';
+                document.getElementById('mensaje-preview').value = 'El mensaje se generará automáticamente...';
+                document.getElementById('mensaje-controls').style.display = 'none';
+                reparacionSeleccionada = null;
+                return;
+            }
+            
+            reparacionSeleccionada = reparaciones.find(r => r.id === ordenId);
+            
+            if (reparacionSeleccionada) {
+                document.getElementById('notif-cliente').value = reparacionSeleccionada.cliente;
+                document.getElementById('notif-telefono').value = reparacionSeleccionada.telefono;
+                
+                // Preseleccionar tipo de mensaje según el estado actual
+                const tipoMensaje = document.getElementById('tipo-mensaje');
+                let tipoSeleccionado = 'recibido'; // default
+                
+                switch (reparacionSeleccionada.estado) {
+                    case 'recibido':
+                        tipoSeleccionado = 'recibido';
+                        break;
+                    case 'diagnosticando':
+                        tipoSeleccionado = 'diagnostico';
+                        break;
+                    case 'listo':
+                        tipoSeleccionado = 'listo';
+                        break;
+                    case 'entregado':
+                        tipoSeleccionado = 'recordatorio';
+                        break;
+                    default:
+                        tipoSeleccionado = 'recibido';
+                }
+                
+                tipoMensaje.value = tipoSeleccionado;
+                generarMensaje();
+            }
+        }
+
+        function enviarMensajeWhatsApp() {
+            const mensaje = document.getElementById('mensaje-preview').value;
+            const telefono = document.getElementById('notif-telefono').value;
+            const cliente = document.getElementById('notif-cliente').value;
+            
+            if (!mensaje || !telefono || !reparacionSeleccionada) {
+                alert('Por favor completa todos los campos');
+                return;
+            }
+            
+            // Limpiar número de teléfono
+            const telefonoLimpio = telefono.replace(/[^\d]/g, '');
+            
+            // Crear URL de WhatsApp
+            const mensajeCodificado = encodeURIComponent(mensaje);
+            const urlWhatsApp = `https://wa.me/${telefonoLimpio}?text=${mensajeCodificado}`;
+            
+            // Abrir WhatsApp
+            window.open(urlWhatsApp, '_blank');
+            
+            // Guardar en historial
+            const historialItem = {
+                id: Date.now().toString(),
+                cliente: cliente,
+                telefono: telefono,
+                mensaje: document.getElementById('tipo-mensaje').options[document.getElementById('tipo-mensaje').selectedIndex].text,
+                fecha: obtenerFechaActual(),
+                estado: 'enviado'
+            };
+            
+            historialMensajes.push(historialItem);
+            guardarDatos();
+            cargarHistorialMensajes();
+            
+            mostrarMensaje('success', 'Mensaje enviado por WhatsApp', 'whatsapp-messages');
+        }
+
+        function generarMensaje() {
+            const tipoMensaje = document.getElementById('tipo-mensaje').value;
+            const mensajeTextarea = document.getElementById('mensaje-preview');
+            
+            if (!reparacionSeleccionada || !tipoMensaje) {
+                mensajeTextarea.value = 'El mensaje se generará automáticamente...';
+                document.getElementById('mensaje-controls').style.display = 'none';
+                return;
+            }
+            
+            let mensaje = '';
+            
+            switch (tipoMensaje) {
+                case 'recibido':
+                    mensaje = `Hola ${reparacionSeleccionada.cliente}, hemos recibido su ${reparacionSeleccionada.equipo}. Le mantendremos informado del progreso. Ticket: #${reparacionSeleccionada.id}`;
+                    break;
+                case 'diagnostico':
+                    mensaje = `Hola ${reparacionSeleccionada.cliente}, hemos diagnosticado su ${reparacionSeleccionada.equipo}. ${reparacionSeleccionada.problema}. Costo estimado: $${reparacionSeleccionada.costoEstimado.toLocaleString()}. ¿Autoriza la reparación?`;
+                    break;
+                case 'listo':
+                    mensaje = `¡Buenas noticias! Su ${reparacionSeleccionada.equipo} está listo para retirar. Costo total: $${reparacionSeleccionada.costoEstimado.toLocaleString()}. Horario: Lun-Vie 9-18hs, Sáb 9-13hs`;
+                    break;
+                case 'recordatorio':
+                    mensaje = `Hola ${reparacionSeleccionada.cliente}, su ${reparacionSeleccionada.equipo} está listo para retirar desde hace varios días. Por favor coordine su retiro. Gracias.`;
+                    break;
+            }
+            
+            mensaje += '\n\nMundo Electrónico';
+            
+            mensajeOriginal = mensaje;
+            mensajeTextarea.value = mensaje;
+            document.getElementById('mensaje-controls').style.display = 'flex';
+        }
+
+        function restaurarMensaje() {
+            document.getElementById('mensaje-preview').value = mensajeOriginal;
+            document.getElementById('edit-mode-indicator').classList.remove('show');
+            modoEdicion = false;
+        }
+
+        function toggleModoEdicion() {
+            modoEdicion = !modoEdicion;
+            const indicator = document.getElementById('edit-mode-indicator');
+            
+            if (modoEdicion) {
+                indicator.classList.add('show');
+            } else {
+                indicator.classList.remove('show');
+            }
+        }
+
+        function cargarHistorialMensajes() {
+            const tbody = document.getElementById('historial-mensajes');
+            tbody.innerHTML = '';
+            
+            historialMensajes.slice(-10).reverse().forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="py-2">${item.cliente}</td>
+                    <td class="py-2">${item.mensaje}</td>
+                    <td class="py-2"><span class="text-green-600">${item.estado}</span></td>
+                    <td class="py-2">${item.fecha}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // FUNCIÓN DE UTILIDAD PARA MOSTRAR MENSAJES
+        function mostrarMensaje(tipo, mensaje, containerId) {
+            const container = document.getElementById(containerId);
+            const alertDiv = document.createElement('div');
+            
+            const colorClass = tipo === 'success' ? 'bg-green-100 border-green-500 text-green-700' : 'bg-red-100 border-red-500 text-red-700';
+            
+            alertDiv.className = `border-l-4 p-4 mb-4 ${colorClass}`;
+            alertDiv.innerHTML = `
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-${tipo === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm">${mensaje}</p>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = '';
+            container.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                if (container.contains(alertDiv)) {
+                    container.removeChild(alertDiv);
+                }
+            }, 5000);
+        }
+
+        // FUNCIONES PARA MÓDULO DE PEDIDOS
+        let pedidos = [];
+        let proximoPedidoId = 1;
+
+        function toggleSena() {
+            const dejaSena = document.querySelector('input[name="deja_sena"]:checked').value;
+            const senaContainer = document.getElementById('sena-container');
+            
+            if (dejaSena === 'si') {
+                senaContainer.style.display = 'block';
+            } else {
+                senaContainer.style.display = 'none';
+                document.querySelector('input[name="sena"]').value = '';
+            }
+        }
+
+        function cargarPedidos() {
+            const datos = localStorage.getItem('mundoElectronicoData');
+            if (datos) {
+                const datosParseados = JSON.parse(datos);
+                pedidos = datosParseados.pedidos || [];
+                proximoPedidoId = datosParseados.proximoPedidoId || 1;
+            }
+            actualizarListaPedidos();
+        }
+
+        function guardarPedidos() {
+            const datos = JSON.parse(localStorage.getItem('mundoElectronicoData') || '{}');
+            datos.pedidos = pedidos;
+            datos.proximoPedidoId = proximoPedidoId;
+            localStorage.setItem('mundoElectronicoData', JSON.stringify(datos));
+        }
+
+        function actualizarListaPedidos() {
+            const lista = document.getElementById('lista-pedidos');
+            const busqueda = document.getElementById('buscar-pedidos').value.toLowerCase();
+            const filtroEstadoPedidos = document.getElementById('filtro-estado-pedidos');
+            const filtroEstado = filtroEstadoPedidos ? filtroEstadoPedidos.value : '';
+            
+            lista.innerHTML = '';
+            
+            const pedidosFiltrados = pedidos.filter(pedido => {
+                const coincideBusqueda = pedido.cliente.toLowerCase().includes(busqueda) || 
+                                       pedido.producto.toLowerCase().includes(busqueda);
+                const coincideEstado = !filtroEstado || pedido.estado === filtroEstado;
+                return coincideBusqueda && coincideEstado;
+            });
+            
+            if (pedidosFiltrados.length === 0) {
+                lista.innerHTML = '<div class="text-center text-gray-500 py-4">No hay pedidos que mostrar</div>';
+                return;
+            }
+            
+            pedidosFiltrados.forEach(pedido => {
+                const estadoColor = {
+                    'pendiente': 'bg-yellow-100 text-yellow-800',
+                    'listo': 'bg-green-100 text-green-800',
+                    'entregado': 'bg-gray-100 text-gray-800'
+                };
+                
+                const saldo = pedido.precio_total - pedido.sena;
+                
+                const pedidoDiv = document.createElement('div');
+                pedidoDiv.className = 'border border-gray-200 rounded-lg p-4 hover:bg-gray-50';
+                pedidoDiv.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <h4 class="font-semibold text-gray-800">#${pedido.id} - ${pedido.cliente}</h4>
+                            <p class="text-sm text-gray-600">${pedido.producto}</p>
+                        </div>
+                        <span class="px-2 py-1 rounded-full text-xs font-medium ${estadoColor[pedido.estado]}">${pedido.estado.toUpperCase()}</span>
+                    </div>
+                    <div class="text-sm text-gray-600 mb-3">
+                        <p><strong>Tel:</strong> ${pedido.telefono}</p>
+                        ${pedido.descripcion ? `<p><strong>Descripción:</strong> ${pedido.descripcion}</p>` : ''}
+                        <p><strong>Total:</strong> $${pedido.precio_total.toLocaleString()} | <strong>Seña:</strong> $${pedido.sena.toLocaleString()} | <strong>Saldo:</strong> $${saldo.toLocaleString()}</p>
+                        <p><strong>Fecha:</strong> ${pedido.fecha}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="cambiarEstadoPedido('${pedido.id}')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700">
+                            <i class="fas fa-edit mr-1"></i>Estado
+                        </button>
+                        <button onclick="eliminarPedido('${pedido.id}')" class="bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700">
+                            <i class="fas fa-trash mr-1"></i>Eliminar
+                        </button>
+                        <button onclick="imprimirComprobantePedido('${pedido.id}')" class="btn-print-orange text-white px-3 py-1 rounded text-xs" title="Imprimir">
+                            <i class="fas fa-print mr-1"></i>Imprimir
+                        </button>
+                        <button onclick="enviarWhatsAppPedido('${pedido.id}')" class="bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700" title="WhatsApp">
+                            <i class="fab fa-whatsapp mr-1"></i>WhatsApp
+                        </button>
+                    </div>
+                `;
+                lista.appendChild(pedidoDiv);
+            });
+        }
+
+        function cambiarEstadoPedido(pedidoId) {
+            const pedido = pedidos.find(p => p.id === pedidoId);
+            if (!pedido) return;
+            
+            const nuevoEstado = prompt(`Estado actual: ${pedido.estado}\n\nSeleccione nuevo estado:\n1. pendiente\n2. listo\n3. entregado\n\nIngrese el número:`);
+            
+            const estados = ['pendiente', 'listo', 'entregado'];
+            const estadoIndex = parseInt(nuevoEstado) - 1;
+            
+            if (estadoIndex >= 0 && estadoIndex < estados.length) {
+                pedido.estado = estados[estadoIndex];
+                guardarPedidos();
+                actualizarListaPedidos();
+                mostrarMensaje('success', `Estado del pedido #${pedidoId} actualizado a "${pedido.estado}".`, 'pedidos-messages');
+            }
+        }
+
+        function eliminarPedido(pedidoId) {
+            if (confirm('¿Estás seguro de que deseas eliminar este pedido?')) {
+                const index = pedidos.findIndex(p => p.id === pedidoId);
+                if (index !== -1) {
+                    pedidos.splice(index, 1);
+                    guardarPedidos();
+                    actualizarListaPedidos();
+                    mostrarMensaje('success', 'Pedido eliminado exitosamente.', 'pedidos-messages');
+                }
+            }
+        }
+
+        // FUNCIONES PARA MÓDULO DE CONFIGURACIÓN
+        let configTaller = {
+            nombre: 'Mundo Electrónico',
+            direccion: 'Av. Corrientes 1234, CABA',
+            telefono: '+54 11 1234-5678',
+            email: 'info@mundoelectronico.com'
+        };
+
+        function cargarConfiguracion() {
+            const datos = localStorage.getItem('mundoElectronicoData');
+            if (datos) {
+                const datosParseados = JSON.parse(datos);
+                configTaller = datosParseados.configTaller || configTaller;
+            }
+            cargarListaTecnicos();
+        }
+
+        function guardarConfiguracion() {
+            const datos = JSON.parse(localStorage.getItem('mundoElectronicoData') || '{}');
+            datos.configTaller = configTaller;
+            localStorage.setItem('mundoElectronicoData', JSON.stringify(datos));
+        }
+
+        function cargarListaTecnicos() {
+            const lista = document.getElementById('lista-tecnicos');
+            lista.innerHTML = '';
+            
+            if (tecnicos.length === 0) {
+                lista.innerHTML = '<div class="text-center text-gray-500 py-4">No hay técnicos registrados</div>';
+                return;
+            }
+            
+            tecnicos.forEach((tecnico, index) => {
+                const tecnicoDiv = document.createElement('div');
+                tecnicoDiv.className = 'border border-gray-200 rounded-lg p-3 hover:bg-gray-50';
+                tecnicoDiv.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h4 class="font-semibold text-gray-800">${tecnico.nombre}</h4>
+                            <p class="text-sm text-gray-600">${tecnico.especialidad}</p>
+                        </div>
+                        <button onclick="eliminarTecnico(${index})" class="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                lista.appendChild(tecnicoDiv);
+            });
+        }
+
+        function showAgregarTecnico() {
+            const nombre = prompt('Nombre del técnico:');
+            if (!nombre) return;
+            
+            const especialidad = prompt('Especialidad del técnico:');
+            if (!especialidad) return;
+            
+            tecnicos.push({ nombre: nombre.trim(), especialidad: especialidad.trim() });
+            guardarDatos();
+            cargarTecnicos();
+            cargarListaTecnicos();
+            mostrarMensaje('success', 'Técnico agregado exitosamente.', 'config-messages');
+        }
+
+        function eliminarTecnico(index) {
+            if (confirm('¿Estás seguro de que deseas eliminar este técnico?')) {
+                tecnicos.splice(index, 1);
+                guardarDatos();
+                cargarTecnicos();
+                cargarListaTecnicos();
+                mostrarMensaje('success', 'Técnico eliminado exitosamente.', 'config-messages');
+            }
+        }
+
+        function cambiarPassword() {
+            const nuevaPassword = document.getElementById('nueva-password').value;
+            const confirmarPassword = document.getElementById('confirmar-password').value;
+            
+            if (!nuevaPassword || !confirmarPassword) {
+                mostrarMensaje('error', 'Por favor complete ambos campos de contraseña.', 'config-messages');
+                return;
+            }
+            
+            if (nuevaPassword !== confirmarPassword) {
+                mostrarMensaje('error', 'Las contraseñas no coinciden.', 'config-messages');
+                return;
+            }
+            
+            if (nuevaPassword.length < 6) {
+                mostrarMensaje('error', 'La contraseña debe tener al menos 6 caracteres.', 'config-messages');
+                return;
+            }
+            
+            // Guardar nueva contraseña en localStorage
+            const datos = JSON.parse(localStorage.getItem('mundoElectronicoData') || '{}');
+            datos.password = nuevaPassword;
+            localStorage.setItem('mundoElectronicoData', JSON.stringify(datos));
+            
+            document.getElementById('nueva-password').value = '';
+            document.getElementById('confirmar-password').value = '';
+            
+            mostrarMensaje('success', 'Contraseña cambiada exitosamente.', 'config-messages');
+        }
+
+        function exportarDatos() {
+            const datos = localStorage.getItem('mundoElectronicoData');
+            if (!datos) {
+                mostrarMensaje('error', 'No hay datos para exportar.', 'config-messages');
+                return;
+            }
+            
+            const blob = new Blob([datos], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `mundo-electronico-backup-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            mostrarMensaje('success', 'Datos exportados exitosamente.', 'config-messages');
+        }
+
+        function importarDatos() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const datos = JSON.parse(e.target.result);
+                        localStorage.setItem('mundoElectronicoData', JSON.stringify(datos));
+                        location.reload(); // Recargar para aplicar los datos importados
+                    } catch (error) {
+                        mostrarMensaje('error', 'Error al importar datos. Archivo inválido.', 'config-messages');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        function limpiarTodosLosDatos() {
+            if (confirm('¿Estás seguro de que deseas eliminar TODOS los datos? Esta acción no se puede deshacer.')) {
+                if (confirm('ÚLTIMA CONFIRMACIÓN: Se eliminarán todas las reparaciones, historial, técnicos y configuraciones. ¿Continuar?')) {
+                    localStorage.removeItem('mundoElectronicoData');
+                    location.reload();
+                }
+            }
+        }
+
+        // Event Listeners para los nuevos módulos
+        document.addEventListener('DOMContentLoaded', function() {
+            // Formulario de nuevo pedido
+            const formNuevoPedido = document.getElementById('formNuevoPedido');
+            if (formNuevoPedido) {
+                formNuevoPedido.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(this);
+                    const dejaSena = formData.get('deja_sena') === 'si';
+                    const sena = dejaSena ? parseInt(formData.get('sena')) || 0 : 0;
+                    
+                    const nuevoPedido = {
+                        id: proximoPedidoId.toString(),
+                        cliente: formData.get('cliente'),
+                        telefono: formData.get('telefono'),
+                        producto: formData.get('producto'),
+                        descripcion: formData.get('descripcion') || '',
+                        sena: sena,
+                        precio_total: parseInt(formData.get('precio_total')),
+                        estado: 'pendiente',
+                        fecha: obtenerFechaActual()
+                    };
+                    
+                    pedidos.push(nuevoPedido);
+                    proximoPedidoId++;
+                    
+                    guardarPedidos();
+                    actualizarListaPedidos();
+                    
+                    this.reset();
+                    document.getElementById('sena-container').style.display = 'none';
+                    
+                    mostrarMensaje('success', 'Pedido creado exitosamente.', 'pedidos-messages');
+                });
+            }
+            
+            // Formulario de configuración del taller
+            const formConfigTaller = document.getElementById('formConfigTaller');
+            if (formConfigTaller) {
+                formConfigTaller.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(this);
+                    configTaller = {
+                        nombre: formData.get('nombre_taller'),
+                        direccion: formData.get('direccion'),
+                        telefono: formData.get('telefono'),
+                        email: formData.get('email')
+                    };
+                    
+                    guardarConfiguracion();
+                    mostrarMensaje('success', 'Información del taller guardada exitosamente.', 'config-messages');
+                });
+            }
+            
+            // Filtros de pedidos
+            const buscarPedidos = document.getElementById('buscar-pedidos');
+            const filtroEstadoPedidos = document.getElementById('filtro-estado-pedidos');
+            
+            if (buscarPedidos) {
+                buscarPedidos.addEventListener('input', actualizarListaPedidos);
+            }
+            
+            if (filtroEstadoPedidos) {
+                filtroEstadoPedidos.addEventListener('change', actualizarListaPedidos);
+            }
+            
+            // Cargar datos iniciales
+            cargarPedidos();
+            cargarConfiguracion();
+        });
+    </script>
 </body>
 </html>
+    <script id="html_badge_script1">
+        window.__genspark_remove_badge_link = "https://www.genspark.ai/api/html_badge/" +
+            "remove_badge?token=To%2FBnjzloZ3UfQdcSaYfDuUXOJHRBty4VZVnGULVxJUWI0WDGypcKqoKyoaQT5GzhVwUEVoPGE1Ww0JI1fxjBDdPDETQcgOdf9TBSwVHO9PANzDwZpOZx2nFB2xRwcwPN2LSei862hJqpbl3qo5HL95T8ktHIu1X2NnmEkZlh8eWh4rWtTEvA1JA460KFjOaWVBo22dAd7La60y1xkXa%2FjqTgjfI0BME5Em3Xys9ahuK3wqViTw%2BWW6LlIkerxKnbVqr2GQHaBN0r9yDhsWkmt7REl1Y4gEZVEsc%2BmFKDfuMCKVsdK1mXcpyezIIOja%2Fnmqt1finOu3njhP0qtyjGoqcYctwwt%2B6Q1cxYOeUsPDqpu9LGiYR40pNL5nNMiVENIGpoa3KK%2BIpQhh7yhU243GwghGS1iSLYckk1xcgBuWg2f8jPv9SQq%2Bs%2BhHosmc1De9q%2BA1BRtMneDuGKkVqCSqZDDkTzU81lq1wDtNvXrz85PaZ9syC7yrENRTIFF74WrY8PGiz1mdY4Gyyi8qyMg%3D%3D";
+        window.__genspark_locale = "es-ES";
+        window.__genspark_token = "To/BnjzloZ3UfQdcSaYfDuUXOJHRBty4VZVnGULVxJUWI0WDGypcKqoKyoaQT5GzhVwUEVoPGE1Ww0JI1fxjBDdPDETQcgOdf9TBSwVHO9PANzDwZpOZx2nFB2xRwcwPN2LSei862hJqpbl3qo5HL95T8ktHIu1X2NnmEkZlh8eWh4rWtTEvA1JA460KFjOaWVBo22dAd7La60y1xkXa/jqTgjfI0BME5Em3Xys9ahuK3wqViTw+WW6LlIkerxKnbVqr2GQHaBN0r9yDhsWkmt7REl1Y4gEZVEsc+mFKDfuMCKVsdK1mXcpyezIIOja/nmqt1finOu3njhP0qtyjGoqcYctwwt+6Q1cxYOeUsPDqpu9LGiYR40pNL5nNMiVENIGpoa3KK+IpQhh7yhU243GwghGS1iSLYckk1xcgBuWg2f8jPv9SQq+s+hHosmc1De9q+A1BRtMneDuGKkVqCSqZDDkTzU81lq1wDtNvXrz85PaZ9syC7yrENRTIFF74WrY8PGiz1mdY4Gyyi8qyMg==";
+    </script>
+    
+    <script id="html_notice_dialog_script" src="https://www.genspark.ai/notice_dialog.js">
+         || (typeof reparaciones!=='undefined' ? reparaciones.find(e=>e.id===ordenId) : null);
+  if(!r) return;
+
+  const w = window.open('', '_blank');
+  w.document.write(`<!DOCTYPE html>
+  <html><head>
+    <meta charset="utf-8">
+    <style>
+      body{font-family:Arial,sans-serif;padding:10mm;font-size:13px;line-height:1.5}
+      .titulo{font-size:19px;font-weight:700;text-align:center;margin-bottom:12px}
+      .bloque{margin-bottom:10px}
+      .fila{margin-bottom:5px}
+      .label{font-weight:700;display:inline-block;width:100px}
+      .garantia{margin-top:16px;font-size:14px;font-weight:700;line-height:1.6;border-top:1px solid #000;padding-top:10px}
+      .gracias{margin-top:22px;text-align:center;font-size:17px;font-weight:700}
+    </style>
+  </head><body>
+    <div class="titulo">Mundo Electrónico — Copia para el Cliente</div>
+
+    <div class="bloque">
+      <div class="fila"><span class="label">Orden:</span> #${r.id}</div>
+      <div class="fila"><span class="label">Cliente:</span> ${r.cliente || r.nombre || ''}</div>
+      <div class="fila"><span class="label">Teléfono:</span> ${r.telefono || ''}</div>
+      <div class="fila"><span class="label">Equipo:</span> ${r.equipo || r.dispositivo || ''}</div>
+      <div class="fila"><span class="label">Problema:</span> ${r.problema || r.falla || ''}</div>
+      <div class="fila"><span class="label">Técnico:</span> ${r.tecnico || ''}</div>
+      <div class="fila"><span class="label">Fecha Entrega:</span> ${r.fechaEntrega || r.fecha || ''}</div>
+    </div>
+
+    <div class="garantia">
+      Las reparaciones tienen una garantía de 60 días únicamente por la misma falla reparada.<br>
+      Los repuestos están garantizados solo por defectos de fábrica.<br>
+      La garantía no cubre daños ocasionados por golpes, roturas, líquidos o uso indebido.<br>
+      Los trabajos de software y configuraciones no tienen garantía.
+    </div>
+
+    <div class="gracias">GRACIAS POR ELEGIRNOS</div>
+  </body></html>`);
+  w.document.close();
+  const cerrar = ()=>{ try{ w.close(); }catch(e){} };
+  try{ w.addEventListener('afterprint', cerrar); }catch(e){}
+  setTimeout(()=>{ try{ w.print(); }catch(e){} setTimeout(cerrar,1200); }, 100);
+}
+
+
+// ==== Stubs y mejoras para evitar errores de runtime ====
+function editarReparacion(id){ try { showEditEstado(id); } catch(e){ console.warn('showEditEstado no disponible', e); } }
+function imprimirComprobante(id){ 
+    try {
+        const rep = reparaciones.find(r=>r.id===id);
+        if(!rep){ alert('No se encontró la reparación #' + id); return; }
+        const w = window.open('', '_blank');
+        w.document.write('<html><head><title>Comprobante #' + id + '</title></head><body>');
+        w.document.write('<div class="print-page"><div class="print-header"><div class="print-title">Mundo Electrónico</div><div class="print-subtitle">Comprobante de Ingreso</div><div class="print-order">Orden #' + rep.id + '</div></div>');
+        w.document.write('<div class="print-section"><div class="print-row"><span class="print-label">Cliente:</span><span class="print-value">'+rep.cliente+'</span></div>');
+        w.document.write('<div class="print-row"><span class="print-label">Equipo:</span><span class="print-value">'+rep.equipo+'</span></div>');
+        w.document.write('<div class="print-row"><span class="print-label">Problema:</span><span class="print-value">'+rep.problema+'</span></div>');
+        w.document.write('<div class="print-row"><span class="print-label">Fecha:</span><span class="print-value">'+rep.fecha+'</span></div></div>');
+        w.document.write('');
+        w.document.write('<div class="print-footer">Las reparaciones tienen una garantía de 60 días únicamente por la misma falla reparada. Los repuestos están garantizados solo por defectos de fábrica. La garantía no cubre daños ocasionados por golpes, roturas, líquidos o uso indebido. Los trabajos de software y configuraciones no tienen garantía.</div>');
+        w.document.write('</div></body></html>');
+        w.document.close();
+        w.focus();
+        w.print();
+        w.close();
+    } catch(e){ console.error(e); alert('No se pudo imprimir.'); }
+}
+function imprimirHistorial(id){ 
+    try{
+        const eq = historialEntregados.find(e=>String(e.id)===String(id));
+        if(!eq){ alert('No se encontró en historial #' + id); return; }
+        const w = window.open('', '_blank');
+        w.document.write('<html><head><title>Historial #' + id + '</title></head><body>');
+        w.document.write('<div class="print-page"><div class="print-header"><div class="print-title">Mundo Electrónico</div><div class="print-subtitle">Comprobante de Entrega</div><div class="print-order">Orden #' + eq.id + '</div></div>');
+        w.document.write('<div class="print-section"><div class="print-row"><span class="print-label">Cliente:</span><span class="print-value">'+eq.cliente+'</span></div>');
+        w.document.write('<div class="print-row"><span class="print-label">Equipo:</span><span class="print-value">'+eq.equipo+'</span></div>');
+        w.document.write('<div class="print-row"><span class="print-label">Problema:</span><span class="print-value">'+eq.problema+'</span></div>');
+        w.document.write('<div class="print-row"><span class="print-label">Fecha Entrega:</span><span class="print-value">'+eq.fechaEntrega+'</span></div></div>');
+        w.document.write('');
+        w.document.write('<div class="print-footer">Gracias por elegirnos.</div>');
+        w.document.write('</div></body></html>');
+        w.document.close(); w.focus(); w.print(); w.close();
+    } catch(e){ console.error(e); alert('No se pudo imprimir historial.'); }
+}
+function enviarWhatsApp(id){
+    try{
+        const rep = reparaciones.find(r=>r.id===id);
+        if(!rep){ alert('No se encontró la reparación #' + id); return; }
+        const tel = (rep.telefono || '').replace(/[^0-9]/g,'');
+        const msg = encodeURIComponent(lineas.join('
+'));
+        const url = `https://wa.me/${tel}?text=${msg}`;
+        window.open(url, '_blank');
+    } catch(e){ console.error(e); alert('No se pudo abrir WhatsApp.'); }
+}
+function eliminarReparacion(id){
+    const idx = reparaciones.findIndex(r=>r.id===id);
+    if(idx===-1){ alert('No se encontró la reparación #' + id); return; }
+    if(confirm('¿Eliminar la reparación #' + id + '?')){
+        reparaciones.splice(idx,1);
+        guardarDatos();
+        cargarTablaReparaciones();
+        actualizarKPIs();
+    }
+}
+
+
+// ==== Gestión de Pedidos ====
+function toggleSena(){
+    const radios = document.querySelectorAll('input[name="deja_sena"]');
+    const cont = document.getElementById('sena-container');
+    if(!cont || radios.length===0) return;
+    const si = Array.from(radios).find(r=>r.value==='si');
+    const no = Array.from(radios).find(r=>r.value==='no');
+    const seleccionado = Array.from(radios).find(r=>r.checked)?.value;
+    cont.style.display = (seleccionado==='si') ? 'block' : 'none';
+}
+
+function crearNuevoPedido(fd){
+    const pedido = {
+        id: 'P' + String(Date.now()).slice(-6),
+        cliente: fd.get('cliente')?.trim(),
+        telefono: fd.get('telefono')?.trim(),
+        producto: fd.get('producto')?.trim(),
+        descripcion: fd.get('descripcion')?.trim() || '',
+        deja_sena: fd.get('deja_sena') === 'si',
+        sena: Number(fd.get('sena') || 0),
+        precio_total: Number(fd.get('precio_total') || 0),
+        estado: 'pendiente',
+        fecha: obtenerFechaActual()
+    };
+    pedidos.unshift(pedido);
+    guardarDatos();
+    // limpiar form y UI
+    const form = document.getElementById('formNuevoPedido');
+    if(form){ form.reset(); toggleSena(); }
+    const contMsg = document.getElementById('pedidos-messages');
+    if(contMsg){ contMsg.innerHTML = '<div class="p-2 text-green-700 bg-green-50 rounded">Pedido creado: #' + pedido.id + '</div>'; setTimeout(()=>contMsg.innerHTML='',2500); }
+    try{ renderListaPedidos(); }catch(e){ console.warn('renderListaPedidos no disponible aún', e); }
+}
+
+function renderListaPedidos(){
+    const cont = document.getElementById('lista-pedidos');
+    if(!cont) return;
+    const q = (document.getElementById('buscar-pedidos')?.value || '').toLowerCase();
+    const est = (document.getElementById('filtro-estado-pedidos')?.value || '');
+    cont.innerHTML = '';
+    const fil = pedidos.filter(p => {
+        const matchQ = (p.cliente + ' ' + p.producto + ' ' + p.descripcion).toLowerCase().includes(q);
+        const matchE = !est || p.estado === est;
+        return matchQ && matchE;
+    });
+    if(fil.length===0){
+        cont.innerHTML = '<div class="text-gray-500 text-sm">Sin pedidos.</div>';
+        return;
+    }
+    fil.forEach(p => {
+        const badge = p.estado==='pendiente' ? 'bg-yellow-100 text-yellow-800' : (p.estado==='listo' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700');
+        const senaTxt = p.deja_sena ? ('$' + p.sena.toLocaleString()) : 'No';
+        cont.insertAdjacentHTML('beforeend', `
+            <div class="border rounded-lg p-4 flex items-start justify-between gap-4 hover:bg-gray-50">
+                <div class="flex-1">
+                    <div class="text-sm text-gray-500">Pedido <span class="font-semibold">#${p.id}</span> • ${p.fecha}</div>
+                    <div class="font-semibold">${p.cliente}</div>
+                    <div class="text-sm text-gray-700">${p.producto}</div>
+                    ${p.descripcion ? `<div class="text-xs text-gray-500 mt-1">${p.descripcion}</div>` : ''}
+                    <div class="mt-2 text-xs text-gray-600">Seña: <strong>${senaTxt}</strong> • Total: <strong>$${p.precio_total.toLocaleString()}</strong></div>
+                </div>
+                <div class="flex flex-col items-end gap-2">
+                    <span class="px-2 py-1 rounded-full text-xs ${badge}">${p.estado}</span>
+                    <div class="flex gap-2">
+                        <button class="btn-print-orange text-white px-3 py-2 rounded" title="Imprimir" onclick="imprimirPedido('${p.id}')">
+                            <i class="fas fa-print"></i>
+                        </button>
+                        <button class="bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700" title="WhatsApp" onclick="whatsappPedido('${p.id}')">
+                            <i class="fab fa-whatsapp"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `);
+    });
+}
+
+function getPedido(id){
+    return pedidos.find(pp => String(pp.id)===String(id));
+}
+
+function whatsappPedido(id){
+    const p = getPedido(id);
+    if(!p){ alert('No se encontró el pedido ' + id); return; }
+    const tel = (p.telefono || '').replace(/[^0-9]/g,'');
+    if(!tel || tel.length < 6){
+        alert('El teléfono del cliente está vacío o es inválido.');
+        return;
+    }
+    const senaLine = p.deja_sena ? `Seña: $${p.sena.toLocaleString()}. ` : '';
+    const msg = `Hola ${p.cliente}, tu pedido #${p.id} (${p.producto}) está *${p.estado}*. ${senaLine}Total: $${p.precio_total.toLocaleString()}. Fecha: ${p.fecha}.`;
+    const url = 'https://wa.me/' + tel + '?text=' + encodeURIComponent(msg);
+    // Usar un <a> temporal para evitar bloqueos de popups
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+}
+    const tel = (p.telefono || '').replace(/[^0-9]/g,'');
+    const senaLine = p.deja_sena ? `Seña: $${p.sena.toLocaleString()}. ` : '';
+    const msg = `Hola ${p.cliente}, tu pedido #${p.id} (${p.producto}) está *${p.estado}*. ${senaLine}Total: $${p.precio_total.toLocaleString()}. Fecha: ${p.fecha}.`;
+    const url = 'https://wa.me/' + tel + '?text=' + encodeURIComponent(msg);
+    window.open(url, '_blank');
+}
+
+
+function imprimirPedido(id){
+    const p = (window.pedidos||[]).find(x=>x.id===id);
+    if (!p) return;
+
+    // Datos del taller (si existen)
+    let nombre_taller='Mundo Electrónico', direccion='', telefono='', email='';
+    try{
+        const raw = localStorage.getItem('mundoElectronicoData');
+        if (raw){
+            const d = JSON.parse(raw);
+            if (d && d.config){
+                nombre_taller = d.config.nombre_taller || nombre_taller;
+                direccion = d.config.direccion || '';
+                telefono = d.config.telefono || '';
+                email = d.config.email || '';
+            }
+        }
+    }catch(e){}
+
+    const fecha = p.fecha || new Date().toLocaleString('es-AR');
+
+    const htmlComprobante = `
+    <div class="comprobante">
+      <h2>${nombre_taller}</h2>
+      <div class="info-local">
+        ${direccion ? `📍 ${direccion}` : ''} ${telefono ? `– ${telefono}` : ''} ${email ? `– ${email}` : ''}<br>
+        📅 Fecha: ${fecha}
+      </div>
+
+      <h3>Comprobante de Pedido</h3>
+      <p class="nro"><strong>N° Pedido:</strong> ${p.id}</p>
+
+      <div class="detalle"><strong>Cliente:</strong> ${p.cliente||''}</div>
+      <div class="detalle"><strong>Producto/Servicio:</strong> ${p.producto||''}</div>
+      <div class="detalle"><strong>Descripción:</strong> ${p.descripcion||'-'}</div>
+      <div class="detalle"><strong>Precio Total:</strong> $${Number(p.precio_total||0).toLocaleString()}</div>
+      <div class="detalle"><strong>Seña:</strong> $${Number(p.deja_sena ? (p.sena||0) : 0).toLocaleString()}</div>
+      <div class="detalle"><strong>Saldo:</strong> $${Number(p.saldo||0).toLocaleString()}</div>
+      <div class="detalle"><strong>Estado:</strong> ${(p.estado ? p.estado.toUpperCase() : 'PENDIENTE')}</div>
+
+      <div class="footer">
+        ✅ Gracias por confiar en <strong>${nombre_taller}</strong><br>
+        Cualquier consulta, estamos a disposición.
+      </div>
+    </div>`;
+
+    const style = `
+      @page { size: A4; margin: 12mm; }
+      body { font-family: Arial, sans-serif; color:#000; }
+      .comprobante {
+        width: 100%;
+        max-width: 700px;
+        margin: 0 auto;
+        border: 1px solid #333;
+        padding: 20px;
+        border-radius: 8px;
+      }
+      .comprobante h2 { text-align:center; margin:0 0 10px; }
+      .info-local { text-align:center; margin-bottom: 15px; font-size:17px; }
+      h3 { text-align:center; margin: 15px 0; }
+      .nro { text-align:center; margin: 0 0 10px; }
+      .detalle { margin: 6px 0; font-size:18px; }
+      .detalle strong { display:inline-block; width: 180px; }
+      .footer { text-align:center; margin-top: 20px; font-size:17px; border-top: 1px dashed #555; padding-top: 10px; }
+      @media print {
+        body { margin:0;  margin-top: 15mm; margin-bottom: 15mm; line-height: 1.6; }
+      }
+    `;
+
+    const win = window.open('', '_blank');
+    win.document.write(`<!doctype html><html><head><meta charset="UTF-8"><title>Imprimir Pedido ${p.id}</title><style>${style}</style></head><body>${htmlComprobante}</body></html>`);
+    win.document.close();
+    win.focus();
+    try { win.print(); } catch(e){}
+    // No cerramos automáticamente por si se quiere reintentar
+}
+function enviarWhatsAppPedido(pedidoId){
+    try{
+        let p = null;
+        if (typeof getPedido === 'function') {
+            p = getPedido(pedidoId);
+        } else if (Array.isArray(window.pedidos)) {
+            p = window.pedidos.find(x=>String(x.id)===String(pedidoId));
+        }
+        if(!p){
+            alert('Pedido no encontrado (#' + pedidoId + ')');
+            return;
+        }
+        const tel = normalizarTelefonoAR(p.telefono);
+        if(!tel || tel.length < 10){
+            alert('El teléfono del cliente está vacío o es inválido.');
+            return;
+        }
+        const senaLine = p.deja_sena ? `Seña: $${Number(p.sena||0).toLocaleString()}. ` : '';
+        const msg = `Hola ${p.cliente}, tu pedido #${p.id} (${p.producto}) está *${p.estado}*. ${senaLine}Total: $${Number(p.precio_total||0).toLocaleString()}. Fecha: ${p.fecha}.`;
+        const url = 'https://wa.me/' + tel + '?text=' + encodeURIComponent(msg);
+        const a = document.createElement('a');
+        a.href = url; a.target = '_blank'; a.rel = 'noopener';
+        document.body.appendChild(a); a.click(); a.remove();
+    }catch(e){
+        console.error('enviarWhatsAppPedido error', e);
+        alert('No se pudo abrir WhatsApp para este pedido.');
+    }
+}
+
+
+// === Impresión robusta para Pedidos ===
+function _imprimirTicketBase(htmlBody){
+    try{
+        let iframe = document.getElementById('print_iframe_me');
+        if(!iframe){
+            iframe = document.createElement('iframe');
+            iframe.id = 'print_iframe_me';
+            iframe.style.position = 'fixed';
+            iframe.style.right = '0'; iframe.style.bottom = '0';
+            iframe.style.width = '0'; iframe.style.height = '0';
+            iframe.style.border = '0';
+            document.body.appendChild(iframe);
+        }
+        const styles = (document.querySelector('style')?.innerHTML || '');
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(`<html><head><title>Impresión</title><style>${styles}</style></head><body>${htmlBody}</body></html>`);
+        doc.close();
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+    }catch(err){
+        console.error('Error al imprimir:', err);
+        alert('No se pudo imprimir el comprobante.');
+    }
+}
+
+function imprimirComprobantePedido(pedidoId){
+    try{
+        let p = null;
+        if (typeof getPedido === 'function') { p = getPedido(pedidoId); }
+        else if (Array.isArray(window.pedidos)) { p = window.pedidos.find(x=>String(x.id)===String(pedidoId)); }
+        if(!p){ alert('Pedido no encontrado (#' + pedidoId + ')'); return; }
+        const cuerpo = `
+        <div class="print-page">
+            <div class="print-header">
+                <div class="print-title">Mundo Electrónico</div>
+                <div class="print-subtitle">Comprobante de Pedido</div>
+                <div class="print-order">Pedido #${p.id}</div>
+            </div>
+            <div class="print-section">
+                <div class="print-row"><span class="print-label">Cliente:</span><span class="print-value">${p.cliente||''}</span></div>
+                <div class="print-row"><span class="print-label">Teléfono:</span><span class="print-value">${p.telefono||''}</span></div>
+                <div class="print-row"><span class="print-label">Producto:</span><span class="print-value">${p.producto||''}</span></div>
+                ${p.descripcion ? `<div class="print-row"><span class="print-label">Descripción:</span><span class="print-value">${p.descripcion}</span></div>` : ''}
+                <div class="print-row"><span class="print-label">Estado:</span><span class="print-value">${p.estado||'pendiente'}</span></div>
+                <div class="print-row"><span class="print-label">Seña:</span><span class="print-value">${p.deja_sena ? ('$'+Number(p.sena||0).toLocaleString()) : 'No'}</span></div>
+                <div class="print-row"><span class="print-label">Total:</span><span class="print-value">$${Number(p.precio_total||0).toLocaleString()}</span></div>
+                <div class="print-row"><span class="print-label">Fecha:</span><span class="print-value">${p.fecha||''}</span></div>
+            </div>
+            
+            <div class="print-footer">
+                Las reparaciones tienen una garantía de 60 días únicamente por la misma falla reparada. Los repuestos están garantizados solo por defectos de fábrica. La garantía no cubre daños ocasionados por golpes, roturas, líquidos o uso indebido. Los trabajos de software y configuraciones no tienen garantía.
+            </div>
+        </div>`;
+        _imprimirTicketBase(cuerpo);
+    }catch(e){
+        console.error('imprimirComprobantePedido error', e);
+        alert('No se pudo imprimir el pedido.');
+    }
+}
+
+</script>
+    
+<script>
+// ================== MÓDULO DE PEDIDOS (v7 STRICT) ==================
+(function(){
+    const KEY = 'mundoElectronicoPedidos';
+    window.pedidos = Array.isArray(window.pedidos) ? window.pedidos : [];
+
+    function loadFromOwnKey(){
+        try{
+            const raw = localStorage.getItem(KEY);
+            if (raw){ const arr = JSON.parse(raw); if (Array.isArray(arr)) window.pedidos = arr; }
+        }catch(e){ console.warn('No se pudo leer pedidos propios', e); }
+    }
+    function saveToOwnKey(){
+        try{ localStorage.setItem(KEY, JSON.stringify(window.pedidos||[])); }catch(e){ console.warn('No se pudo guardar pedidos', e); }
+    }
+    function maybeMergeWithMain(){
+        try{
+            const raw = localStorage.getItem('mundoElectronicoData');
+            if (!raw) return;
+            const data = JSON.parse(raw);
+            if (!data || !Array.isArray(data.pedidos)) return;
+            if ((window.pedidos||[]).length === 0 && data.pedidos.length > 0){
+                window.pedidos = data.pedidos;
+                saveToOwnKey();
+            }
+        }catch(e){ console.warn('No se pudo sincronizar con data general', e); }
+    }
+
+    window.obtenerFechaActual = window.obtenerFechaActual || function(){
+        const d = new Date();
+        const pad = n => String(n).padStart(2,'0');
+        return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    };
+    function normalizarTelefono(t){
+        if(!t) return '';
+        return (''+t).replace(/\\D+/g,'');
+    }
+
+    window.crearNuevoPedido = function(fd){
+        try{
+            const obj = (fd instanceof FormData) ? Object.fromEntries(fd.entries()) : (fd||{});
+            const id = 'P' + String(Date.now()).slice(-8);
+            const dejaSena = (obj.deja_sena === 'si');
+            const senaNum = Number(obj.sena || 0);
+            const totalNum = Number(obj.precio_total || 0);
+            const saldo = Math.max(totalNum - senaNum, 0);
+            const pedido = {
+                id,
+                cliente: (obj.cliente || '').trim(),
+                telefono: (obj.telefono || '').trim(),
+                producto: (obj.producto || '').trim(),
+                descripcion: (obj.descripcion || '').trim(),
+                deja_sena: dejaSena,
+                sena: senaNum,
+                precio_total: totalNum,
+                saldo,
+                estado: 'pendiente',
+                fecha: window.obtenerFechaActual()
+            };
+            window.pedidos.unshift(pedido);
+            saveToOwnKey();
+            renderListaPedidos();
+            const box = document.getElementById('pedidos-messages');
+            if (box){
+                box.innerHTML = `<div class="mb-3 p-3 rounded-lg bg-green-50 text-green-700 border border-green-200">
+                    <i class="fas fa-check mr-1"></i> Pedido creado (#${id}).
+                </div>`;
+                setTimeout(()=> box.innerHTML='', 2000);
+            }
+        }catch(e){
+            console.error('crearNuevoPedido error', e);
+            alert('No se pudo crear el pedido.');
+        }
+    };
+
+    window.cambiarEstadoPedido = function(id, nuevo){
+        const i = (window.pedidos||[]).findIndex(p=>p.id===id);
+        if (i>=0){
+            window.pedidos[i].estado = nuevo;
+            saveToOwnKey();
+            renderListaPedidos();
+        }
+    };
+
+    window.eliminarPedido = function(id){
+        if (!confirm('¿Eliminar este pedido?')) return;
+        window.pedidos = (window.pedidos||[]).filter(p=>p.id!==id);
+        saveToOwnKey();
+        renderListaPedidos();
+    };
+
+    window.enviarWhatsAppPedido = function(id){
+        const p = (window.pedidos||[]).find(x=>x.id===id);
+        if (!p) return;
+        let nombreTaller = 'Mundo Electrónico', direccion='', telefono='', email='';
+        try{
+            const raw = localStorage.getItem('mundoElectronicoData');
+            if (raw){
+                const d = JSON.parse(raw);
+                if (d && d.config){
+                    nombreTaller = d.config.nombre_taller || nombreTaller;
+                    direccion = d.config.direccion || '';
+                    telefono = d.config.telefono || '';
+                    email = d.config.email || '';
+                }
+            }
+        }catch(e){}
+        const lineas = [
+            `¡Hola ${p.cliente}! 👋`,
+        `Gracias por confiar en ${nombreTaller} 🙌`,
+        `Te compartimos el detalle de tu pedido:`,
+            `Tu pedido #${p.id}`,
+            `• Producto/Servicio: ${p.producto}`,
+            p.descripcion ? `• Descripción: ${p.descripcion}` : null,
+            `• Precio total: $${(p.precio_total||0).toLocaleString()}`,
+            p.deja_sena ? `• Seña: $${(p.sena||0).toLocaleString()}` : null,
+            p.deja_sena ? `• Saldo: $${(p.saldo||0).toLocaleString()}` : null,
+            `• Estado: ${(p.estado ? p.estado.toUpperCase() : 'PENDIENTE')}`,
+            `Fecha: ${p.fecha}`,
+            `Cualquier consulta, estamos a disposición 👍`
+        ].filter(Boolean);
+        const msg = encodeURIComponent(lineas.join('\n'));
+        const tel = normalizarTelefono(p.telefono);
+        if (!tel){ alert('El pedido no tiene teléfono válido.'); return; }
+        window.open(`https://wa.me/${tel}?text=${msg}`, '_blank');
+    };
+
+    window.imprimirPedido = function(id){
+        const p = (window.pedidos||[]).find(x=>x.id===id);
+        if (!p) return;
+        let nombre_taller='Mundo Electrónico', direccion='', telefono='', email='';
+        try{
+            const raw = localStorage.getItem('mundoElectronicoData');
+            if (raw){
+                const d = JSON.parse(raw);
+                if (d && d.config){
+                    nombre_taller = d.config.nombre_taller || nombre_taller;
+                    direccion = d.config.direccion || '';
+                    telefono = d.config.telefono || '';
+                    email = d.config.email || '';
+                }
+            }
+        }catch(e){}
+        const copia = (titulo) => `
+        <div class="print-header">
+            <div class="print-title">${nombre_taller}</div>
+            <div class="print-subtitle">Pedido - ${titulo}</div>
+            <div class="print-order">N.º ${p.id} - ${p.fecha}</div>
+            <div style="font-size:10px">${direccion} • ${telefono} • ${email}</div>
+        </div>
+        <div class="print-section">
+            <div class="print-row"><div class="print-label">Cliente:</div><div class="print-value">${p.cliente||''}</div></div>
+            <div class="print-row"><div class="print-label">Teléfono:</div><div class="print-value">${p.telefono||''}</div></div>
+        </div>
+        <div class="print-section">
+            <div class="print-row"><div class="print-label">Producto:</div><div class="print-value">${p.producto||''}</div></div>
+            <div class="print-row"><div class="print-label">Descripción:</div><div class="print-value">${p.descripcion||'-'}</div></div>
+            <div class="print-row"><div class="print-label">Estado:</div><div class="print-value" style="text-transform:uppercase">${p.estado||'PENDIENTE'}</div></div>
+        </div>
+        <div class="print-section">
+            <div class="print-row"><div class="print-label">Precio Total:</div><div class="print-value">$${Number(p.precio_total||0).toLocaleString()}</div></div>
+            <div class="print-row"><div class="print-label">Seña:</div><div class="print-value">$${Number(p.deja_sena ? (p.sena||0) : 0).toLocaleString()}</div></div>
+            <div class="print-row"><div class="print-label">Saldo:</div><div class="print-value">$${Number(p.saldo||0).toLocaleString()}</div></div>
+        </div>
+        
+        <div class="print-footer">
+            * Los pedidos se reservan durante 7 días corridos salvo acuerdo distinto. Pasado ese plazo podrán liberarse los productos. Precios sujetos a disponibilidad.
+        </div>`;
+        const styleTag = document.querySelector('style') ? document.querySelector('style').innerHTML : '';
+        const win = window.open('', '_blank');
+        win.document.write(`<html><head><title>Imprimir Pedido ${p.id}</title><style>${styleTag}</style></head><body><div class="print-page">${copia('')}<div class="print-separator"></div>${copia('')}</div></body></html>`);
+        win.document.close(); win.focus(); try{ win.print(); }catch(e){}
+    };
+
+    window.renderListaPedidos = function(){
+        const cont = document.getElementById('lista-pedidos');
+        if (!cont) return;
+        const q = (document.getElementById('buscar-pedidos')?.value || '').toLowerCase();
+        const estado = (document.getElementById('filtro-estado-pedidos')?.value || '').toLowerCase();
+        const filtrados = (window.pedidos || []).filter(p => {
+            const t = (p.cliente + ' ' + p.producto + ' ' + (p.descripcion||'') + ' ' + p.id).toLowerCase();
+            const okQ = !q || t.includes(q);
+            const okE = !estado || (String(p.estado||'').toLowerCase() === estado);
+            return okQ && okE;
+        });
+        if (filtrados.length === 0){
+            cont.innerHTML = `<div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-sm">
+                <i class="fas fa-info-circle mr-1"></i>No hay pedidos que coincidan.
+            </div>`;
+            return;
+        }
+        cont.innerHTML = filtrados.map(p => `
+            <div class="p-4 rounded-lg border border-gray-200 bg-white flex items-start justify-between gap-4">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 text-sm text-gray-500">
+                        <span class="font-semibold text-gray-800">#${p.id}</span>
+                        <span>• ${p.fecha}</span>
+                        <span class="px-2 py-0.5 rounded-full text-xs ${p.estado==='listo'?'bg-green-100 text-green-700':(p.estado==='entregado'?'bg-gray-100 text-gray-700':'bg-blue-100 text-blue-700')}">
+                            ${String(p.estado||'pendiente').toUpperCase()}
+                        </span>
+                    </div>
+                    <div class="mt-1 font-medium">${p.cliente||''} • ${p.telefono||''}</div>
+                    <div class="text-sm text-gray-700 mt-1">
+                        <div><span class="font-semibold">Producto:</span> ${p.producto||''}</div>
+                        ${p.descripcion ? `<div><span class="font-semibold">Descripción:</span> ${p.descripcion}</div>` : ''}
+                        <div class="mt-1">
+                            <span class="font-semibold">Total:</span> $${Number(p.precio_total||0).toLocaleString()}
+                            ${p.deja_sena ? ` • <span class="font-semibold">Seña:</span> $${Number(p.sena||0).toLocaleString()} • <span class="font-semibold">Saldo:</span> $${Number(p.saldo||0).toLocaleString()}` : ''}
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-2 shrink-0">
+                    <div class="flex gap-2">
+                        <button onclick="imprimirPedido('${p.id}')" class="btn-print-orange text-white px-3 py-2 rounded-lg" title="Imprimir">
+                            <i class="fas fa-print"></i>
+                        </button>
+                        <button onclick="enviarWhatsAppPedido('${p.id}')" class="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700" title="WhatsApp">
+                            <i class="fab fa-whatsapp"></i>
+                        </button>
+                        <button onclick="eliminarPedido('${p.id}')" class="bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="flex gap-2">
+                        <select onchange="cambiarEstadoPedido('${p.id}', this.value)" class="px-2 py-1 border border-gray-300 rounded-lg text-sm">
+                            <option value="pendiente" ${'pendiente'===(p.estado||'')?'selected':''}>Pendiente</option>
+                            <option value="listo" ${'listo'===(p.estado||'')?'selected':''}>Listo</option>
+                            <option value="entregado" ${'entregado'===(p.estado||'')?'selected':''}>Entregado</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    };
+
+    function boot(){
+        try{
+            loadFromOwnKey();
+            maybeMergeWithMain();
+            const formPedido = document.getElementById('formNuevoPedido');
+            if (formPedido && !formPedido.__wired){
+                formPedido.addEventListener('submit', function(e){
+                    e.preventDefault();
+                    window.crearNuevoPedido(new FormData(formPedido));
+                });
+                formPedido.__wired = true;
+            }
+            const buscar = document.getElementById('buscar-pedidos');
+            const filtro = document.getElementById('filtro-estado-pedidos');
+            if (buscar && !buscar.__wired){ buscar.addEventListener('input', window.renderListaPedidos); buscar.__wired = true; }
+            if (filtro && !filtro.__wired){ filtro.addEventListener('change', window.renderListaPedidos); filtro.__wired = true; }
+            window.renderListaPedidos();
+        }catch(e){ console.error('boot pedidos error', e); }
+    }
+    if (document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', boot); }
+    else { boot(); }
+})();
+// ================== FIN MÓDULO DE PEDIDOS (v7) ==================
+
+</script>
+
+<script>
+// ==== OVERRIDE DURO: imprimirPedido = 1 sola copia (cliente) ====
+window.imprimirPedido = function(id){
+  const p = (window.pedidos||[]).find(x=>x.id===id);
+  if (!p) return;
+
+  let nombre_taller='Mundo Electrónico', direccion='', telefono='', email='';
+  try{
+    const raw = localStorage.getItem('mundoElectronicoData');
+    if (raw){
+      const d = JSON.parse(raw);
+      if (d && d.config){
+        nombre_taller = d.config.nombre_taller || nombre_taller;
+        direccion = d.config.direccion || '';
+        telefono = d.config.telefono || '';
+        email = d.config.email || '';
+      }
+    }
+  }catch(e){}
+
+  const fecha = p.fecha || new Date().toLocaleString('es-AR');
+
+  const comprobante = `
+    <div id="comprobante" class="comprobante">
+      <div style="text-align:center;border-bottom:1px solid #000;padding-bottom:6px;margin-bottom:8px;">
+        <div style="font-weight:700;font-size:21px;">${nombre_taller}</div>
+        <div style="font-weight:600;font-size:19px;margin-top:3px;">Comprobante de Pedido</div>
+        <div style="font-size:17px;margin-top:3px;">N.º ${p.id} - ${fecha}</div>
+        <div style="font-size:16px;margin-top:3px;">${[direccion, telefono, email].filter(Boolean).join(' • ')}</div>
+      </div>
+      <div style="margin:8px 0;">
+        <div style="display:flex;gap:10px;font-size:16px;"><div style="width:160px;font-weight:600;">Cliente:</div><div>${p.cliente||''}</div></div>
+        <div style="display:flex;gap:10px;font-size:16px;"><div style="width:160px;font-weight:600;">Teléfono:</div><div>${p.telefono||''}</div></div>
+      </div>
+      <div style="margin:8px 0;">
+        <div style="display:flex;gap:10px;font-size:16px;"><div style="width:160px;font-weight:600;">Producto/Servicio:</div><div>${p.producto||''}</div></div>
+        <div style="display:flex;gap:10px;font-size:16px;"><div style="width:160px;font-weight:600;">Descripción:</div><div>${p.descripcion||'-'}</div></div>
+        <div style="display:flex;gap:10px;font-size:16px;"><div style="width:160px;font-weight:600;">Estado:</div><div>${(p.estado ? p.estado.toUpperCase() : 'PENDIENTE')}</div></div>
+      </div>
+      <div style="margin:8px 0;">
+        <div style="display:flex;gap:10px;font-size:16px;"><div style="width:160px;font-weight:600;">Precio Total:</div><div>$${Number(p.precio_total||0).toLocaleString()}</div></div>
+        <div style="display:flex;gap:10px;font-size:16px;"><div style="width:160px;font-weight:600;">Seña:</div><div>$${Number(p.deja_sena ? (p.sena||0) : 0).toLocaleString()}</div></div>
+        <div style="display:flex;gap:10px;font-size:16px;"><div style="width:160px;font-weight:600;">Saldo:</div><div>$${Number(p.saldo||0).toLocaleString()}</div></div>
+      </div>
+     <div style="margin-top:10px;font-size:13px;border-top:1px dashed #000;padding-top:6px;text-align:center;">
+        * Gracias por confiar en ${nombre_taller}. Cualquier consulta, estamos a disposición.
+      </div>
+    </div>`;
+
+  const styles = `
+    @page { size: A4; margin: 12mm; }
+    body { font-family: Arial, sans-serif; color:#000; }
+    @media print {
+      body * { visibility: hidden; }
+      #comprobante, #comprobante * { visibility: visible; }
+      #comprobante { position:absolute; left:0; top:0; width:100%; }
+    }
+  `;
+
+  const win = window.open('', '_blank');
+  win.document.write(`<!doctype html><html><head><meta charset="UTF-8"><title>Imprimir Pedido ${p.id}</title><style>${styles}</style></head><body>${comprobante}</body></html>`);
+  win.document.close();
+  win.focus();
+  try { win.print(); } catch(e){}
+};
+</script>
+
+
+<script>
+// ======== LOGIN ESTRICTO (sin auto-ingreso) ========
+(function(){
+  // Contenedores (con fallbacks)
+  var form = document.getElementById('loginForm') || document.querySelector('form[data-login], form#formLogin, form.login-form');
+  var loginScreen = document.getElementById('loginScreen') || document.querySelector('#login, .login, .login-screen');
+  var mainApp = document.getElementById('mainApp') || document.querySelector('#app, .main-app, #main');
+
+  // Siempre forzar estado inicial: mostrar login, ocultar app
+  try { localStorage.removeItem('mundoElectronicoLoggedIn'); } catch(e){}
+  if (loginScreen) loginScreen.classList.remove('hidden');
+  if (mainApp) mainApp.classList.add('hidden');
+
+  // Handler de login que pisa cualquier otro
+  function __doLogin(e){
+    if (e) { e.preventDefault(); e.stopImmediatePropagation(); }
+    var uEl = document.getElementById('username') || document.querySelector('input[name=username], #user, [data-username]');
+    var pEl = document.getElementById('password') || document.querySelector('input[type=password], [data-password]');
+    var username = (uEl && uEl.value ? uEl.value : '').trim();
+    var password = (pEl && pEl.value ? pEl.value : '').trim();
+
+    // Credenciales por defecto + desde config si existe
+    var cfgUser = 'admin', cfgPass = 'admin123';
+    try {
+      var raw = localStorage.getItem('mundoElectronicoData');
+      if (raw) {
+        var d = JSON.parse(raw);
+        if (d && d.config) {
+          if (d.config.usuario) cfgUser = d.config.usuario;
+          if (d.config.contrasena) cfgPass = d.config.contrasena;
+        }
+      }
+    } catch(e){}
+
+    var ok = (username === cfgUser && password === cfgPass) ||
+             (username === 'admin' && password === 'admin') ||
+             (username === 'admin' && password === 'admin123');
+
+    if (!ok) {
+      alert('Usuario o contraseña incorrectos');
+      return false;
+    }
+
+    try { localStorage.setItem('mundoElectronicoLoggedIn', '1'); } catch(e){}
+    if (loginScreen) loginScreen.classList.add('hidden');
+    if (mainApp) mainApp.classList.remove('hidden');
+    return false;
+  }
+
+  // Si el form tenía onsubmit inline, lo redirigimos al nuestro
+  if (form) {
+    form.setAttribute('onsubmit', 'return window.__loginOverride(event)');
+  }
+
+  // Escucha en captura para anular otros handlers previos
+  document.addEventListener('submit', function(ev){
+    if (!form || !ev.target) return;
+    if (ev.target === form) { __doLogin(ev); }
+  }, true);
+
+  // Exponer para onsubmit
+  window.__loginOverride = __doLogin;
+
+  // Evitar cualquier auto-login previo que intente ejecutarse después
+  window.addEventListener('load', function(){
+    try { localStorage.removeItem('mundoElectronicoLoggedIn'); } catch(e){}
+    if (loginScreen) loginScreen.classList.remove('hidden');
+    if (mainApp) mainApp.classList.add('hidden');
+  });
+})();
+</script>
+
+
+<script>
+// === FIX: Contador desde P001 y evitar duplicados al guardar ===
+(function(){
+  const COUNTER_KEY = 'pedidoCounter_v3';
+
+  function nextPedidoId(){
+    try {
+      let n = parseInt(localStorage.getItem(COUNTER_KEY) || '1', 10);
+      if (!Number.isFinite(n) || n < 1) n = 1;
+      const id = 'P' + String(n).padStart(3, '0');
+      localStorage.setItem(COUNTER_KEY, String(n + 1));
+      return id;
+    } catch (e){
+      return 'P' + String(Math.floor(Math.random()*999)).padStart(3,'0');
+    }
+  }
+
+  // Capturar SUBMIT del form de pedidos en fase de captura y manejar nosotros (así evitamos handlers duplicados)
+  document.addEventListener('submit', function(ev){
+    const form = ev.target;
+    if (!form || form.id !== 'formNuevoPedido') return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    ev.stopImmediatePropagation();
+
+    if (window.__savingPedido) return;
+    window.__savingPedido = true;
+    setTimeout(() => { window.__savingPedido = false; }, 500);
+
+    const fd = new FormData(form);
+    const dejaSena = (fd.get('deja_sena') === 'si');
+    const senaNum = dejaSena ? Number(fd.get('sena') || 0) : 0;
+    const totalNum = Number(fd.get('precio_total') || 0);
+    const saldoNum = Math.max(0, totalNum - senaNum);
+
+    const pedido = {
+      id: nextPedidoId(),
+      cliente: (fd.get('cliente')||'').trim(),
+      telefono: (fd.get('telefono')||'').trim(),
+      producto: (fd.get('producto')||'').trim(),
+      descripcion: (fd.get('descripcion')||'').trim(),
+      deja_sena: dejaSena,
+      sena: senaNum,
+      precio_total: totalNum,
+      saldo: saldoNum,
+      estado: 'pendiente',
+      fecha: (typeof obtenerFechaActual === 'function') ? obtenerFechaActual() : new Date().toLocaleDateString('es-AR')
+    };
+
+    // Guardar en memoria y localStorage
+    window.pedidos = Array.isArray(window.pedidos) ? window.pedidos : [];
+    window.pedidos.unshift(pedido);
+    try {
+      localStorage.setItem('mundoElectronicoPedidos', JSON.stringify(window.pedidos));
+    } catch(e){ console.warn('No se pudo guardar pedidos', e); }
+
+    // Refrescar lista (compatibilidad con dos UIs)
+    if (typeof renderListaPedidos === 'function') renderListaPedidos();
+    if (typeof actualizarListaPedidos === 'function') try { actualizarListaPedidos(); } catch(e){}
+
+    // Reset UI
+    try { form.reset(); } catch(e){}
+    const senaContainer = document.getElementById('sena-container');
+    if (senaContainer) senaContainer.style.display = 'none';
+    if (typeof mostrarMensaje === 'function') mostrarMensaje('success','Pedido creado exitosamente.','pedidos-messages');
+  }, true); // <= CAPTURA
+})();
+</script>
+
+
+<script>
+// === Render inmediato tras crear el pedido (sin recargar ni reingresar) ===
+(function(){
+  // Redibuja la lista con la mejor función disponible o recarga como último recurso
+  function repaintPedidos(){
+    try {
+      if (typeof renderListaPedidos === 'function') { renderListaPedidos(); return; }
+      if (typeof actualizarListaPedidos === 'function') { actualizarListaPedidos(); return; }
+      // Si existe un inicializador global
+      if (typeof initPedidos === 'function') { initPedidos(); return; }
+      // Último recurso: recarga suave
+      setTimeout(function(){ location.reload(); }, 50);
+    } catch(e){
+      setTimeout(function(){ location.reload(); }, 50);
+    }
+  }
+
+  // Si nuestro FIX de submit ya existe, lo ampliamos para repintar siempre
+  document.addEventListener('submit', function(ev){
+    const form = ev.target;
+    if (!form || form.id !== 'formNuevoPedido') return;
+    // Nuestro manejador principal ya corre en otra IIFE; acá solo añadimos el repaint post-guardado
+    // Esperamos un tick para asegurar que localStorage y window.pedidos se actualizaron
+    setTimeout(repaintPedidos, 80);
+  }, true);
+
+  // Además escuchamos un evento custom por si otras partes lo disparan
+  window.addEventListener('pedidos:actualizado', repaintPedidos);
+})();
+</script>
