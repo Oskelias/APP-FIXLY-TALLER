@@ -521,13 +521,49 @@
                     </div>
                 </div>
 
-                <!-- Clientes -->
-                <div id="clientes" class="section p-8">
-                    <h1 class="text-3xl font-bold text-gray-800 mb-8">Clientes</h1>
-                    <div class="card bg-white p-6 rounded-xl">
-                        <p class="text-gray-600">Módulo de clientes en desarrollo...</p>
-                    </div>
-                </div>
+                <!-- ====== Clientes ====== -->
+<div id="clientes" class="section p-8 hidden">
+  <h1 class="text-3xl font-bold text-gray-800 mb-8">Clientes</h1>
+
+  <!-- Barra de búsqueda y botón -->
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex-1">
+      <input id="clientSearch" type="text" placeholder="Buscar por nombre o celular"
+             class="w-full md:w-96 px-4 py-2 border rounded-lg focus:ring focus:ring-indigo-200 focus:outline-none">
+    </div>
+    <button id="btnNewClient" class="ml-4 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+      + Nuevo cliente
+    </button>
+  </div>
+
+  <!-- Tabla -->
+  <div class="overflow-x-auto bg-white rounded-lg shadow">
+    <table class="min-w-full text-sm text-left">
+      <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
+        <tr>
+          <th class="px-4 py-3">Nombre</th>
+          <th class="px-4 py-3">Celular</th>
+          <th class="px-4 py-3">Email</th>
+          <th class="px-4 py-3 text-center">Activas</th>
+          <th class="px-4 py-3 text-right">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="clientsTbody" class="divide-y divide-gray-200">
+        <!-- filas generadas por JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Estado vacío -->
+  <div id="clientsEmpty" class="text-center text-gray-500 py-12 hidden">
+    <p class="mb-4">Todavía no hay clientes cargados.</p>
+    <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+      Cargar el primero
+    </button>
+  </div>
+</div>
+<!-- ====== Fin Clientes ====== -->
+
 
                 <!-- WhatsApp -->
                 <div id="whatsapp" class="section p-8">
