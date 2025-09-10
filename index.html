@@ -2007,6 +2007,16 @@ function showSection(sectionName){
   }
 
   document.addEventListener('DOMContentLoaded', function(){
+
+    // Auto login si la sesión está activa
+    try{
+      if (isSessionLogged()){
+        var ls = document.getElementById('loginScreen'); if (ls) ls.classList.add('hidden');
+        var app = document.getElementById('mainApp'); if (app) app.classList.remove('hidden');
+        window.showSection('dashboard');
+      }
+    }catch(e){}
+
     const data = getStoredData();
     const cfg = data.configTaller || { nombre:'Fixly Taller', direccion:'', telefono:'', email:'' };
     // Pintar formulario y marca
@@ -2016,7 +2026,7 @@ function showSection(sectionName){
     // Interceptar submit del formulario para persistir
     const form = document.getElementById('formConfigTaller');
     if (form){
-      form.addEventListener('submit', function(ev){
+      form.addEventListener('submit', function(ev){ ev.preventDefault();
         try {
           // Si el form ya maneja submit, dejamos que siga, pero también persistimos
           const fd = new FormData(form);
@@ -2753,6 +2763,16 @@ ventanaImpresion.document.close();
   }
 
   document.addEventListener('DOMContentLoaded', function(){
+
+    // Auto login si la sesión está activa
+    try{
+      if (isSessionLogged()){
+        var ls = document.getElementById('loginScreen'); if (ls) ls.classList.add('hidden');
+        var app = document.getElementById('mainApp'); if (app) app.classList.remove('hidden');
+        window.showSection('dashboard');
+      }
+    }catch(e){}
+
     const data = getStoredData();
     const cfg = data.configTaller || { nombre:'Fixly Taller', direccion:'', telefono:'', email:'' };
     // Pintar formulario y marca
@@ -2762,7 +2782,7 @@ ventanaImpresion.document.close();
     // Interceptar submit del formulario para persistir
     const form = document.getElementById('formConfigTaller');
     if (form){
-      form.addEventListener('submit', function(ev){
+      form.addEventListener('submit', function(ev){ ev.preventDefault();
         try {
           // Si el form ya maneja submit, dejamos que siga, pero también persistimos
           const fd = new FormData(form);
@@ -2853,6 +2873,12 @@ document.addEventListener("DOMContentLoaded", function(){
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(obj || {})); } catch(e){}
   }
 
+  // ===== Sesión (persistir login) =====
+  function setSessionLogged(inFlag){
+    try { localStorage.setItem('fixly_session_logged', inFlag ? '1' : '0'); } catch(e){}
+  }
+  function isSessionLogged(){ try { return localStorage.getItem('fixly_session_logged') === '1'; } catch(e){ return false; } }
+
   // ===== Marca según configuración =====
   function forceBrand(){
     try{
@@ -2903,7 +2929,7 @@ document.addEventListener("DOMContentLoaded", function(){
     set('email', cfg.email);
 
     // Guardar
-    form.addEventListener('submit', function(ev){
+    form.addEventListener('submit', function(ev){ ev.preventDefault();
       try{
         var fd = new FormData(form);
         var nuevo = {
@@ -2940,6 +2966,16 @@ document.addEventListener("DOMContentLoaded", function(){
   };
 
   document.addEventListener('DOMContentLoaded', function(){
+
+    // Auto login si la sesión está activa
+    try{
+      if (isSessionLogged()){
+        var ls = document.getElementById('loginScreen'); if (ls) ls.classList.add('hidden');
+        var app = document.getElementById('mainApp'); if (app) app.classList.remove('hidden');
+        window.showSection('dashboard');
+      }
+    }catch(e){}
+
     // Delegación por si onclick falla
     try{
       var nav = document.querySelector('.w-64 nav');
@@ -2963,13 +2999,23 @@ document.addEventListener("DOMContentLoaded", function(){
 
   // ===== Login básico (por si la app lo perdió en ediciones) =====
   document.addEventListener('DOMContentLoaded', function(){
+
+    // Auto login si la sesión está activa
+    try{
+      if (isSessionLogged()){
+        var ls = document.getElementById('loginScreen'); if (ls) ls.classList.add('hidden');
+        var app = document.getElementById('mainApp'); if (app) app.classList.remove('hidden');
+        window.showSection('dashboard');
+      }
+    }catch(e){}
+
     var lf = document.getElementById('loginForm');
     if (!lf) return;
     lf.addEventListener('submit', function(e){
       e.preventDefault();
       var user = (document.getElementById('username')||{}).value || '';
       var pass = (document.getElementById('password')||{}).value || '';
-      if (user.trim()==='admin' && pass.trim()==='admin123'){
+      if (user.trim()==='admin' && pass.trim()==='admin123'){ setSessionLogged(true);
         var ls = document.getElementById('loginScreen'); if (ls) ls.classList.add('hidden');
         var app = document.getElementById('mainApp'); if (app) app.classList.remove('hidden');
         window.showSection('dashboard');
