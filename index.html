@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FixlyTaller Sistema de Gestion </title>
+    <title>Fixly Taller — Sistema de Gestión</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -267,7 +267,7 @@
                 <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                     <i class="fas fa-mobile-alt text-blue-600 text-2xl"></i>
                 </div>
-                <h1 class="text-2xl font-bold text-gray-800">Mundo Electrónico</h1>
+                <h1 class="text-2xl font-bold text-gray-800">Fixly Taller</h1>
                 <p class="text-gray-600">Sistema de Gestión</p>
             </div>
             
@@ -757,7 +757,7 @@
                             <form id="formConfigTaller" class="space-y-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del Taller</label>
-                                    <input type="text" name="nombre_taller" value="Mundo Electrónico" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                    <input type="text" name="nombre_taller" value="Fixly Taller" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
                                 </div>
                                 
                                 <div>
@@ -1230,7 +1230,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 
         // FUNCIONES DE DATOS
         function cargarDatos() {
-            const datosGuardados = localStorage.getItem('mundoElectronicoData');
+            const datosGuardados = localStorage.getItem('fixlytallerData');
             if (datosGuardados) {
                 const datos = JSON.parse(datosGuardados);
                 reparaciones = datos.reparaciones || datosIniciales.reparaciones;
@@ -1256,7 +1256,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
                 historialEntregados: historialEntregados,
                 historialMensajes: historialMensajes
             };
-            localStorage.setItem('mundoElectronicoData', JSON.stringify(datos));
+            localStorage.setItem('fixlytallerData', JSON.stringify(datos));
         }
 
         function obtenerFechaActual() {
@@ -1810,7 +1810,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
                 <!DOCTYPE html>
                 <html>
                 <head>
-                    <title>Comprobante #${reparacion.id}</title>
+                    <title>Fixly Taller — Sistema de Gestión</title>
                     <style>
                         body { font-family: Arial, sans-serif; margin: 0; padding: 15mm; font-size: 9px; line-height: 1.1; }
                         .print-header { text-align: center; margin-bottom: 8px; border-bottom: 1px solid #000; padding-bottom: 4px; }
@@ -1829,7 +1829,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
                 </head>
                 <body>
                     <div class="print-header">
-                        <div class="print-title">Mundo Electrónico</div>
+                        <div class="print-title">Fixly Taller</div>
                         <div class="print-subtitle">ORIGINAL</div>
                         <div class="print-order">ORDEN #${reparacion.id}</div>
                     </div>
@@ -1881,7 +1881,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
                     <div class="print-separator"></div>
                     
                     <div class="print-header">
-                        <div class="print-title">Mundo Electrónico</div>
+                        <div class="print-title">Fixly Taller</div>
                         <div class="print-subtitle">COPIA CLIENTE</div>
                         <div class="print-order">ORDEN #${reparacion.id}</div>
                     </div>
@@ -1929,13 +1929,105 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
                     </div>
                     
                     <div class="print-footer">
-                        <strong>Mundo Electrónico - Moreno 1878 - Tel 11 3030-1162</strong><br>
+                        <strong>Fixly Taller - Moreno 1878 - Tel 11 3030-1162</strong><br>
                         Las reparaciones tienen una garantía de 90 días únicamente por la misma falla reparada.<br>
                         Los repuestos están garantizados solo por defectos de fábrica.<br>
                         La garantía no cubre daños ocasionados por golpes, roturas, líquidos o uso indebido.<br>
                         Los trabajos de software y configuraciones no tienen garantía.
                     </div>
-                </body>
+                
+<!-- PATCH: Fixly Taller branding + config persistencia -->
+<script>
+(function(){
+  const STORAGE_KEY = 'fixlytallerData';
+
+  // Migración desde clave antigua si existiera
+  try {
+    const oldKey = 'mundoElectronicoData';
+    const oldData = localStorage.getItem(oldKey);
+    const hasNew = localStorage.getItem(STORAGE_KEY);
+    if (oldData && !hasNew) localStorage.setItem(STORAGE_KEY, oldData);
+  } catch(e) {}
+
+  function getStoredData(){
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+    catch(e){ return {}; }
+  }
+  function setStoredData(obj){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
+  }
+
+  function fillConfigForm(cfg){
+    var form = document.getElementById('formConfigTaller');
+    if (!form) return;
+    (form.querySelector('[name="nombre_taller"]')||{}).value = cfg.nombre || 'Fixly Taller';
+    (form.querySelector('[name="direccion"]')||{}).value = cfg.direccion || '';
+    (form.querySelector('[name="telefono"]')||{}).value = cfg.telefono || '';
+    (form.querySelector('[name="email"]')||{}).value = cfg.email || '';
+  }
+
+  function replaceBrandText(oldText, newText){
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+    let node;
+    const targets = [];
+    while ((node = walker.nextNode())) {
+      if (node.nodeValue && node.nodeValue.indexOf(oldText) !== -1) targets.append(node);
+    }
+    // Fallback for some browsers where NodeList might not be array-like
+    const all = document.querySelectorAll('*');
+    all.forEach(function(el){
+      if (el.childNodes && el.childNodes.length) {
+        el.childNodes.forEach(function(n){
+          if (n.nodeType === 3 && n.nodeValue.indexOf(oldText) !== -1) {
+            n.nodeValue = n.nodeValue.replace(new RegExp(oldText, 'g'), newText);
+          }
+        });
+      }
+    });
+  }
+
+  function applyBrand(cfg){
+    try{
+      (document.getElementById('brand-login')||{}).textContent = cfg.nombre || 'Fixly Taller';
+      (document.getElementById('brand-sidebar')||{}).textContent = cfg.nombre || 'Fixly Taller';
+      document.title = (cfg.nombre || 'Fixly Taller') + ' — Sistema de Gestión';
+      replaceBrandText('Mundo Electrónico', cfg.nombre || 'Fixly Taller');
+    }catch(e){}
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    const data = getStoredData();
+    const cfg = data.configTaller || { nombre:'Fixly Taller', direccion:'', telefono:'', email:'' };
+    // Pintar formulario y marca
+    fillConfigForm(cfg);
+    applyBrand(cfg);
+
+    // Interceptar submit del formulario para persistir
+    const form = document.getElementById('formConfigTaller');
+    if (form){
+      form.addEventListener('submit', function(ev){
+        try {
+          // Si el form ya maneja submit, dejamos que siga, pero también persistimos
+          const fd = new FormData(form);
+          const nuevoCfg = {
+            nombre: fd.get('nombre_taller') || 'Fixly Taller',
+            direccion: fd.get('direccion') || '',
+            telefono: fd.get('telefono') || '',
+            email: fd.get('email') || ''
+          };
+          const d = getStoredData();
+          d.configTaller = nuevoCfg;
+          setStoredData(d);
+          applyBrand(nuevoCfg);
+        } catch(e){}
+      }, true);
+    }
+  });
+})();
+</script>
+<!-- /PATCH -->
+
+</body>
                 </html>
             `);
             
@@ -2152,7 +2244,7 @@ ventanaImpresion.document.close();
                     break;
             }
             
-            mensaje += '\n\nMundo Electrónico';
+            mensaje += '\n\nFixly Taller';
             
             mensajeOriginal = mensaje;
             mensajeTextarea.value = mensaje;
@@ -2238,7 +2330,7 @@ ventanaImpresion.document.close();
         }
 
         function cargarPedidos() {
-            const datos = localStorage.getItem('mundoElectronicoData');
+            const datos = localStorage.getItem('fixlytallerData');
             if (datos) {
                 const datosParseados = JSON.parse(datos);
                 pedidos = datosParseados.pedidos || [];
@@ -2248,10 +2340,10 @@ ventanaImpresion.document.close();
         }
 
         function guardarPedidos() {
-            const datos = JSON.parse(localStorage.getItem('mundoElectronicoData') || '{}');
+            const datos = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
             datos.pedidos = pedidos;
             datos.proximoPedidoId = proximoPedidoId;
-            localStorage.setItem('mundoElectronicoData', JSON.stringify(datos));
+            localStorage.setItem('fixlytallerData', JSON.stringify(datos));
         }
 
         function actualizarListaPedidos() {
@@ -2342,14 +2434,14 @@ ventanaImpresion.document.close();
 
         // FUNCIONES PARA MÓDULO DE CONFIGURACIÓN
         let configTaller = {
-            nombre: 'Mundo Electrónico',
+            nombre: 'Fixly Taller',
             direccion: 'Av. Corrientes 1234, CABA',
             telefono: '+54 11 1234-5678',
             email: 'info@mundoelectronico.com'
         };
 
         function cargarConfiguracion() {
-            const datos = localStorage.getItem('mundoElectronicoData');
+            const datos = localStorage.getItem('fixlytallerData');
             if (datos) {
                 const datosParseados = JSON.parse(datos);
                 configTaller = datosParseados.configTaller || configTaller;
@@ -2358,9 +2450,9 @@ ventanaImpresion.document.close();
         }
 
         function guardarConfiguracion() {
-            const datos = JSON.parse(localStorage.getItem('mundoElectronicoData') || '{}');
+            const datos = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
             datos.configTaller = configTaller;
-            localStorage.setItem('mundoElectronicoData', JSON.stringify(datos));
+            localStorage.setItem('fixlytallerData', JSON.stringify(datos));
         }
 
         function cargarListaTecnicos() {
@@ -2434,9 +2526,9 @@ ventanaImpresion.document.close();
             }
             
             // Guardar nueva contraseña en localStorage
-            const datos = JSON.parse(localStorage.getItem('mundoElectronicoData') || '{}');
+            const datos = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
             datos.password = nuevaPassword;
-            localStorage.setItem('mundoElectronicoData', JSON.stringify(datos));
+            localStorage.setItem('fixlytallerData', JSON.stringify(datos));
             
             document.getElementById('nueva-password').value = '';
             document.getElementById('confirmar-password').value = '';
@@ -2445,7 +2537,7 @@ ventanaImpresion.document.close();
         }
 
         function exportarDatos() {
-            const datos = localStorage.getItem('mundoElectronicoData');
+            const datos = localStorage.getItem('fixlytallerData');
             if (!datos) {
                 mostrarMensaje('error', 'No hay datos para exportar.', 'config-messages');
                 return;
@@ -2476,7 +2568,7 @@ ventanaImpresion.document.close();
                 reader.onload = function(e) {
                     try {
                         const datos = JSON.parse(e.target.result);
-                        localStorage.setItem('mundoElectronicoData', JSON.stringify(datos));
+                        localStorage.setItem('fixlytallerData', JSON.stringify(datos));
                         location.reload(); // Recargar para aplicar los datos importados
                     } catch (error) {
                         mostrarMensaje('error', 'Error al importar datos. Archivo inválido.', 'config-messages');
@@ -2490,7 +2582,7 @@ ventanaImpresion.document.close();
         function limpiarTodosLosDatos() {
             if (confirm('¿Estás seguro de que deseas eliminar TODOS los datos? Esta acción no se puede deshacer.')) {
                 if (confirm('ÚLTIMA CONFIRMACIÓN: Se eliminarán todas las reparaciones, historial, técnicos y configuraciones. ¿Continuar?')) {
-                    localStorage.removeItem('mundoElectronicoData');
+                    localStorage.removeItem('fixlytallerData');
                     location.reload();
                 }
             }
@@ -2569,6 +2661,98 @@ ventanaImpresion.document.close();
             cargarConfiguracion();
         });
     </script>
+
+<!-- PATCH: Fixly Taller branding + config persistencia -->
+<script>
+(function(){
+  const STORAGE_KEY = 'fixlytallerData';
+
+  // Migración desde clave antigua si existiera
+  try {
+    const oldKey = 'mundoElectronicoData';
+    const oldData = localStorage.getItem(oldKey);
+    const hasNew = localStorage.getItem(STORAGE_KEY);
+    if (oldData && !hasNew) localStorage.setItem(STORAGE_KEY, oldData);
+  } catch(e) {}
+
+  function getStoredData(){
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+    catch(e){ return {}; }
+  }
+  function setStoredData(obj){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
+  }
+
+  function fillConfigForm(cfg){
+    var form = document.getElementById('formConfigTaller');
+    if (!form) return;
+    (form.querySelector('[name="nombre_taller"]')||{}).value = cfg.nombre || 'Fixly Taller';
+    (form.querySelector('[name="direccion"]')||{}).value = cfg.direccion || '';
+    (form.querySelector('[name="telefono"]')||{}).value = cfg.telefono || '';
+    (form.querySelector('[name="email"]')||{}).value = cfg.email || '';
+  }
+
+  function replaceBrandText(oldText, newText){
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+    let node;
+    const targets = [];
+    while ((node = walker.nextNode())) {
+      if (node.nodeValue && node.nodeValue.indexOf(oldText) !== -1) targets.append(node);
+    }
+    // Fallback for some browsers where NodeList might not be array-like
+    const all = document.querySelectorAll('*');
+    all.forEach(function(el){
+      if (el.childNodes && el.childNodes.length) {
+        el.childNodes.forEach(function(n){
+          if (n.nodeType === 3 && n.nodeValue.indexOf(oldText) !== -1) {
+            n.nodeValue = n.nodeValue.replace(new RegExp(oldText, 'g'), newText);
+          }
+        });
+      }
+    });
+  }
+
+  function applyBrand(cfg){
+    try{
+      (document.getElementById('brand-login')||{}).textContent = cfg.nombre || 'Fixly Taller';
+      (document.getElementById('brand-sidebar')||{}).textContent = cfg.nombre || 'Fixly Taller';
+      document.title = (cfg.nombre || 'Fixly Taller') + ' — Sistema de Gestión';
+      replaceBrandText('Mundo Electrónico', cfg.nombre || 'Fixly Taller');
+    }catch(e){}
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    const data = getStoredData();
+    const cfg = data.configTaller || { nombre:'Fixly Taller', direccion:'', telefono:'', email:'' };
+    // Pintar formulario y marca
+    fillConfigForm(cfg);
+    applyBrand(cfg);
+
+    // Interceptar submit del formulario para persistir
+    const form = document.getElementById('formConfigTaller');
+    if (form){
+      form.addEventListener('submit', function(ev){
+        try {
+          // Si el form ya maneja submit, dejamos que siga, pero también persistimos
+          const fd = new FormData(form);
+          const nuevoCfg = {
+            nombre: fd.get('nombre_taller') || 'Fixly Taller',
+            direccion: fd.get('direccion') || '',
+            telefono: fd.get('telefono') || '',
+            email: fd.get('email') || ''
+          };
+          const d = getStoredData();
+          d.configTaller = nuevoCfg;
+          setStoredData(d);
+          applyBrand(nuevoCfg);
+        } catch(e){}
+      }, true);
+    }
+  });
+})();
+</script>
+<!-- /PATCH -->
+
 </body>
 </html>
     <script id="html_badge_script1">
