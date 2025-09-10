@@ -563,7 +563,83 @@
   </div>
 </div>
 <!-- ====== Fin Clientes ====== -->
+                <!-- Modal Nueva Reparación -->
+<div id="repair-modal" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-black/40" data-close-repair></div>
+  <div class="relative mx-auto mt-20 w-[95%] max-w-2xl rounded-xl bg-white shadow-lg">
+    <div class="flex items-center justify-between border-b px-6 py-4">
+      <h2 class="text-lg font-semibold">Nueva reparación</h2>
+      <button class="text-gray-500 hover:text-gray-700" data-close-repair>&times;</button>
+    </div>
 
+    <form id="repair-form" class="px-6 py-5 space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Cliente</label>
+          <input id="rep-client-name" type="text" class="w-full rounded-lg border px-3 py-2 bg-gray-100" disabled>
+        </div>
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Celular</label>
+          <input id="rep-client-phone" type="text" class="w-full rounded-lg border px-3 py-2 bg-gray-100" disabled>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-1" for="rep-equipo">Equipo</label>
+          <select id="rep-equipo" class="w-full rounded-lg border px-3 py-2">
+            <option>Celular</option>
+            <option>Notebook</option>
+            <option>Tablet</option>
+            <option>PC</option>
+            <option>Otro</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1" for="rep-marca">Marca</label>
+          <input id="rep-marca" class="w-full rounded-lg border px-3 py-2" placeholder="Ej: Samsung">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-1" for="rep-modelo">Modelo</label>
+          <input id="rep-modelo" class="w-full rounded-lg border px-3 py-2" placeholder="Ej: A32">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1" for="rep-serie">Serie/IMEI</label>
+          <input id="rep-serie" class="w-full rounded-lg border px-3 py-2" placeholder="Opcional">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-1" for="rep-accesorios">Accesorios</label>
+          <input id="rep-accesorios" class="w-full rounded-lg border px-3 py-2" placeholder="Cargador, funda...">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1" for="rep-prioridad">Prioridad</label>
+          <select id="rep-prioridad" class="w-full rounded-lg border px-3 py-2">
+            <option value="normal">Normal</option>
+            <option value="urgente">Urgente</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1" for="rep-falla">Falla/Descripción</label>
+        <textarea id="rep-falla" rows="3" class="w-full rounded-lg border px-3 py-2" placeholder="¿Qué le pasa?"></textarea>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 border-t pt-4">
+        <button type="button" class="rounded-lg border px-4 py-2" data-close-repair>Cancelar</button>
+        <button id="rep-create" type="submit" class="rounded-lg bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700">
+          Crear ticket
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
 
                 <!-- WhatsApp -->
                 <div id="whatsapp" class="section p-8">
@@ -2838,18 +2914,20 @@ ventanaImpresion.document.close();
 <script>
 (() => {
   const LS_CLIENTS = 'fixly:clients';
-  const LS_REPAIRS = 'fixly:repairs'; // para contar "Activas"
+  const LS_REPAIRS = 'fixly:repairs';
 
   const $  = (s, p = document) => p.querySelector(s);
   const $$ = (s, p = document) => [...p.querySelectorAll(s)];
+  const uid = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())+Math.random());
+  const normPhone = (v) => (v || '').replace(/[^\d+]/g, '');
 
-  // Refs UI
+  // === Refs Clientes UI ===
   const tblBody     = $('#clientsTbody');
   const searchInput = $('#clientSearch');
   const btnNew      = $('#btnNewClient') || $('#btnEmptyNew');
   const emptyState  = $('#clientsEmpty');
 
-  // Modal
+  // Modal Cliente
   const modal      = $('#client-modal');
   const modalTitle = $('#client-modal-title');
   const form       = $('#client-form');
@@ -2861,30 +2939,40 @@ ventanaImpresion.document.close();
   const dupMsg = $('#dup-msg');
   const btnSaveRepair = $('#btn-save-repair');
 
-  // ===== Storage helpers =====
+  // Modal Reparación (nuevo)
+  const repModal   = $('#repair-modal');
+  const repForm    = $('#repair-form');
+  const repClientName  = $('#rep-client-name');
+  const repClientPhone = $('#rep-client-phone');
+  const repEquipo  = $('#rep-equipo');
+  const repMarca   = $('#rep-marca');
+  const repModelo  = $('#rep-modelo');
+  const repSerie   = $('#rep-serie');
+  const repAcc     = $('#rep-accesorios');
+  const repFalla   = $('#rep-falla');
+  const repPrior   = $('#rep-prioridad');
+
+  // === Storage helpers ===
   const loadClients = () => JSON.parse(localStorage.getItem(LS_CLIENTS) || '[]');
   const saveClients = (arr) => localStorage.setItem(LS_CLIENTS, JSON.stringify(arr));
   const loadRepairs = () => JSON.parse(localStorage.getItem(LS_REPAIRS) || '[]');
+  const saveRepairs = (arr) => localStorage.setItem(LS_REPAIRS, JSON.stringify(arr));
 
-  const normPhone = (v) => (v || '').replace(/[^\d+]/g, '');
-  const uid = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random());
-
-  // ===== State =====
+  // === Estado ===
   let clients = [];
   let query = '';
+  let currentClient = null; // para el modal de reparación
 
-  // ===== Render =====
+  // === Contadores ===
   function abiertasDe(id) {
     const reps = loadRepairs();
     return reps.filter(r => r.clientId === id && r.estado !== 'entregado' && r.estado !== 'cancelado').length;
   }
 
+  // === Render tabla ===
   function renderRows(list) {
     tblBody.innerHTML = '';
-    if (!list.length) {
-      emptyState?.classList.remove('hidden');
-      return;
-    }
+    if (!list.length) { emptyState?.classList.remove('hidden'); return; }
     emptyState?.classList.add('hidden');
 
     list.forEach(c => {
@@ -2924,8 +3012,8 @@ ventanaImpresion.document.close();
     applyFilter();
   }
 
-  // ===== Modal =====
-  function openModal(mode = 'new', client = null) {
+  // === Modal Cliente ===
+  function openClientModal(mode = 'new', client = null) {
     modal.classList.remove('hidden');
     dupMsg?.classList.add('hidden');
     if (mode === 'edit' && client) {
@@ -2942,11 +3030,32 @@ ventanaImpresion.document.close();
     }
     setTimeout(() => fName.focus(), 20);
   }
-  const closeModal = () => modal.classList.add('hidden');
+  const closeClientModal = () => modal.classList.add('hidden');
 
-  // ===== Events =====
-  btnNew?.addEventListener('click', () => openModal('new'));
-  $$('#client-modal [data-close-modal]').forEach(el => el.addEventListener('click', closeModal));
+  // === Modal Reparación ===
+  function genCode() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const day = String(d.getDate()).padStart(2,'0');
+    const seq = String(Math.floor(Math.random()*10000)).padStart(4,'0');
+    return `R-${y}${m}${day}-${seq}`;
+  }
+
+  function openRepairModal(c) {
+    currentClient = c;
+    repClientName.value  = c.nombre || '';
+    repClientPhone.value = c.celular || '';
+    repForm.reset();      // limpia equipo, marca, etc.
+    repModal.classList.remove('hidden');
+    setTimeout(() => repEquipo.focus(), 20);
+  }
+  const closeRepairModal = () => repModal.classList.add('hidden');
+
+  // === Eventos ===
+  btnNew?.addEventListener('click', () => openClientModal('new'));
+  $$('#client-modal [data-close-modal]').forEach(el => el.addEventListener('click', closeClientModal));
+  $$('#repair-modal [data-close-repair]').forEach(el => el.addEventListener('click', closeRepairModal));
 
   searchInput?.addEventListener('input', (e) => { query = e.target.value || ''; applyFilter(); });
 
@@ -2958,7 +3067,7 @@ ventanaImpresion.document.close();
     const c   = clients.find(x => x.id === id);
     if (!c) return;
 
-    if (act === 'edit') return openModal('edit', c);
+    if (act === 'edit') return openClientModal('edit', c);
 
     if (act === 'del') {
       if (!confirm(`Eliminar a ${c.nombre}?`)) return;
@@ -2969,10 +3078,8 @@ ventanaImpresion.document.close();
     }
 
     if (act === 'repair') {
-      localStorage.setItem('fixly:selectedClientId', id);
-      location.hash = '#reparaciones';
-      alert('Cliente seleccionado. Abrí "Reparaciones" para crear el ticket.');
-      return;
+      // En lugar de navegar a Reparaciones, abrimos modal aquí
+      return openRepairModal(c);
     }
   });
 
@@ -3001,26 +3108,56 @@ ventanaImpresion.document.close();
       clients.unshift(payload);
     }
     saveClients(clients);
-    closeModal();
+    closeClientModal();
     applyFilter();
   });
 
   btnSaveRepair?.addEventListener('click', () => {
+    // Guarda cliente y abre modal reparación
     form.dispatchEvent(new Event('submit', { cancelable: true }));
     setTimeout(() => {
-      if (!modal.classList.contains('hidden')) return; // hubo error/dup
+      // si el modal cliente sigue abierto hubo error (dup)
+      if (!modal.classList.contains('hidden')) return;
       const last = clients[0];
-      if (last?.id) {
-        localStorage.setItem('fixly:selectedClientId', last.id);
-        location.hash = '#reparaciones';
-        alert('Cliente guardado. Abrí "Reparaciones" para crear el ticket.');
-      }
-    }, 50);
+      if (last) openRepairModal(last);
+    }, 30);
+  });
+
+  // Crear ticket desde modal de reparación
+  repForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!currentClient) return;
+
+    const repairs = loadRepairs();
+    const now = Date.now();
+    const ticket = {
+      id: uid(),
+      code: genCode(),
+      clientId: currentClient.id,
+      cliente: currentClient.nombre || '',
+      equipo: (repEquipo?.value || '').trim(),
+      marca:  (repMarca?.value  || '').trim(),
+      modelo: (repModelo?.value || '').trim(),
+      serie:  (repSerie?.value  || '').trim(),
+      accesorios: (repAcc?.value || '').trim(),
+      falla:  (repFalla?.value  || '').trim(),
+      prioridad: (repPrior?.value || 'normal'),
+      estado: 'ingresado',
+      created_at: now
+    };
+
+    repairs.unshift(ticket);
+    saveRepairs(repairs);
+    closeRepairModal();
+    // Actualiza badge "Activas"
+    applyFilter();
+    alert(`Ticket creado: ${ticket.code}`);
+    // Si querés, navegá a Historial:
+    // location.hash = '#historial';
   });
 
   document.addEventListener('DOMContentLoaded', loadAndRender);
 })();
 </script>
-
 </body>
 </html>
