@@ -267,7 +267,7 @@
                 <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                     <i class="fas fa-mobile-alt text-blue-600 text-2xl"></i>
                 </div>
-                <h1 class="text-2xl font-bold text-gray-800">Mundo Electrónico</h1>
+                <h1 class="text-2xl font-bold text-gray-800">Fixly Taller</h1>
                 <p class="text-gray-600">Sistema de Gestión</p>
             </div>
             
@@ -772,7 +772,7 @@
                                 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                                    <input type="email" name="email" value="info@mundoelectronico.com" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                    <input type="email" name="email" value="info@fixlytaller.com" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
                                 </div>
                                 
                                 <button type="submit" class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center">
@@ -1230,7 +1230,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 
         // FUNCIONES DE DATOS
         function cargarDatos() {
-            const datosGuardados = localStorage.getItem('mundoElectronicoData');
+            const datosGuardados = localStorage.getItem('fixlytallerData');
             if (datosGuardados) {
                 const datos = JSON.parse(datosGuardados);
                 reparaciones = datos.reparaciones || datosIniciales.reparaciones;
@@ -1256,7 +1256,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
                 historialEntregados: historialEntregados,
                 historialMensajes: historialMensajes
             };
-            localStorage.setItem('mundoElectronicoData', JSON.stringify(datos));
+            localStorage.setItem('fixlytallerData', JSON.stringify(datos));
         }
 
         function obtenerFechaActual() {
@@ -2238,7 +2238,7 @@ ventanaImpresion.document.close();
         }
 
         function cargarPedidos() {
-            const datos = localStorage.getItem('mundoElectronicoData');
+            const datos = localStorage.getItem('fixlytallerData');
             if (datos) {
                 const datosParseados = JSON.parse(datos);
                 pedidos = datosParseados.pedidos || [];
@@ -2248,10 +2248,10 @@ ventanaImpresion.document.close();
         }
 
         function guardarPedidos() {
-            const datos = JSON.parse(localStorage.getItem('mundoElectronicoData') || '{}');
+            const datos = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
             datos.pedidos = pedidos;
             datos.proximoPedidoId = proximoPedidoId;
-            localStorage.setItem('mundoElectronicoData', JSON.stringify(datos));
+            localStorage.setItem('fixlytallerData', JSON.stringify(datos));
         }
 
         function actualizarListaPedidos() {
@@ -2345,11 +2345,11 @@ ventanaImpresion.document.close();
             nombre: 'Mundo Electrónico',
             direccion: 'Av. Corrientes 1234, CABA',
             telefono: '+54 11 1234-5678',
-            email: 'info@mundoelectronico.com'
+            email: 'info@fixlytaller.com'
         };
 
         function cargarConfiguracion() {
-            const datos = localStorage.getItem('mundoElectronicoData');
+            const datos = localStorage.getItem('fixlytallerData');
             if (datos) {
                 const datosParseados = JSON.parse(datos);
                 configTaller = datosParseados.configTaller || configTaller;
@@ -2358,9 +2358,9 @@ ventanaImpresion.document.close();
         }
 
         function guardarConfiguracion() {
-            const datos = JSON.parse(localStorage.getItem('mundoElectronicoData') || '{}');
+            const datos = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
             datos.configTaller = configTaller;
-            localStorage.setItem('mundoElectronicoData', JSON.stringify(datos));
+            localStorage.setItem('fixlytallerData', JSON.stringify(datos));
         }
 
         function cargarListaTecnicos() {
@@ -2434,9 +2434,9 @@ ventanaImpresion.document.close();
             }
             
             // Guardar nueva contraseña en localStorage
-            const datos = JSON.parse(localStorage.getItem('mundoElectronicoData') || '{}');
+            const datos = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
             datos.password = nuevaPassword;
-            localStorage.setItem('mundoElectronicoData', JSON.stringify(datos));
+            localStorage.setItem('fixlytallerData', JSON.stringify(datos));
             
             document.getElementById('nueva-password').value = '';
             document.getElementById('confirmar-password').value = '';
@@ -2445,7 +2445,7 @@ ventanaImpresion.document.close();
         }
 
         function exportarDatos() {
-            const datos = localStorage.getItem('mundoElectronicoData');
+            const datos = localStorage.getItem('fixlytallerData');
             if (!datos) {
                 mostrarMensaje('error', 'No hay datos para exportar.', 'config-messages');
                 return;
@@ -2476,7 +2476,7 @@ ventanaImpresion.document.close();
                 reader.onload = function(e) {
                     try {
                         const datos = JSON.parse(e.target.result);
-                        localStorage.setItem('mundoElectronicoData', JSON.stringify(datos));
+                        localStorage.setItem('fixlytallerData', JSON.stringify(datos));
                         location.reload(); // Recargar para aplicar los datos importados
                     } catch (error) {
                         mostrarMensaje('error', 'Error al importar datos. Archivo inválido.', 'config-messages');
@@ -2490,7 +2490,7 @@ ventanaImpresion.document.close();
         function limpiarTodosLosDatos() {
             if (confirm('¿Estás seguro de que deseas eliminar TODOS los datos? Esta acción no se puede deshacer.')) {
                 if (confirm('ÚLTIMA CONFIRMACIÓN: Se eliminarán todas las reparaciones, historial, técnicos y configuraciones. ¿Continuar?')) {
-                    localStorage.removeItem('mundoElectronicoData');
+                    localStorage.removeItem('fixlytallerData');
                     location.reload();
                 }
             }
