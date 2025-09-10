@@ -2608,80 +2608,223 @@ ventanaImpresion.document.close();
             }
         }
 
-        // Event Listeners para los nuevos módulos
-        document.addEventListener('DOMContentLoaded', function() {
-            // Formulario de nuevo pedido
-            const formNuevoPedido = document.getElementById('formNuevoPedido');
-            if (formNuevoPedido) {
-                formNuevoPedido.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    const formData = new FormData(this);
-                    const dejaSena = formData.get('deja_sena') === 'si';
-                    const sena = dejaSena ? parseInt(formData.get('sena')) || 0 : 0;
-                    
-                    const nuevoPedido = {
-                        id: proximoPedidoId.toString(),
-                        cliente: formData.get('cliente'),
-                        telefono: formData.get('telefono'),
-                        producto: formData.get('producto'),
-                        descripcion: formData.get('descripcion') || '',
-                        sena: sena,
-                        precio_total: parseInt(formData.get('precio_total')),
-                        estado: 'pendiente',
-                        fecha: obtenerFechaActual()
-                    };
-                    
-                    pedidos.push(nuevoPedido);
-                    proximoPedidoId++;
-                    
-                    guardarPedidos();
-                    actualizarListaPedidos();
-                    
-                    this.reset();
-                    document.getElementById('sena-container').style.display = 'none';
-                    
-                    mostrarMensaje('success', 'Pedido creado exitosamente.', 'pedidos-messages');
-                });
-            }
-            
-            // Formulario de configuración del taller
-            const formConfigTaller = document.getElementById('formConfigTaller');
-            if (formConfigTaller) {
-                formConfigTaller.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    const formData = new FormData(this);
-                    configTaller = {
-                        nombre: formData.get('nombre_taller'),
-                        direccion: formData.get('direccion'),
-                        telefono: formData.get('telefono'),
-                        email: formData.get('email')
-                    };
-                    
-                    guardarConfiguracion();
-                    mostrarMensaje('success', 'Información del taller guardada exitosamente.', 'config-messages');
-                });
-            }
-            
-            // Filtros de pedidos
-            const buscarPedidos = document.getElementById('buscar-pedidos');
-            const filtroEstadoPedidos = document.getElementById('filtro-estado-pedidos');
-            
-            if (buscarPedidos) {
-                buscarPedidos.addEventListener('input', actualizarListaPedidos);
-            }
-            
-            if (filtroEstadoPedidos) {
-                filtroEstadoPedidos.addEventListener('change', actualizarListaPedidos);
-            }
-            
-            // Cargar datos iniciales
-            cargarPedidos();
-            cargarConfiguracion();
-        });
-    </script>
-    <!-- Script Clientes (localStorage) -->
+       <!-- ============= SCRIPTS ============= -->
+
+<script>
+// Event Listeners para los nuevos módulos
+document.addEventListener('DOMContentLoaded', function() {
+  // Formulario de nuevo pedido
+  const formNuevoPedido = document.getElementById('formNuevoPedido');
+  if (formNuevoPedido) {
+    formNuevoPedido.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(this);
+      const dejaSena = formData.get('deja_sena') === 'si';
+      const sena = dejaSena ? parseInt(formData.get('sena')) || 0 : 0;
+      
+      const nuevoPedido = {
+        id: proximoPedidoId.toString(),
+        cliente: formData.get('cliente'),
+        telefono: formData.get('telefono'),
+        producto: formData.get('producto'),
+        descripcion: formData.get('descripcion') || '',
+        sena: sena,
+        precio_total: parseInt(formData.get('precio_total')),
+        estado: 'pendiente',
+        fecha: obtenerFechaActual()
+      };
+      
+      pedidos.push(nuevoPedido);
+      proximoPedidoId++;
+      
+      guardarPedidos();
+      actualizarListaPedidos();
+      
+      this.reset();
+      document.getElementById('sena-container').style.display = 'none';
+      
+      mostrarMensaje('success', 'Pedido creado exitosamente.', 'pedidos-messages');
+    });
+  }
+  
+  // Formulario de configuración del taller
+  const formConfigTaller = document.getElementById('formConfigTaller');
+  if (formConfigTaller) {
+    formConfigTaller.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(this);
+      configTaller = {
+        nombre: formData.get('nombre_taller'),
+        direccion: formData.get('direccion'),
+        telefono: formData.get('telefono'),
+        email: formData.get('email')
+      };
+      
+      guardarConfiguracion();
+      mostrarMensaje('success', 'Información del taller guardada exitosamente.', 'config-messages');
+    });
+  }
+  
+  // Filtros de pedidos
+  const buscarPedidos = document.getElementById('buscar-pedidos');
+  const filtroEstadoPedidos = document.getElementById('filtro-estado-pedidos');
+  if (buscarPedidos) buscarPedidos.addEventListener('input', actualizarListaPedidos);
+  if (filtroEstadoPedidos) filtroEstadoPedidos.addEventListener('change', actualizarListaPedidos);
+  
+  // Cargar datos iniciales
+  cargarPedidos();
+  cargarConfiguracion();
+});
+</script>
+
+<!-- 2) Pedidos helpers + render (localStorage) -->
+<script>
+(() => {
+  const LS_PEDIDOS = 'fixly:pedidos';
+  const LS_SEQ     = 'fixly:pedidos:seq';
+
+  // Estado global usado por tu listener
+  window.pedidos = [];
+  window.proximoPedidoId = 1;
+
+  const $  = (s,p=document)=>p.querySelector(s);
+  const $$ = (s,p=document)=>[...p.querySelectorAll(s)];
+  const money = n => isFinite(n) ? new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS'}).format(Number(n)) : '';
+  const hoy = () => {
+    const d = new Date();
+    const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
+    return `${dd}/${m}/${y}`;
+  };
+
+  // Expuestos porque el HTML y tu listener los llaman
+  window.obtenerFechaActual = () => hoy();
+
+  window.mostrarMensaje = (tipo, texto, contId='pedidos-messages') => {
+    const box = document.getElementById(contId);
+    if (!box) return;
+    const ok = (tipo === 'success');
+    box.innerHTML = `<div class="mb-3 rounded-lg px-3 py-2 text-sm ${ok?'bg-emerald-50 text-emerald-800 border border-emerald-200':'bg-rose-50 text-rose-800 border border-rose-200'}">${texto}</div>`;
+    setTimeout(()=> box.innerHTML='', 2500);
+  };
+
+  // Toggle seña (lo llama tu HTML por onchange)
+  window.toggleSena = function toggleSena(){
+    const radios = document.querySelectorAll('input[name="deja_sena"]');
+    const val = [...radios].find(r=>r.checked)?.value || 'no';
+    const cont = $('#sena-container');
+    if (cont) cont.style.display = (val === 'si') ? 'block' : 'none';
+    if (val !== 'si') {
+      const sena = document.querySelector('input[name="sena"]');
+      if (sena) sena.value = '';
+    }
+  };
+
+  // Storage
+  function loadLS() {
+    const arr = JSON.parse(localStorage.getItem(LS_PEDIDOS) || '[]');
+    const seq = Number(localStorage.getItem(LS_SEQ) || 1);
+    return { arr, seq };
+  }
+  function saveLS(arr, seq) {
+    localStorage.setItem(LS_PEDIDOS, JSON.stringify(arr));
+    localStorage.setItem(LS_SEQ, String(seq));
+  }
+
+  // Expuestos (los usa tu listener)
+  window.guardarPedidos = function guardarPedidos() {
+    saveLS(window.pedidos, window.proximoPedidoId);
+  };
+
+  window.cargarPedidos = function cargarPedidos() {
+    const { arr, seq } = loadLS();
+    window.pedidos = arr;
+    window.proximoPedidoId = seq || ((arr[0]?.id ? Number(arr[0].id)+1 : 1));
+    actualizarListaPedidos();
+  };
+
+  function cardPedido(p) {
+    const estado = (p.estado || 'pendiente');
+    const chip = estado === 'pendiente' ? 'bg-amber-100 text-amber-800'
+              : estado === 'listo'     ? 'bg-emerald-100 text-emerald-800'
+              :                           'bg-gray-200 text-gray-700';
+    return `
+      <div class="border rounded-lg p-3 flex items-center justify-between" data-id="${p.id}">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <span class="font-semibold">#${p.id}</span>
+            <span class="px-2 py-0.5 rounded-full text-xs ${chip}">${estado}</span>
+            <span class="text-xs text-gray-500">${p.fecha || ''}</span>
+          </div>
+          <div class="text-sm text-gray-800 truncate">${p.cliente} · ${p.producto}</div>
+          <div class="text-xs text-gray-500 truncate">Tel: ${p.telefono || '-'}</div>
+          <div class="text-xs text-gray-500 truncate">
+            Total: ${money(p.precio_total)} ${p.sena ? `· Seña: ${money(p.sena)}` : ''}
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button class="px-2 py-1 rounded-lg border text-emerald-700 hover:bg-emerald-50" data-act="next">⟳</button>
+          <button class="px-2 py-1 rounded-lg border text-rose-700 hover:bg-rose-50" data-act="del">🗑</button>
+        </div>
+      </div>`;
+  }
+
+  window.actualizarListaPedidos = function actualizarListaPedidos() {
+    const lista = $('#lista-pedidos');
+    if (!lista) return;
+
+    const q  = ($('#buscar-pedidos')?.value || '').toLowerCase().trim();
+    const st = ($('#filtro-estado-pedidos')?.value || '').toLowerCase().trim();
+
+    const items = window.pedidos.filter(p =>
+      (!q  || (p.cliente||'').toLowerCase().includes(q) || (p.producto||'').toLowerCase().includes(q)) &&
+      (!st || (p.estado||'pendiente') === st)
+    );
+
+    if (!items.length) {
+      lista.innerHTML = `<div class="text-gray-500 py-8 text-center">No hay pedidos que mostrar</div>`;
+      return;
+    }
+    lista.innerHTML = items.map(cardPedido).join('');
+  };
+
+  // Acciones rápidas en la lista
+  document.getElementById('lista-pedidos')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-act]');
+    if (!btn) return;
+    const card = btn.closest('[data-id]');
+    const id = card?.dataset.id;
+    if (!id) return;
+
+    const i = window.pedidos.findIndex(p => String(p.id) === String(id));
+    if (i === -1) return;
+
+    if (btn.dataset.act === 'del') {
+      if (!confirm(`Eliminar pedido #${window.pedidos[i].id}?`)) return;
+      window.pedidos.splice(i,1);
+      guardarPedidos();
+      actualizarListaPedidos();
+      return;
+    }
+    if (btn.dataset.act === 'next') {
+      const cur = window.pedidos[i].estado || 'pendiente';
+      window.pedidos[i].estado = cur === 'pendiente' ? 'listo' : (cur === 'listo' ? 'entregado' : 'pendiente');
+      guardarPedidos();
+      actualizarListaPedidos();
+      return;
+    }
+  });
+
+  // Init de respaldo (por si entras directo a la pestaña)
+  document.addEventListener('DOMContentLoaded', () => {
+    if (!window.pedidos.length) window.cargarPedidos();
+    window.toggleSena?.();
+  });
+})();
+</script>
+
+<!-- 3) Script Clientes (localStorage + modal Nueva reparación) -->
 <script>
 (() => {
   const LS_CLIENTS = 'fixly:clients';
@@ -2849,7 +2992,7 @@ ventanaImpresion.document.close();
     }
 
     if (act === 'repair') {
-      // En lugar de navegar a Reparaciones, abrimos modal aquí con el cliente precargado
+      // Abrimos modal aquí con el cliente precargado
       return openRepairModal(c);
     }
   });
@@ -2904,29 +3047,4 @@ ventanaImpresion.document.close();
     const ticket = {
       id: uid(),
       code: genCode(),
-      clientId: currentClient.id,
-      cliente: currentClient.nombre || '',
-      equipo: (repEquipo?.value || '').trim(),
-      marca:  (repMarca?.value  || '').trim(),
-      modelo: (repModelo?.value || '').trim(),
-      serie:  (repSerie?.value  || '').trim(),
-      accesorios: (repAcc?.value || '').trim(),
-      falla:  (repFalla?.value  || '').trim(),
-      prioridad: (repPrior?.value || 'normal'),
-      estado: 'ingresado',
-      created_at: now
-    };
-
-    repairs.unshift(ticket);
-    saveRepairs(repairs);
-    closeRepairModal();
-    // Actualiza badge "Activas"
-    applyFilter();
-    alert(`Ticket creado: ${ticket.code}`);
-    // Si querés, navegar al historial:
-    // location.hash = '#historial';
-  });
-
-  document.addEventListener('DOMContentLoaded', loadAndRender);
-})();
-</script>
+      clie
