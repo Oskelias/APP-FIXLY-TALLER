@@ -2608,21 +2608,44 @@ ventanaImpresion.document.close();
             }
         }
 
-       <!-- ============= SCRIPTS ============= -->
+    
+    <!-- ============= SCRIPTS ============= -->
 
 <script>
-// Event Listeners para los nuevos módulos
+// === Stubs/Config: evita que explote si no existían ===
+window.configTaller = window.configTaller || {};
+
+window.guardarConfiguracion = function guardarConfiguracion() {
+  try { localStorage.setItem('fixly:config', JSON.stringify(window.configTaller||{})); } catch {}
+};
+
+window.cargarConfiguracion = function cargarConfiguracion() {
+  try {
+    const cfg = JSON.parse(localStorage.getItem('fixly:config') || '{}');
+    window.configTaller = cfg || {};
+    // Rellenar formulario si existe
+    const f = document.getElementById('formConfigTaller');
+    if (f) {
+      f.elements['nombre_taller'] && (f.elements['nombre_taller'].value = cfg.nombre || '');
+      f.elements['direccion']     && (f.elements['direccion'].value     = cfg.direccion || '');
+      f.elements['telefono']      && (f.elements['telefono'].value      = cfg.telefono || '');
+      f.elements['email']         && (f.elements['email'].value         = cfg.email || '');
+    }
+  } catch {}
+};
+
+// === Event Listeners para los nuevos módulos (tu bloque) ===
 document.addEventListener('DOMContentLoaded', function() {
   // Formulario de nuevo pedido
   const formNuevoPedido = document.getElementById('formNuevoPedido');
   if (formNuevoPedido) {
     formNuevoPedido.addEventListener('submit', function(e) {
       e.preventDefault();
-      
-      const formData = new FormData(this);
-      const dejaSena = formData.get('deja_sena') === 'si';
-      const sena = dejaSena ? parseInt(formData.get('sena')) || 0 : 0;
-      
+
+      const formData  = new FormData(this);
+      const dejaSena  = formData.get('deja_sena') === 'si';
+      const sena      = dejaSena ? parseInt(formData.get('sena')) || 0 : 0;
+
       const nuevoPedido = {
         id: proximoPedidoId.toString(),
         cliente: formData.get('cliente'),
@@ -2630,52 +2653,51 @@ document.addEventListener('DOMContentLoaded', function() {
         producto: formData.get('producto'),
         descripcion: formData.get('descripcion') || '',
         sena: sena,
-        precio_total: parseInt(formData.get('precio_total')),
+        precio_total: parseInt(formData.get('precio_total')) || 0,
         estado: 'pendiente',
         fecha: obtenerFechaActual()
       };
-      
-      pedidos.push(nuevoPedido);
+
+      pedidos.unshift(nuevoPedido);
       proximoPedidoId++;
-      
+
       guardarPedidos();
       actualizarListaPedidos();
-      
+
       this.reset();
-      document.getElementById('sena-container').style.display = 'none';
-      
+      const senaCont = document.getElementById('sena-container');
+      if (senaCont) senaCont.style.display = 'none';
+
       mostrarMensaje('success', 'Pedido creado exitosamente.', 'pedidos-messages');
     });
   }
-  
+
   // Formulario de configuración del taller
   const formConfigTaller = document.getElementById('formConfigTaller');
   if (formConfigTaller) {
     formConfigTaller.addEventListener('submit', function(e) {
       e.preventDefault();
-      
       const formData = new FormData(this);
-      configTaller = {
-        nombre: formData.get('nombre_taller'),
-        direccion: formData.get('direccion'),
-        telefono: formData.get('telefono'),
-        email: formData.get('email')
+      window.configTaller = {
+        nombre:    formData.get('nombre_taller') || '',
+        direccion: formData.get('direccion')     || '',
+        telefono:  formData.get('telefono')      || '',
+        email:     formData.get('email')         || ''
       };
-      
       guardarConfiguracion();
       mostrarMensaje('success', 'Información del taller guardada exitosamente.', 'config-messages');
     });
   }
-  
+
   // Filtros de pedidos
   const buscarPedidos = document.getElementById('buscar-pedidos');
-  const filtroEstadoPedidos = document.getElementById('filtro-estado-pedidos');
-  if (buscarPedidos) buscarPedidos.addEventListener('input', actualizarListaPedidos);
-  if (filtroEstadoPedidos) filtroEstadoPedidos.addEventListener('change', actualizarListaPedidos);
-  
+  const filtroEstado  = document.getElementById('filtro-estado-pedidos');
+  if (buscarPedidos)  buscarPedidos.addEventListener('input', actualizarListaPedidos);
+  if (filtroEstado)   filtroEstado.addEventListener('change', actualizarListaPedidos);
+
   // Cargar datos iniciales
-  cargarPedidos();
-  cargarConfiguracion();
+  cargarPedidos();        // (definida más abajo)
+  cargarConfiguracion();  // (stub arriba)
 });
 </script>
 
@@ -2686,11 +2708,10 @@ document.addEventListener('DOMContentLoaded', function() {
   const LS_SEQ     = 'fixly:pedidos:seq';
 
   // Estado global usado por tu listener
-  window.pedidos = [];
-  window.proximoPedidoId = 1;
+  window.pedidos = window.pedidos || [];
+  window.proximoPedidoId = window.proximoPedidoId || 1;
 
   const $  = (s,p=document)=>p.querySelector(s);
-  const $$ = (s,p=document)=>[...p.querySelectorAll(s)];
   const money = n => isFinite(n) ? new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS'}).format(Number(n)) : '';
   const hoy = () => {
     const d = new Date();
@@ -2698,7 +2719,7 @@ document.addEventListener('DOMContentLoaded', function() {
     return `${dd}/${m}/${y}`;
   };
 
-  // Expuestos porque el HTML y tu listener los llaman
+  // Expuestos porque tu HTML/listener los llaman
   window.obtenerFechaActual = () => hoy();
 
   window.mostrarMensaje = (tipo, texto, contId='pedidos-messages') => {
@@ -2713,7 +2734,7 @@ document.addEventListener('DOMContentLoaded', function() {
   window.toggleSena = function toggleSena(){
     const radios = document.querySelectorAll('input[name="deja_sena"]');
     const val = [...radios].find(r=>r.checked)?.value || 'no';
-    const cont = $('#sena-container');
+    const cont = document.getElementById('sena-container');
     if (cont) cont.style.display = (val === 'si') ? 'block' : 'none';
     if (val !== 'si') {
       const sena = document.querySelector('input[name="sena"]');
@@ -2732,7 +2753,7 @@ document.addEventListener('DOMContentLoaded', function() {
     localStorage.setItem(LS_SEQ, String(seq));
   }
 
-  // Expuestos (los usa tu listener)
+  // Expuestas para tu listener
   window.guardarPedidos = function guardarPedidos() {
     saveLS(window.pedidos, window.proximoPedidoId);
   };
@@ -2771,11 +2792,11 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   window.actualizarListaPedidos = function actualizarListaPedidos() {
-    const lista = $('#lista-pedidos');
+    const lista = document.getElementById('lista-pedidos');
     if (!lista) return;
 
-    const q  = ($('#buscar-pedidos')?.value || '').toLowerCase().trim();
-    const st = ($('#filtro-estado-pedidos')?.value || '').toLowerCase().trim();
+    const q  = (document.getElementById('buscar-pedidos')?.value || '').toLowerCase().trim();
+    const st = (document.getElementById('filtro-estado-pedidos')?.value || '').toLowerCase().trim();
 
     const items = window.pedidos.filter(p =>
       (!q  || (p.cliente||'').toLowerCase().includes(q) || (p.producto||'').toLowerCase().includes(q)) &&
@@ -2816,7 +2837,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
-  // Init de respaldo (por si entras directo a la pestaña)
+  // Init de respaldo
   document.addEventListener('DOMContentLoaded', () => {
     if (!window.pedidos.length) window.cargarPedidos();
     window.toggleSena?.();
@@ -2863,188 +2884,4 @@ document.addEventListener('DOMContentLoaded', function() {
   const repModelo  = $('#rep-modelo');
   const repSerie   = $('#rep-serie');
   const repAcc     = $('#rep-accesorios');
-  const repFalla   = $('#rep-falla');
-  const repPrior   = $('#rep-prioridad');
-
-  // === Storage helpers ===
-  const loadClients = () => JSON.parse(localStorage.getItem(LS_CLIENTS) || '[]');
-  const saveClients = (arr) => localStorage.setItem(LS_CLIENTS, JSON.stringify(arr));
-  const loadRepairs = () => JSON.parse(localStorage.getItem(LS_REPAIRS) || '[]');
-  const saveRepairs = (arr) => localStorage.setItem(LS_REPAIRS, JSON.stringify(arr));
-
-  // === Estado ===
-  let clients = [];
-  let query = '';
-  let currentClient = null; // para el modal de reparación
-
-  // === Contadores ===
-  function abiertasDe(id) {
-    const reps = loadRepairs();
-    return reps.filter(r => r.clientId === id && r.estado !== 'entregado' && r.estado !== 'cancelado').length;
-  }
-
-  // === Render tabla ===
-  function renderRows(list) {
-    tblBody.innerHTML = '';
-    if (!list.length) { emptyState?.classList.remove('hidden'); return; }
-    emptyState?.classList.add('hidden');
-
-    list.forEach(c => {
-      const tr = document.createElement('tr');
-      tr.className = 'hover:bg-gray-50';
-      tr.innerHTML = `
-        <td class="px-4 py-3 font-medium text-gray-800">${c.nombre || ''}</td>
-        <td class="px-4 py-3 text-gray-700">${c.celular || ''}</td>
-        <td class="px-4 py-3 text-gray-700">${c.email || ''}</td>
-        <td class="px-4 py-3 text-center">
-          <span class="inline-flex items-center justify-center rounded-full bg-gray-200 px-2 text-xs">${abiertasDe(c.id)}</span>
-        </td>
-        <td class="px-4 py-3 text-right">
-          <div class="inline-flex gap-2">
-            <button class="text-indigo-600 hover:underline" data-act="edit" data-id="${c.id}">Editar</button>
-            <button class="text-emerald-600 hover:underline" data-act="repair" data-id="${c.id}">Nueva reparación</button>
-            <button class="text-rose-600 hover:underline" data-act="del" data-id="${c.id}">Eliminar</button>
-          </div>
-        </td>`;
-      tblBody.appendChild(tr);
-    });
-  }
-
-  function applyFilter() {
-    const q = query.toLowerCase();
-    const list = q
-      ? clients.filter(c =>
-          (c.nombre || '').toLowerCase().includes(q) ||
-          (c.celular || '').toLowerCase().includes(q)
-        )
-      : clients;
-    renderRows(list);
-  }
-
-  function loadAndRender() {
-    clients = loadClients();
-    applyFilter();
-  }
-
-  // === Modal Cliente ===
-  function openClientModal(mode = 'new', client = null) {
-    modal.classList.remove('hidden');
-    dupMsg?.classList.add('hidden');
-    if (mode === 'edit' && client) {
-      modalTitle.textContent = 'Editar cliente';
-      fId.value    = client.id;
-      fName.value  = client.nombre || '';
-      fPhone.value = client.celular || '';
-      fEmail.value = client.email || '';
-      fNotes.value = client.notas || '';
-    } else {
-      modalTitle.textContent = 'Nuevo cliente';
-      fId.value = '';
-      form.reset();
-    }
-    setTimeout(() => fName.focus(), 20);
-  }
-  const closeClientModal = () => modal.classList.add('hidden');
-
-  // === Modal Reparación (en Clientes) ===
-  function genCode() {
-    const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth()+1).padStart(2,'0');
-    const day = String(d.getDate()).padStart(2,'0');
-    const seq = String(Math.floor(Math.random()*10000)).padStart(4,'0');
-    return `R-${y}${m}${day}-${seq}`;
-  }
-
-  function openRepairModal(c) {
-    currentClient = c;
-    repClientName.value  = c.nombre || '';
-    repClientPhone.value = c.celular || '';
-    repForm.reset();      // limpia equipo, marca, etc.
-    repModal.classList.remove('hidden');
-    setTimeout(() => repEquipo.focus(), 20);
-  }
-  const closeRepairModal = () => repModal.classList.add('hidden');
-
-  // === Eventos ===
-  btnNew?.addEventListener('click', () => openClientModal('new'));
-  $$('#client-modal [data-close-modal]').forEach(el => el.addEventListener('click', closeClientModal));
-  $$('#repair-modal [data-close-repair]').forEach(el => el.addEventListener('click', closeRepairModal));
-
-  searchInput?.addEventListener('input', (e) => { query = e.target.value || ''; applyFilter(); });
-
-  tblBody?.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-act]');
-    if (!btn) return;
-    const id  = btn.dataset.id;
-    const act = btn.dataset.act;
-    const c   = clients.find(x => x.id === id);
-    if (!c) return;
-
-    if (act === 'edit') return openClientModal('edit', c);
-
-    if (act === 'del') {
-      if (!confirm(`Eliminar a ${c.nombre}?`)) return;
-      clients = clients.filter(x => x.id !== id);
-      saveClients(clients);
-      applyFilter();
-      return;
-    }
-
-    if (act === 'repair') {
-      // Abrimos modal aquí con el cliente precargado
-      return openRepairModal(c);
-    }
-  });
-
-  form?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const id = fId.value || uid();
-    const payload = {
-      id,
-      nombre: fName.value.trim(),
-      celular: normPhone(fPhone.value.trim()),
-      email: fEmail.value.trim(),
-      notas: fNotes.value.trim(),
-      updated_at: Date.now()
-    };
-    if (!payload.nombre || !payload.celular) return;
-
-    // anti-duplicado por celular
-    const dup = clients.find(x => normPhone(x.celular) === payload.celular && x.id !== fId.value);
-    if (dup) { dupMsg?.classList.remove('hidden'); return; }
-    dupMsg?.classList.add('hidden');
-
-    if (fId.value) {
-      const i = clients.findIndex(x => x.id === id);
-      clients[i] = { ...clients[i], ...payload };
-    } else {
-      clients.unshift(payload);
-    }
-    saveClients(clients);
-    closeClientModal();
-    applyFilter();
-  });
-
-  btnSaveRepair?.addEventListener('click', () => {
-    // Guarda cliente y abre modal reparación
-    form.dispatchEvent(new Event('submit', { cancelable: true }));
-    setTimeout(() => {
-      // si el modal cliente sigue abierto hubo error (dup)
-      if (!modal.classList.contains('hidden')) return;
-      const last = clients[0];
-      if (last) openRepairModal(last);
-    }, 30);
-  });
-
-  // Crear ticket desde modal de reparación
-  repForm?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    if (!currentClient) return;
-
-    const repairs = loadRepairs();
-    const now = Date.now();
-    const ticket = {
-      id: uid(),
-      code: genCode(),
-      clie
+  const repFalla   =
