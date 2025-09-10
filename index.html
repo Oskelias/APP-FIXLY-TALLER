@@ -1200,11 +1200,22 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         });
 
         // FUNCIONES DE NAVEGACIÓN Y SECCIONES
-        function showSection(sectionName) {
-            // Ocultar todas las secciones
-            document.querySelectorAll('.section').forEach(section => {
-                section.classList.remove('active');
-            });
+        
+function showSection(sectionName){
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  var sec = document.getElementById(sectionName);
+  if (sec) sec.classList.add('active');
+  var links = document.querySelectorAll('.sidebar-item');
+  links.forEach(function(a){
+    a.classList.remove('active');
+    try{
+      var oc = a.getAttribute('onclick') || '';
+      if (oc.indexOf("'"+sectionName+"'") !== -1) a.classList.add('active');
+    } catch(e){}
+  });
+  try { document.querySelector('.main-content').scrollTop = 0; } catch(e){}
+}
+);
             
             // Mostrar la sección seleccionada
             document.getElementById(sectionName).classList.add('active');
@@ -2791,6 +2802,41 @@ document.addEventListener("DOMContentLoaded", function(){
     });
   }
 });
+</script>
+
+
+<script>
+(function(){
+  function forceBrand(){
+    try{
+      var data = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
+      var brand = (data.configTaller && data.configTaller.nombre) ? data.configTaller.nombre : 'Fixly Taller';
+      var bl = document.getElementById('brand-login'); if (bl) bl.textContent = brand;
+      var bs = document.getElementById('brand-sidebar');
+      if (!bs){
+        var cont = document.querySelector('.w-64 .p-6 .flex.items-center > div:last-child') ||
+                   document.querySelector('.w-64 .p-6 .flex.items-center div:nth-child(2)');
+        if (cont){
+          cont.innerHTML = '<h1 id="brand-sidebar" class="text-lg font-bold text-gray-800">'+brand+'</h1>';
+        }
+      } else {
+        bs.textContent = brand;
+      }
+      document.querySelectorAll('body *').forEach(function(el){
+        if (el.childNodes && el.childNodes.length){
+          el.childNodes.forEach(function(n){
+            if (n.nodeType === 3 && /Mundo\s+Electrónico/.test(n.nodeValue)){
+              n.nodeValue = n.nodeValue.replace(/Mundo\s+Electrónico/g, brand);
+            }
+          });
+        }
+      });
+      document.title = brand + ' — Sistema de Gestión';
+    }catch(e){}
+  }
+  document.addEventListener('DOMContentLoaded', forceBrand);
+  window.forceBrand = forceBrand;
+})();
 </script>
 
 </body>
