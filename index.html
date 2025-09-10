@@ -555,12 +555,12 @@
   </div>
 
   <!-- Estado vacío -->
-  <div id="clientsEmpty" class="text-center text-gray-500 py-12 hidden">
-    <p class="mb-4">Todavía no hay clientes cargados.</p>
-    <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
-      Cargar el primero
-    </button>
-  </div>
+  <<div id="clientsEmpty" class="text-center text-gray-500 py-12 hidden">
+  <p class="mb-4">Todavía no hay clientes cargados.</p>
+  <button id="btnEmptyNew" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+    Cargar el primero
+  </button>
+</div>
 </div>
 <!-- ====== Fin Clientes ====== -->
                 <!-- Modal Nueva Reparación -->
@@ -2681,236 +2681,7 @@ ventanaImpresion.document.close();
             cargarConfiguracion();
         });
     </script>
-    <!-- Modal Cliente -->
-<div id="client-modal" class="fixed inset-0 z-50 hidden">
-  <div class="absolute inset-0 bg-black/40" data-close-modal></div>
-  <div class="relative mx-auto mt-20 w-[95%] max-w-lg rounded-xl bg-white shadow-lg">
-    <div class="flex items-center justify-between border-b px-6 py-4">
-      <h2 id="client-modal-title" class="text-lg font-semibold">Nuevo cliente</h2>
-      <button class="text-gray-500 hover:text-gray-700" data-close-modal>&times;</button>
-    </div>
-    <form id="client-form" class="px-6 py-5 space-y-4">
-      <input type="hidden" id="cl-id">
-      <div>
-        <label class="block text-sm font-medium mb-1" for="cl-name">Nombre *</label>
-        <input id="cl-name" type="text" required maxlength="120"
-               class="w-full rounded-lg border px-3 py-2 focus:ring focus:ring-indigo-200">
-      </div>
-      <div>
-        <label class="block text-sm font-medium mb-1" for="cl-phone">Celular (WhatsApp) *</label>
-        <input id="cl-phone" type="tel" required placeholder="+54 9 11 1234-5678"
-               class="w-full rounded-lg border px-3 py-2 focus:ring focus:ring-indigo-200">
-        <p id="dup-msg" class="mt-1 hidden text-sm text-amber-600">Ya existe un cliente con ese celular.</p>
-      </div>
-      <div>
-        <label class="block text-sm font-medium mb-1" for="cl-email">Email</label>
-        <input id="cl-email" type="email"
-               class="w-full rounded-lg border px-3 py-2 focus:ring focus:ring-indigo-200">
-      </div>
-      <div>
-        <label class="block text-sm font-medium mb-1" for="cl-notes">Notas</label>
-        <textarea id="cl-notes" rows="3"
-                  class="w-full rounded-lg border px-3 py-2 focus:ring focus:ring-indigo-200"></textarea>
-      </div>
-      <div class="flex items-center justify-end gap-2 border-t pt-4">
-        <button type="button" class="rounded-lg border px-4 py-2" data-close-modal>Cancelar</button>
-        <button id="btn-save" type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700">
-          Guardar
-        </button>
-        <button id="btn-save-repair" type="button"
-                class="rounded-lg bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700">
-          Guardar + crear reparación
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Script Clientes -->
-<script>
-(() => {
-  const API_BASE = '/api'; // ⚠️ cambia si tu backend está en otro host
-
-  const $  = (s, p = document) => p.querySelector(s);
-  const $$ = (s, p = document) => [...p.querySelectorAll(s)];
-
-  const tblBody     = $('#clientsTbody');
-  const searchInput = $('#clientSearch');
-  const btnNew      = $('#btnNewClient');
-  const emptyState  = $('#clientsEmpty');
-
-  const modal      = $('#client-modal');
-  const modalTitle = $('#client-modal-title');
-  const form       = $('#client-form');
-  const fId    = $('#cl-id');
-  const fName  = $('#cl-name');
-  const fPhone = $('#cl-phone');
-  const fEmail = $('#cl-email');
-  const fNotes = $('#cl-notes');
-  const dupMsg = $('#dup-msg');
-  const btnSaveRepair = $('#btn-save-repair');
-
-  let clients = [];
-  let page = 1;
-  const limit = 20;
-  let query = '';
-
-  async function api(path, options = {}) {
-    const res = await fetch(`${API_BASE}${path}`, {
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      ...options
-    });
-    if (res.status === 204) return null;
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
-    return data;
-  }
-
-  const listClients  = (q = '', p = 1) => api(`/clients?query=${encodeURIComponent(q)}&page=${p}&limit=${limit}`);
-  const createClient = (payload)       => api(`/clients`, { method: 'POST',  body: JSON.stringify(payload) });
-  const updateClient = (id, payload)   => api(`/clients/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
-  const deleteClient = (id)            => api(`/clients/${id}`, { method: 'DELETE' });
-
-  const normPhone = (v) => v.replace(/[^\d+]/g, '');
-
-  function renderRows(list) {
-    tblBody.innerHTML = '';
-    if (!list || !list.length) {
-      emptyState?.classList.remove('hidden');
-      return;
-    }
-    emptyState?.classList.add('hidden');
-    list.forEach(c => {
-      const tr = document.createElement('tr');
-      tr.className = 'hover:bg-gray-50';
-      tr.innerHTML = `
-        <td class="px-4 py-3 font-medium text-gray-800">${c.nombre || ''}</td>
-        <td class="px-4 py-3 text-gray-700">${c.celular || ''}</td>
-        <td class="px-4 py-3 text-gray-700">${c.email || ''}</td>
-        <td class="px-4 py-3 text-center">
-          <span class="inline-flex items-center justify-center rounded-full bg-gray-200 px-2 text-xs">${c.abiertas ?? 0}</span>
-        </td>
-        <td class="px-4 py-3 text-right">
-          <div class="inline-flex gap-2">
-            <button class="text-indigo-600 hover:underline" data-act="edit" data-id="${c.id}">Editar</button>
-            <button class="text-emerald-600 hover:underline" data-act="repair" data-id="${c.id}">Nueva reparación</button>
-            <button class="text-rose-600 hover:underline" data-act="del" data-id="${c.id}">Eliminar</button>
-          </div>
-        </td>`;
-      tblBody.appendChild(tr);
-    });
-  }
-
-  async function loadAndRender() {
-    try {
-      const data = await listClients(query, page);
-      clients = data.items || [];
-      renderRows(clients);
-    } catch (e) {
-      console.error(e);
-      alert('No se pudieron cargar los clientes.');
-    }
-  }
-
-  function openModal(mode = 'new', client = null) {
-    modal.classList.remove('hidden');
-    dupMsg?.classList.add('hidden');
-    if (mode === 'edit' && client) {
-      modalTitle.textContent = 'Editar cliente';
-      fId.value    = client.id;
-      fName.value  = client.nombre || '';
-      fPhone.value = client.celular || '';
-      fEmail.value = client.email || '';
-      fNotes.value = client.notas || '';
-    } else {
-      modalTitle.textContent = 'Nuevo cliente';
-      fId.value = '';
-      form.reset();
-    }
-    setTimeout(() => fName.focus(), 20);
-  }
-  function closeModal() { modal.classList.add('hidden'); }
-
-  btnNew?.addEventListener('click', () => openModal('new'));
-  $$('#client-modal [data-close-modal]').forEach(el => el.addEventListener('click', closeModal));
-
-  searchInput?.addEventListener('input', (e) => { query = e.target.value || ''; page = 1; loadAndRender(); });
-
-  tblBody?.addEventListener('click', async (e) => {
-    const btn = e.target.closest('[data-act]');
-    if (!btn) return;
-    const id  = btn.dataset.id;
-    const act = btn.dataset.act;
-    const c   = clients.find(x => x.id === id);
-    if (!c) return;
-
-    if (act === 'edit') openModal('edit', c);
-    if (act === 'del') {
-      if (!confirm(`Eliminar a ${c.nombre}?`)) return;
-      try { await deleteClient(id); await loadAndRender(); }
-      catch { alert('No se pudo eliminar el cliente.'); }
-    }
-    if (act === 'repair') {
-      localStorage.setItem('fixly:selectedClientId', id);
-      location.hash = '#reparaciones';
-      alert('Cliente seleccionado. Abrí "Reparaciones" para crear el ticket.');
-    }
-  });
-
-  form?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const id = fId.value || null;
-    const payload = {
-      nombre:  fName.value.trim(),
-      celular: normPhone(fPhone.value.trim()),
-      email:   fEmail.value.trim(),
-      notas:   fNotes.value.trim()
-    };
-    if (!payload.nombre || !payload.celular) return;
-
-    try {
-      if (id) await updateClient(id, payload);
-      else    await createClient(payload);
-      closeModal();
-      await loadAndRender();
-    } catch (err) {
-      const msg = String(err.message || '');
-      if (msg.includes('duplicate_phone') || msg.includes('409')) {
-        dupMsg?.classList.remove('hidden');
-      } else {
-        alert('Error al guardar el cliente.');
-      }
-    }
-  });
-
-  btnSaveRepair?.addEventListener('click', async () => {
-    const submitEvt = new Event('submit', { cancelable: true });
-    form?.dispatchEvent(submitEvt);
-    setTimeout(async () => {
-      if (!modal.classList.contains('hidden')) return;
-      await loadAndRender();
-      const last = clients[0];
-      if (last?.id) {
-        localStorage.setItem('fixly:selectedClientId', last.id);
-        location.hash = '#reparaciones';
-        alert('Cliente guardado. Abrí "Reparaciones" para crear el ticket.');
-      }
-    }, 50);
-  });
-
-  document.addEventListener('DOMContentLoaded', loadAndRender);
-})();
-</script>
-
-<script id="html_badge_script1">
-  window.__genspark_remove_badge_link = "...";
-  window.__genspark_locale = "es-ES";
-  window.__genspark_token = "...";
-</script>
-
-<script id="html_notice_dialog_script" src="https://www.genspark.ai/notice_dialog.js"></script>
-<!-- Script Clientes (localStorage) -->
+    <!-- Script Clientes (localStorage) -->
 <script>
 (() => {
   const LS_CLIENTS = 'fixly:clients';
@@ -2939,7 +2710,7 @@ ventanaImpresion.document.close();
   const dupMsg = $('#dup-msg');
   const btnSaveRepair = $('#btn-save-repair');
 
-  // Modal Reparación (nuevo)
+  // Modal Nueva Reparación (en Clientes)
   const repModal   = $('#repair-modal');
   const repForm    = $('#repair-form');
   const repClientName  = $('#rep-client-name');
@@ -3032,7 +2803,7 @@ ventanaImpresion.document.close();
   }
   const closeClientModal = () => modal.classList.add('hidden');
 
-  // === Modal Reparación ===
+  // === Modal Reparación (en Clientes) ===
   function genCode() {
     const d = new Date();
     const y = d.getFullYear();
@@ -3078,7 +2849,7 @@ ventanaImpresion.document.close();
     }
 
     if (act === 'repair') {
-      // En lugar de navegar a Reparaciones, abrimos modal aquí
+      // En lugar de navegar a Reparaciones, abrimos modal aquí con el cliente precargado
       return openRepairModal(c);
     }
   });
@@ -3152,12 +2923,10 @@ ventanaImpresion.document.close();
     // Actualiza badge "Activas"
     applyFilter();
     alert(`Ticket creado: ${ticket.code}`);
-    // Si querés, navegá a Historial:
+    // Si querés, navegar al historial:
     // location.hash = '#historial';
   });
 
   document.addEventListener('DOMContentLoaded', loadAndRender);
 })();
 </script>
-</body>
-</html>
