@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fixly Taller — Sistema de Gestión</title>
+    <title>FixlyTaller Sistema de Gestion </title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -267,7 +267,7 @@
                 <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                     <i class="fas fa-mobile-alt text-blue-600 text-2xl"></i>
                 </div>
-                <h1 class="text-2xl font-bold text-gray-800">Fixly Taller</h1>
+                <h1 class="text-2xl font-bold text-gray-800">Mundo Electrónico</h1>
                 <p class="text-gray-600">Sistema de Gestión</p>
             </div>
             
@@ -757,7 +757,7 @@
                             <form id="formConfigTaller" class="space-y-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del Taller</label>
-                                    <input type="text" name="nombre_taller" value="Fixly Taller" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                    <input type="text" name="nombre_taller" value="Mundo Electrónico" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
                                 </div>
                                 
                                 <div>
@@ -1200,22 +1200,11 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         });
 
         // FUNCIONES DE NAVEGACIÓN Y SECCIONES
-        
-function showSection(sectionName){
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  var sec = document.getElementById(sectionName);
-  if (sec) sec.classList.add('active');
-  var links = document.querySelectorAll('.sidebar-item');
-  links.forEach(function(a){
-    a.classList.remove('active');
-    try{
-      var oc = a.getAttribute('onclick') || '';
-      if (oc.indexOf("'"+sectionName+"'") !== -1) a.classList.add('active');
-    } catch(e){}
-  });
-  try { document.querySelector('.main-content').scrollTop = 0; } catch(e){}
-}
-);
+        function showSection(sectionName) {
+            // Ocultar todas las secciones
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
             
             // Mostrar la sección seleccionada
             document.getElementById(sectionName).classList.add('active');
@@ -1241,7 +1230,7 @@ function showSection(sectionName){
 
         // FUNCIONES DE DATOS
         function cargarDatos() {
-            const datosGuardados = localStorage.getItem('fixlytallerData');
+            const datosGuardados = localStorage.getItem('mundoElectronicoData');
             if (datosGuardados) {
                 const datos = JSON.parse(datosGuardados);
                 reparaciones = datos.reparaciones || datosIniciales.reparaciones;
@@ -1267,7 +1256,7 @@ function showSection(sectionName){
                 historialEntregados: historialEntregados,
                 historialMensajes: historialMensajes
             };
-            localStorage.setItem('fixlytallerData', JSON.stringify(datos));
+            localStorage.setItem('mundoElectronicoData', JSON.stringify(datos));
         }
 
         function obtenerFechaActual() {
@@ -1821,7 +1810,7 @@ function showSection(sectionName){
                 <!DOCTYPE html>
                 <html>
                 <head>
-                    <title>Fixly Taller — Sistema de Gestión</title>
+                    <title>Comprobante #${reparacion.id}</title>
                     <style>
                         body { font-family: Arial, sans-serif; margin: 0; padding: 15mm; font-size: 9px; line-height: 1.1; }
                         .print-header { text-align: center; margin-bottom: 8px; border-bottom: 1px solid #000; padding-bottom: 4px; }
@@ -1840,7 +1829,7 @@ function showSection(sectionName){
                 </head>
                 <body>
                     <div class="print-header">
-                        <div class="print-title">Fixly Taller</div>
+                        <div class="print-title">Mundo Electrónico</div>
                         <div class="print-subtitle">ORIGINAL</div>
                         <div class="print-order">ORDEN #${reparacion.id}</div>
                     </div>
@@ -1892,7 +1881,7 @@ function showSection(sectionName){
                     <div class="print-separator"></div>
                     
                     <div class="print-header">
-                        <div class="print-title">Fixly Taller</div>
+                        <div class="print-title">Mundo Electrónico</div>
                         <div class="print-subtitle">COPIA CLIENTE</div>
                         <div class="print-order">ORDEN #${reparacion.id}</div>
                     </div>
@@ -1940,135 +1929,13 @@ function showSection(sectionName){
                     </div>
                     
                     <div class="print-footer">
-                        <strong>Fixly Taller - Moreno 1878 - Tel 11 3030-1162</strong><br>
+                        <strong>Mundo Electrónico - Moreno 1878 - Tel 11 3030-1162</strong><br>
                         Las reparaciones tienen una garantía de 90 días únicamente por la misma falla reparada.<br>
                         Los repuestos están garantizados solo por defectos de fábrica.<br>
                         La garantía no cubre daños ocasionados por golpes, roturas, líquidos o uso indebido.<br>
                         Los trabajos de software y configuraciones no tienen garantía.
                     </div>
-                
-<!-- PATCH: Fixly Taller branding + config persistencia -->
-<script>
-(function(){
-  const STORAGE_KEY = 'fixlytallerData';
-
-  // Migración desde clave antigua si existiera
-  try {
-    const oldKey = 'fixlytallerData';
-    const oldData = localStorage.getItem(oldKey);
-    const hasNew = localStorage.getItem(STORAGE_KEY);
-    if (oldData && !hasNew) localStorage.setItem(STORAGE_KEY, oldData);
-  } catch(e) {}
-
-  function getStoredData(){
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
-    catch(e){ return {}; }
-  }
-  function setStoredData(obj){
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
-  }
-
-  function fillConfigForm(cfg){
-    var form = document.getElementById('formConfigTaller');
-    if (!form) return;
-    (form.querySelector('[name="nombre_taller"]')||{}).value = cfg.nombre || 'Fixly Taller';
-    (form.querySelector('[name="direccion"]')||{}).value = cfg.direccion || '';
-    (form.querySelector('[name="telefono"]')||{}).value = cfg.telefono || '';
-    (form.querySelector('[name="email"]')||{}).value = cfg.email || '';
-  }
-
-  function replaceBrandText(oldText, newText){
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
-    let node;
-    const targets = [];
-    while ((node = walker.nextNode())) {
-      if (node.nodeValue && node.nodeValue.indexOf(oldText) !== -1) targets.append(node);
-    }
-    // Fallback for some browsers where NodeList might not be array-like
-    const all = document.querySelectorAll('*');
-    all.forEach(function(el){
-      if (el.childNodes && el.childNodes.length) {
-        el.childNodes.forEach(function(n){
-          if (n.nodeType === 3 && n.nodeValue.indexOf(oldText) !== -1) {
-            n.nodeValue = n.nodeValue.replace(new RegExp(oldText, 'g'), newText);
-          }
-        });
-      }
-    });
-  }
-
-  function applyBrand(cfg){
-    try{
-      (document.getElementById('brand-login')||{}).textContent = cfg.nombre || 'Fixly Taller';
-      (document.getElementById('brand-sidebar')||{}).textContent = cfg.nombre || 'Fixly Taller';
-      document.title = (cfg.nombre || 'Fixly Taller') + ' — Sistema de Gestión';
-      replaceBrandText('Fixly Taller', cfg.nombre || 'Fixly Taller');
-    }catch(e){}
-  }
-
-  document.addEventListener('DOMContentLoaded', function(){
-
-    // Auto login si la sesión está activa
-    try{
-      if (isSessionLogged()){
-        var ls = document.getElementById('loginScreen'); if (ls) ls.classList.add('hidden');
-        var app = document.getElementById('mainApp'); if (app) app.classList.remove('hidden');
-        window.showSection('dashboard');
-      }
-    }catch(e){}
-
-    const data = getStoredData();
-    const cfg = data.configTaller || { nombre:'Fixly Taller', direccion:'', telefono:'', email:'' };
-    // Pintar formulario y marca
-    fillConfigForm(cfg);
-    applyBrand(cfg);
-
-    // Interceptar submit del formulario para persistir
-    const form = document.getElementById('formConfigTaller');
-    if (form){
-      form.addEventListener('submit', function(ev){ ev.preventDefault();
-        try {
-          // Si el form ya maneja submit, dejamos que siga, pero también persistimos
-          const fd = new FormData(form);
-          const nuevoCfg = {
-            nombre: fd.get('nombre_taller') || 'Fixly Taller',
-            direccion: fd.get('direccion') || '',
-            telefono: fd.get('telefono') || '',
-            email: fd.get('email') || ''
-          };
-          const d = getStoredData();
-          d.configTaller = nuevoCfg;
-          setStoredData(d);
-          applyBrand(nuevoCfg);
-        } catch(e){}
-      }, true);
-    }
-  });
-})();
-</script>
-<!-- /PATCH -->
-
-
-<script>
-document.addEventListener("DOMContentLoaded", function(){
-  const loginForm = document.getElementById("loginForm");
-  if (loginForm){
-    loginForm.addEventListener("submit", function(e){
-      e.preventDefault();
-      const user = document.getElementById("username").value.trim();
-      const pass = document.getElementById("password").value.trim();
-      if(user === "admin" && pass === "admin123"){
-        document.getElementById("loginScreen").classList.add("hidden");
-        document.getElementById("mainApp").classList.remove("hidden");
-      } else {
-        alert("Usuario o contraseña incorrectos");
-      }
-    });
-  }
-});
-</script>
-
-</body>
+                </body>
                 </html>
             `);
             
@@ -2285,7 +2152,7 @@ ventanaImpresion.document.close();
                     break;
             }
             
-            mensaje += '\n\nFixly Taller';
+            mensaje += '\n\nMundo Electrónico';
             
             mensajeOriginal = mensaje;
             mensajeTextarea.value = mensaje;
@@ -2371,7 +2238,7 @@ ventanaImpresion.document.close();
         }
 
         function cargarPedidos() {
-            const datos = localStorage.getItem('fixlytallerData');
+            const datos = localStorage.getItem('mundoElectronicoData');
             if (datos) {
                 const datosParseados = JSON.parse(datos);
                 pedidos = datosParseados.pedidos || [];
@@ -2381,10 +2248,10 @@ ventanaImpresion.document.close();
         }
 
         function guardarPedidos() {
-            const datos = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
+            const datos = JSON.parse(localStorage.getItem('mundoElectronicoData') || '{}');
             datos.pedidos = pedidos;
             datos.proximoPedidoId = proximoPedidoId;
-            localStorage.setItem('fixlytallerData', JSON.stringify(datos));
+            localStorage.setItem('mundoElectronicoData', JSON.stringify(datos));
         }
 
         function actualizarListaPedidos() {
@@ -2475,14 +2342,14 @@ ventanaImpresion.document.close();
 
         // FUNCIONES PARA MÓDULO DE CONFIGURACIÓN
         let configTaller = {
-            nombre: 'Fixly Taller',
+            nombre: 'Mundo Electrónico',
             direccion: 'Av. Corrientes 1234, CABA',
             telefono: '+54 11 1234-5678',
             email: 'info@mundoelectronico.com'
         };
 
         function cargarConfiguracion() {
-            const datos = localStorage.getItem('fixlytallerData');
+            const datos = localStorage.getItem('mundoElectronicoData');
             if (datos) {
                 const datosParseados = JSON.parse(datos);
                 configTaller = datosParseados.configTaller || configTaller;
@@ -2491,9 +2358,9 @@ ventanaImpresion.document.close();
         }
 
         function guardarConfiguracion() {
-            const datos = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
+            const datos = JSON.parse(localStorage.getItem('mundoElectronicoData') || '{}');
             datos.configTaller = configTaller;
-            localStorage.setItem('fixlytallerData', JSON.stringify(datos));
+            localStorage.setItem('mundoElectronicoData', JSON.stringify(datos));
         }
 
         function cargarListaTecnicos() {
@@ -2567,9 +2434,9 @@ ventanaImpresion.document.close();
             }
             
             // Guardar nueva contraseña en localStorage
-            const datos = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
+            const datos = JSON.parse(localStorage.getItem('mundoElectronicoData') || '{}');
             datos.password = nuevaPassword;
-            localStorage.setItem('fixlytallerData', JSON.stringify(datos));
+            localStorage.setItem('mundoElectronicoData', JSON.stringify(datos));
             
             document.getElementById('nueva-password').value = '';
             document.getElementById('confirmar-password').value = '';
@@ -2578,7 +2445,7 @@ ventanaImpresion.document.close();
         }
 
         function exportarDatos() {
-            const datos = localStorage.getItem('fixlytallerData');
+            const datos = localStorage.getItem('mundoElectronicoData');
             if (!datos) {
                 mostrarMensaje('error', 'No hay datos para exportar.', 'config-messages');
                 return;
@@ -2609,7 +2476,7 @@ ventanaImpresion.document.close();
                 reader.onload = function(e) {
                     try {
                         const datos = JSON.parse(e.target.result);
-                        localStorage.setItem('fixlytallerData', JSON.stringify(datos));
+                        localStorage.setItem('mundoElectronicoData', JSON.stringify(datos));
                         location.reload(); // Recargar para aplicar los datos importados
                     } catch (error) {
                         mostrarMensaje('error', 'Error al importar datos. Archivo inválido.', 'config-messages');
@@ -2623,7 +2490,7 @@ ventanaImpresion.document.close();
         function limpiarTodosLosDatos() {
             if (confirm('¿Estás seguro de que deseas eliminar TODOS los datos? Esta acción no se puede deshacer.')) {
                 if (confirm('ÚLTIMA CONFIRMACIÓN: Se eliminarán todas las reparaciones, historial, técnicos y configuraciones. ¿Continuar?')) {
-                    localStorage.removeItem('fixlytallerData');
+                    localStorage.removeItem('mundoElectronicoData');
                     location.reload();
                 }
             }
@@ -2702,333 +2569,6 @@ ventanaImpresion.document.close();
             cargarConfiguracion();
         });
     </script>
-
-<!-- PATCH: Fixly Taller branding + config persistencia -->
-<script>
-(function(){
-  const STORAGE_KEY = 'fixlytallerData';
-
-  // Migración desde clave antigua si existiera
-  try {
-    const oldKey = 'fixlytallerData';
-    const oldData = localStorage.getItem(oldKey);
-    const hasNew = localStorage.getItem(STORAGE_KEY);
-    if (oldData && !hasNew) localStorage.setItem(STORAGE_KEY, oldData);
-  } catch(e) {}
-
-  function getStoredData(){
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
-    catch(e){ return {}; }
-  }
-  function setStoredData(obj){
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
-  }
-
-  function fillConfigForm(cfg){
-    var form = document.getElementById('formConfigTaller');
-    if (!form) return;
-    (form.querySelector('[name="nombre_taller"]')||{}).value = cfg.nombre || 'Fixly Taller';
-    (form.querySelector('[name="direccion"]')||{}).value = cfg.direccion || '';
-    (form.querySelector('[name="telefono"]')||{}).value = cfg.telefono || '';
-    (form.querySelector('[name="email"]')||{}).value = cfg.email || '';
-  }
-
-  function replaceBrandText(oldText, newText){
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
-    let node;
-    const targets = [];
-    while ((node = walker.nextNode())) {
-      if (node.nodeValue && node.nodeValue.indexOf(oldText) !== -1) targets.append(node);
-    }
-    // Fallback for some browsers where NodeList might not be array-like
-    const all = document.querySelectorAll('*');
-    all.forEach(function(el){
-      if (el.childNodes && el.childNodes.length) {
-        el.childNodes.forEach(function(n){
-          if (n.nodeType === 3 && n.nodeValue.indexOf(oldText) !== -1) {
-            n.nodeValue = n.nodeValue.replace(new RegExp(oldText, 'g'), newText);
-          }
-        });
-      }
-    });
-  }
-
-  function applyBrand(cfg){
-    try{
-      (document.getElementById('brand-login')||{}).textContent = cfg.nombre || 'Fixly Taller';
-      (document.getElementById('brand-sidebar')||{}).textContent = cfg.nombre || 'Fixly Taller';
-      document.title = (cfg.nombre || 'Fixly Taller') + ' — Sistema de Gestión';
-      replaceBrandText('Fixly Taller', cfg.nombre || 'Fixly Taller');
-    }catch(e){}
-  }
-
-  document.addEventListener('DOMContentLoaded', function(){
-
-    // Auto login si la sesión está activa
-    try{
-      if (isSessionLogged()){
-        var ls = document.getElementById('loginScreen'); if (ls) ls.classList.add('hidden');
-        var app = document.getElementById('mainApp'); if (app) app.classList.remove('hidden');
-        window.showSection('dashboard');
-      }
-    }catch(e){}
-
-    const data = getStoredData();
-    const cfg = data.configTaller || { nombre:'Fixly Taller', direccion:'', telefono:'', email:'' };
-    // Pintar formulario y marca
-    fillConfigForm(cfg);
-    applyBrand(cfg);
-
-    // Interceptar submit del formulario para persistir
-    const form = document.getElementById('formConfigTaller');
-    if (form){
-      form.addEventListener('submit', function(ev){ ev.preventDefault();
-        try {
-          // Si el form ya maneja submit, dejamos que siga, pero también persistimos
-          const fd = new FormData(form);
-          const nuevoCfg = {
-            nombre: fd.get('nombre_taller') || 'Fixly Taller',
-            direccion: fd.get('direccion') || '',
-            telefono: fd.get('telefono') || '',
-            email: fd.get('email') || ''
-          };
-          const d = getStoredData();
-          d.configTaller = nuevoCfg;
-          setStoredData(d);
-          applyBrand(nuevoCfg);
-        } catch(e){}
-      }, true);
-    }
-  });
-})();
-</script>
-<!-- /PATCH -->
-
-
-<script>
-document.addEventListener("DOMContentLoaded", function(){
-  const loginForm = document.getElementById("loginForm");
-  if (loginForm){
-    loginForm.addEventListener("submit", function(e){
-      e.preventDefault();
-      const user = document.getElementById("username").value.trim();
-      const pass = document.getElementById("password").value.trim();
-      if(user === "admin" && pass === "admin123"){
-        document.getElementById("loginScreen").classList.add("hidden");
-        document.getElementById("mainApp").classList.remove("hidden");
-      } else {
-        alert("Usuario o contraseña incorrectos");
-      }
-    });
-  }
-});
-</script>
-
-
-<script>
-(function(){
-  function forceBrand(){
-    try{
-      var data = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
-      var brand = (data.configTaller && data.configTaller.nombre) ? data.configTaller.nombre : 'Fixly Taller';
-      var bl = document.getElementById('brand-login'); if (bl) bl.textContent = brand;
-      var bs = document.getElementById('brand-sidebar');
-      if (!bs){
-        var cont = document.querySelector('.w-64 .p-6 .flex.items-center > div:last-child') ||
-                   document.querySelector('.w-64 .p-6 .flex.items-center div:nth-child(2)');
-        if (cont){
-          cont.innerHTML = '<h1 id="brand-sidebar" class="text-lg font-bold text-gray-800">'+brand+'</h1>';
-        }
-      } else {
-        bs.textContent = brand;
-      }
-      document.querySelectorAll('body *').forEach(function(el){
-        if (el.childNodes && el.childNodes.length){
-          el.childNodes.forEach(function(n){
-            if (n.nodeType === 3 && /Mundo\s+Electrónico/.test(n.nodeValue)){
-              n.nodeValue = n.nodeValue.replace(/Mundo\s+Electrónico/g, brand);
-            }
-          });
-        }
-      });
-      document.title = brand + ' — Sistema de Gestión';
-    }catch(e){}
-  }
-  document.addEventListener('DOMContentLoaded', forceBrand);
-  window.forceBrand = forceBrand;
-})();
-</script>
-
-
-<!-- FIXLY: Navegación, Login, Marca y Config persistente -->
-<script>
-(function(){
-  // ===== Helpers de storage =====
-  var STORAGE_KEY = 'fixlytallerData';
-  function getStoredData(){
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
-    catch(e){ return {}; }
-  }
-  function setStoredData(obj){
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(obj || {})); } catch(e){}
-  }
-
-  // ===== Sesión (persistir login) =====
-  function setSessionLogged(inFlag){
-    try { localStorage.setItem('fixly_session_logged', inFlag ? '1' : '0'); } catch(e){}
-  }
-  function isSessionLogged(){ try { return localStorage.getItem('fixly_session_logged') === '1'; } catch(e){ return false; } }
-
-  // ===== Marca según configuración =====
-  function forceBrand(){
-    try{
-      var data = getStoredData();
-      var brand = (data.configTaller && data.configTaller.nombre) ? data.configTaller.nombre : 'Fixly Taller';
-
-      var bl = document.getElementById('brand-login');  if (bl) bl.textContent = brand;
-      var bs = document.getElementById('brand-sidebar');
-      if (!bs){
-        var cont = document.querySelector('.w-64 .p-6 .flex.items-center > div:last-child') ||
-                   document.querySelector('.w-64 .p-6 .flex.items-center div:nth-child(2)');
-        if (cont){
-          cont.innerHTML = '<h1 id="brand-sidebar" class="text-lg font-bold text-gray-800">'+brand+'</h1>';
-        }
-      } else {
-        bs.textContent = brand;
-      }
-
-      // Reemplazo defensivo de textos sueltos
-      document.querySelectorAll('body *').forEach(function(el){
-        if (!el.childNodes) return;
-        el.childNodes.forEach(function(n){
-          if (n.nodeType === 3 && /Mundo\s+Electrónico/.test(n.nodeValue)){
-            n.nodeValue = n.nodeValue.replace(/Mundo\s+Electrónico/g, brand);
-          }
-        });
-      });
-
-      document.title = brand + ' — Sistema de Gestión';
-    }catch(e){ console.warn('forceBrand', e); }
-  }
-  window.forceBrand = forceBrand;
-
-  // ===== Hidratar y guardar Configuración =====
-  function hydrateConfigForm(){
-    var form = document.getElementById('formConfigTaller');
-    if (!form) return;
-    var data = getStoredData();
-    var cfg = data.configTaller || { nombre:'Fixly Taller', direccion:'', telefono:'', email:'' };
-
-    var set = function(name, val){
-      var i = form.querySelector('[name="'+name+'"]');
-      if (i) i.value = (val || '');
-    };
-    set('nombre_taller', cfg.nombre);
-    set('direccion', cfg.direccion);
-    set('telefono', cfg.telefono);
-    set('email', cfg.email);
-
-    // Guardar
-    form.addEventListener('submit', function(ev){ ev.preventDefault();
-      try{
-        var fd = new FormData(form);
-        var nuevo = {
-          nombre:   (fd.get('nombre_taller') || '').trim() || 'Fixly Taller',
-          direccion:(fd.get('direccion') || '').trim(),
-          telefono: (fd.get('telefono') || '').trim(),
-          email:    (fd.get('email') || '').trim()
-        };
-        var d = getStoredData();
-        d.configTaller = nuevo;
-        setStoredData(d);
-        forceBrand();
-      }catch(e){ console.warn('guardar config', e); }
-    });
-  }
-
-  // ===== Navegación segura =====
-  window.showSection = function(sectionName){
-    try{
-      document.querySelectorAll('.section').forEach(function(s){ s.classList.remove('active'); });
-      var sec = document.getElementById(sectionName);
-      if (sec) sec.classList.add('active');
-
-      var links = document.querySelectorAll('.sidebar-item');
-      links.forEach(function(a){
-        a.classList.remove('active');
-        var oc = (a.getAttribute('onclick') || '');
-        if (oc.indexOf("'" + sectionName + "'") !== -1) a.classList.add('active');
-      });
-
-      var mc = document.querySelector('.main-content');
-      if (mc) mc.scrollTop = 0;
-    }catch(e){ console.warn('showSection', e); }
-  };
-
-  document.addEventListener('DOMContentLoaded', function(){
-
-    // Auto login si la sesión está activa
-    try{
-      if (isSessionLogged()){
-        var ls = document.getElementById('loginScreen'); if (ls) ls.classList.add('hidden');
-        var app = document.getElementById('mainApp'); if (app) app.classList.remove('hidden');
-        window.showSection('dashboard');
-      }
-    }catch(e){}
-
-    // Delegación por si onclick falla
-    try{
-      var nav = document.querySelector('.w-64 nav');
-      if (nav){
-        nav.addEventListener('click', function(ev){
-          var a = ev.target.closest('a.sidebar-item');
-          if (!a) return;
-          ev.preventDefault();
-          var m = a.getAttribute('onclick') || '';
-          var mm = /showSection\('([^']+)'\)/.exec(m);
-          var section = (mm && mm[1]) ? mm[1] : (a.dataset.section || 'dashboard');
-          window.showSection(section);
-        });
-      }
-    }catch(e){}
-
-    // Inicializaciones de Config y Marca
-    hydrateConfigForm();
-    forceBrand();
-  });
-
-  // ===== Login básico (por si la app lo perdió en ediciones) =====
-  document.addEventListener('DOMContentLoaded', function(){
-
-    // Auto login si la sesión está activa
-    try{
-      if (isSessionLogged()){
-        var ls = document.getElementById('loginScreen'); if (ls) ls.classList.add('hidden');
-        var app = document.getElementById('mainApp'); if (app) app.classList.remove('hidden');
-        window.showSection('dashboard');
-      }
-    }catch(e){}
-
-    var lf = document.getElementById('loginForm');
-    if (!lf) return;
-    lf.addEventListener('submit', function(e){
-      e.preventDefault();
-      var user = (document.getElementById('username')||{}).value || '';
-      var pass = (document.getElementById('password')||{}).value || '';
-      if (user.trim()==='admin' && pass.trim()==='admin123'){ setSessionLogged(true);
-        var ls = document.getElementById('loginScreen'); if (ls) ls.classList.add('hidden');
-        var app = document.getElementById('mainApp'); if (app) app.classList.remove('hidden');
-        window.showSection('dashboard');
-        forceBrand();
-      } else {
-        alert('Usuario o contraseña incorrectos');
-      }
-    });
-  });
-})();
-</script>
-<!-- /FIXLY -->
-
 </body>
 </html>
     <script id="html_badge_script1">
