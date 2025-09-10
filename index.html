@@ -1954,7 +1954,7 @@ function showSection(sectionName){
 
   // Migración desde clave antigua si existiera
   try {
-    const oldKey = 'mundoElectronicoData';
+    const oldKey = 'fixlytallerData';
     const oldData = localStorage.getItem(oldKey);
     const hasNew = localStorage.getItem(STORAGE_KEY);
     if (oldData && !hasNew) localStorage.setItem(STORAGE_KEY, oldData);
@@ -2002,7 +2002,7 @@ function showSection(sectionName){
       (document.getElementById('brand-login')||{}).textContent = cfg.nombre || 'Fixly Taller';
       (document.getElementById('brand-sidebar')||{}).textContent = cfg.nombre || 'Fixly Taller';
       document.title = (cfg.nombre || 'Fixly Taller') + ' — Sistema de Gestión';
-      replaceBrandText('Mundo Electrónico', cfg.nombre || 'Fixly Taller');
+      replaceBrandText('Fixly Taller', cfg.nombre || 'Fixly Taller');
     }catch(e){}
   }
 
@@ -2700,7 +2700,7 @@ ventanaImpresion.document.close();
 
   // Migración desde clave antigua si existiera
   try {
-    const oldKey = 'mundoElectronicoData';
+    const oldKey = 'fixlytallerData';
     const oldData = localStorage.getItem(oldKey);
     const hasNew = localStorage.getItem(STORAGE_KEY);
     if (oldData && !hasNew) localStorage.setItem(STORAGE_KEY, oldData);
@@ -2748,7 +2748,7 @@ ventanaImpresion.document.close();
       (document.getElementById('brand-login')||{}).textContent = cfg.nombre || 'Fixly Taller';
       (document.getElementById('brand-sidebar')||{}).textContent = cfg.nombre || 'Fixly Taller';
       document.title = (cfg.nombre || 'Fixly Taller') + ' — Sistema de Gestión';
-      replaceBrandText('Mundo Electrónico', cfg.nombre || 'Fixly Taller');
+      replaceBrandText('Fixly Taller', cfg.nombre || 'Fixly Taller');
     }catch(e){}
   }
 
@@ -2838,6 +2838,150 @@ document.addEventListener("DOMContentLoaded", function(){
   window.forceBrand = forceBrand;
 })();
 </script>
+
+
+<!-- FIXLY: Navegación, Login, Marca y Config persistente -->
+<script>
+(function(){
+  // ===== Helpers de storage =====
+  var STORAGE_KEY = 'fixlytallerData';
+  function getStoredData(){
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+    catch(e){ return {}; }
+  }
+  function setStoredData(obj){
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(obj || {})); } catch(e){}
+  }
+
+  // ===== Marca según configuración =====
+  function forceBrand(){
+    try{
+      var data = getStoredData();
+      var brand = (data.configTaller && data.configTaller.nombre) ? data.configTaller.nombre : 'Fixly Taller';
+
+      var bl = document.getElementById('brand-login');  if (bl) bl.textContent = brand;
+      var bs = document.getElementById('brand-sidebar');
+      if (!bs){
+        var cont = document.querySelector('.w-64 .p-6 .flex.items-center > div:last-child') ||
+                   document.querySelector('.w-64 .p-6 .flex.items-center div:nth-child(2)');
+        if (cont){
+          cont.innerHTML = '<h1 id="brand-sidebar" class="text-lg font-bold text-gray-800">'+brand+'</h1>';
+        }
+      } else {
+        bs.textContent = brand;
+      }
+
+      // Reemplazo defensivo de textos sueltos
+      document.querySelectorAll('body *').forEach(function(el){
+        if (!el.childNodes) return;
+        el.childNodes.forEach(function(n){
+          if (n.nodeType === 3 && /Mundo\s+Electrónico/.test(n.nodeValue)){
+            n.nodeValue = n.nodeValue.replace(/Mundo\s+Electrónico/g, brand);
+          }
+        });
+      });
+
+      document.title = brand + ' — Sistema de Gestión';
+    }catch(e){ console.warn('forceBrand', e); }
+  }
+  window.forceBrand = forceBrand;
+
+  // ===== Hidratar y guardar Configuración =====
+  function hydrateConfigForm(){
+    var form = document.getElementById('formConfigTaller');
+    if (!form) return;
+    var data = getStoredData();
+    var cfg = data.configTaller || { nombre:'Fixly Taller', direccion:'', telefono:'', email:'' };
+
+    var set = function(name, val){
+      var i = form.querySelector('[name="'+name+'"]');
+      if (i) i.value = (val || '');
+    };
+    set('nombre_taller', cfg.nombre);
+    set('direccion', cfg.direccion);
+    set('telefono', cfg.telefono);
+    set('email', cfg.email);
+
+    // Guardar
+    form.addEventListener('submit', function(ev){
+      try{
+        var fd = new FormData(form);
+        var nuevo = {
+          nombre:   (fd.get('nombre_taller') || '').trim() || 'Fixly Taller',
+          direccion:(fd.get('direccion') || '').trim(),
+          telefono: (fd.get('telefono') || '').trim(),
+          email:    (fd.get('email') || '').trim()
+        };
+        var d = getStoredData();
+        d.configTaller = nuevo;
+        setStoredData(d);
+        forceBrand();
+      }catch(e){ console.warn('guardar config', e); }
+    });
+  }
+
+  // ===== Navegación segura =====
+  window.showSection = function(sectionName){
+    try{
+      document.querySelectorAll('.section').forEach(function(s){ s.classList.remove('active'); });
+      var sec = document.getElementById(sectionName);
+      if (sec) sec.classList.add('active');
+
+      var links = document.querySelectorAll('.sidebar-item');
+      links.forEach(function(a){
+        a.classList.remove('active');
+        var oc = (a.getAttribute('onclick') || '');
+        if (oc.indexOf("'" + sectionName + "'") !== -1) a.classList.add('active');
+      });
+
+      var mc = document.querySelector('.main-content');
+      if (mc) mc.scrollTop = 0;
+    }catch(e){ console.warn('showSection', e); }
+  };
+
+  document.addEventListener('DOMContentLoaded', function(){
+    // Delegación por si onclick falla
+    try{
+      var nav = document.querySelector('.w-64 nav');
+      if (nav){
+        nav.addEventListener('click', function(ev){
+          var a = ev.target.closest('a.sidebar-item');
+          if (!a) return;
+          ev.preventDefault();
+          var m = a.getAttribute('onclick') || '';
+          var mm = /showSection\('([^']+)'\)/.exec(m);
+          var section = (mm && mm[1]) ? mm[1] : (a.dataset.section || 'dashboard');
+          window.showSection(section);
+        });
+      }
+    }catch(e){}
+
+    // Inicializaciones de Config y Marca
+    hydrateConfigForm();
+    forceBrand();
+  });
+
+  // ===== Login básico (por si la app lo perdió en ediciones) =====
+  document.addEventListener('DOMContentLoaded', function(){
+    var lf = document.getElementById('loginForm');
+    if (!lf) return;
+    lf.addEventListener('submit', function(e){
+      e.preventDefault();
+      var user = (document.getElementById('username')||{}).value || '';
+      var pass = (document.getElementById('password')||{}).value || '';
+      if (user.trim()==='admin' && pass.trim()==='admin123'){
+        var ls = document.getElementById('loginScreen'); if (ls) ls.classList.add('hidden');
+        var app = document.getElementById('mainApp'); if (app) app.classList.remove('hidden');
+        window.showSection('dashboard');
+        forceBrand();
+      } else {
+        alert('Usuario o contraseña incorrectos');
+      }
+    });
+  });
+})();
+</script>
+<!-- /FIXLY -->
 
 </body>
 </html>
