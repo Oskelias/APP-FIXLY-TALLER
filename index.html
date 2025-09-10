@@ -2608,233 +2608,80 @@ ventanaImpresion.document.close();
             }
         }
 
-    
-   <!-- ============= SCRIPTS ============= -->
-
-<script>
-/* ===== Config: stubs seguros para evitar crash ===== */
-window.configTaller = window.configTaller || {};
-
-window.guardarConfiguracion = function guardarConfiguracion() {
-  try { localStorage.setItem('fixly:config', JSON.stringify(window.configTaller||{})); } catch {}
-};
-
-window.cargarConfiguracion = function cargarConfiguracion() {
-  try {
-    const cfg = JSON.parse(localStorage.getItem('fixly:config') || '{}');
-    window.configTaller = cfg || {};
-    // Rellenar formulario si existe
-    const f = document.getElementById('formConfigTaller');
-    if (f) {
-      f.elements['nombre_taller'] && (f.elements['nombre_taller'].value = cfg.nombre || '');
-      f.elements['direccion']     && (f.elements['direccion'].value     = cfg.direccion || '');
-      f.elements['telefono']      && (f.elements['telefono'].value      = cfg.telefono || '');
-      f.elements['email']         && (f.elements['email'].value         = cfg.email || '');
-    }
-  } catch {}
-}
-
-/* ===== Pedidos (localStorage) + UI ===== */
-(() => {
-  const LS_PEDIDOS = 'fixly:pedidos';
-  const LS_SEQ     = 'fixly:pedidos:seq';
-
-  // Estado global
-  window.pedidos = window.pedidos || [];
-  window.proximoPedidoId = window.proximoPedidoId || 1;
-
-  const $  = (s,p=document)=>p.querySelector(s);
-  const money = n => isFinite(n) ? new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS'}).format(Number(n)) : '';
-  const hoy = () => {
-    const d=new Date(); const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
-    return `${dd}/${m}/${y}`;
-  };
-
-  // Expuestas (las usa el HTML/otros scripts)
-  window.obtenerFechaActual = () => hoy();
-  window.mostrarMensaje = (tipo, texto, contId='pedidos-messages') => {
-    const box = document.getElementById(contId);
-    if (!box) return;
-    const ok = (tipo === 'success');
-    box.innerHTML = `<div class="mb-3 rounded-lg px-3 py-2 text-sm ${ok?'bg-emerald-50 text-emerald-800 border border-emerald-200':'bg-rose-50 text-rose-800 border border-rose-200'}">${texto}</div>`;
-    setTimeout(()=> box.innerHTML='', 2500);
-  };
-  window.toggleSena = function toggleSena(){
-    const radios = document.querySelectorAll('input[name="deja_sena"]');
-    const val = [...radios].find(r=>r.checked)?.value || 'no';
-    const cont = document.getElementById('sena-container');
-    if (cont) cont.style.display = (val === 'si') ? 'block' : 'none';
-    if (val !== 'si') {
-      const sena = document.querySelector('input[name="sena"]');
-      if (sena) sena.value = '';
-    }
-  };
-
-  // Storage helpers
-  function loadLS() {
-    const arr = JSON.parse(localStorage.getItem(LS_PEDIDOS) || '[]');
-    const seq = Number(localStorage.getItem(LS_SEQ) || 1);
-    return { arr, seq };
-  }
-  function saveLS(arr, seq) {
-    localStorage.setItem(LS_PEDIDOS, JSON.stringify(arr));
-    localStorage.setItem(LS_SEQ, String(seq));
-  }
-
-  // API expuesta para otros bloques
-  window.guardarPedidos = function guardarPedidos() {
-    saveLS(window.pedidos, window.proximoPedidoId);
-  };
-  window.cargarPedidos = function cargarPedidos() {
-    const { arr, seq } = loadLS();
-    window.pedidos = arr;
-    // seq seguro; si no existe, derivamos
-    const lastId = (arr.length ? Number(arr[0].id) : 0);
-    window.proximoPedidoId = Number.isFinite(seq) && seq > 0 ? seq : (lastId+1 || 1);
-    actualizarListaPedidos();
-  };
-  window.actualizarListaPedidos = function actualizarListaPedidos() {
-    const lista = document.getElementById('lista-pedidos');
-    if (!lista) return;
-
-    const q  = (document.getElementById('buscar-pedidos')?.value || '').toLowerCase().trim();
-    const st = (document.getElementById('filtro-estado-pedidos')?.value || '').toLowerCase().trim();
-
-    const items = window.pedidos.filter(p =>
-      (!q  || (p.cliente||'').toLowerCase().includes(q) || (p.producto||'').toLowerCase().includes(q)) &&
-      (!st || (p.estado||'pendiente') === st)
-    );
-
-    if (!items.length) {
-      lista.innerHTML = `<div class="text-gray-500 py-8 text-center">No hay pedidos que mostrar</div>`;
-      return;
-    }
-    lista.innerHTML = items.map(cardPedido).join('');
-
-    function cardPedido(p) {
-      const estado = (p.estado || 'pendiente');
-      const chip = estado === 'pendiente' ? 'bg-amber-100 text-amber-800'
-                : estado === 'listo'     ? 'bg-emerald-100 text-emerald-800'
-                :                           'bg-gray-200 text-gray-700';
-      return `
-        <div class="border rounded-lg p-3 flex items-center justify-between" data-id="${p.id}">
-          <div class="min-w-0">
-            <div class="flex items-center gap-2">
-              <span class="font-semibold">#${p.id}</span>
-              <span class="px-2 py-0.5 rounded-full text-xs ${chip}">${estado}</span>
-              <span class="text-xs text-gray-500">${p.fecha || ''}</span>
-            </div>
-            <div class="text-sm text-gray-800 truncate">${p.cliente} · ${p.producto}</div>
-            <div class="text-xs text-gray-500 truncate">Tel: ${p.telefono || '-'}</div>
-            <div class="text-xs text-gray-500 truncate">
-              Total: ${money(p.precio_total)} ${p.sena ? `· Seña: ${money(p.sena)}` : ''}
-            </div>
-          </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <button class="px-2 py-1 rounded-lg border text-emerald-700 hover:bg-emerald-50" data-act="next">⟳</button>
-            <button class="px-2 py-1 rounded-lg border text-rose-700 hover:bg-rose-50" data-act="del">🗑</button>
-          </div>
-        </div>`;
-    }
-  };
-
-  // Delegación acciones en lista
-  document.getElementById('lista-pedidos')?.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-act]');
-    if (!btn) return;
-    const card = btn.closest('[data-id]');
-    const id = card?.dataset.id;
-    if (!id) return;
-
-    const i = window.pedidos.findIndex(p => String(p.id) === String(id));
-    if (i === -1) return;
-
-    if (btn.dataset.act === 'del') {
-      if (!confirm(`Eliminar pedido #${window.pedidos[i].id}?`)) return;
-      window.pedidos.splice(i,1);
-      guardarPedidos();
-      actualizarListaPedidos();
-      return;
-    }
-    if (btn.dataset.act === 'next') {
-      const cur = window.pedidos[i].estado || 'pendiente';
-      window.pedidos[i].estado = cur === 'pendiente' ? 'listo' : (cur === 'listo' ? 'entregado' : 'pendiente');
-      guardarPedidos();
-      actualizarListaPedidos();
-      return;
-    }
-  });
-
-  // ---- INIT seguro (si el DOM ya cargó o no) ----
-  function initPedidosYConfig() {
-    // Listeners del formulario de pedidos
-    const formNuevoPedido = document.getElementById('formNuevoPedido');
-    if (formNuevoPedido) {
-      formNuevoPedido.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const fd = new FormData(this);
-        const dejaSena = fd.get('deja_sena') === 'si';
-        const sena = dejaSena ? parseInt(fd.get('sena')) || 0 : 0;
-        const pedido = {
-          id: window.proximoPedidoId.toString(),
-          cliente: fd.get('cliente'),
-          telefono: fd.get('telefono'),
-          producto: fd.get('producto'),
-          descripcion: fd.get('descripcion') || '',
-          sena,
-          precio_total: parseInt(fd.get('precio_total')) || 0,
-          estado: 'pendiente',
-          fecha: hoy()
-        };
-        if (!pedido.cliente || !pedido.telefono || !pedido.producto) {
-          window.mostrarMensaje('error','Completá cliente, teléfono y producto.','pedidos-messages');
-          return;
-        }
-        window.pedidos.unshift(pedido);
-        window.proximoPedidoId++;
-        window.guardarPedidos();
-        window.actualizarListaPedidos();
-        this.reset();
-        window.toggleSena();
-        window.mostrarMensaje('success', `Pedido creado: #${pedido.id}`, 'pedidos-messages');
-      });
-    }
-
-    // Listeners de filtros
-    document.getElementById('buscar-pedidos')?.addEventListener('input', window.actualizarListaPedidos);
-    document.getElementById('filtro-estado-pedidos')?.addEventListener('change', window.actualizarListaPedidos);
-
-    // Form Configuración
-    const formConfig = document.getElementById('formConfigTaller');
-    if (formConfig) {
-      formConfig.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const fd = new FormData(formConfig);
-        window.configTaller = {
-          nombre:    fd.get('nombre_taller') || '',
-          direccion: fd.get('direccion')     || '',
-          telefono:  fd.get('telefono')      || '',
-          email:     fd.get('email')         || ''
-        };
-        window.guardarConfiguracion();
-        window.mostrarMensaje('success','Información del taller guardada.','config-messages');
-      });
-    }
-
-    // Carga inicial
-    window.cargarPedidos();
-    window.cargarConfiguracion();
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initPedidosYConfig);
-  } else {
-    initPedidosYConfig();
-  }
-})();
-</script>
-
-<!-- 3) Script Clientes (localStorage + modal Nueva reparación) -->
+        // Event Listeners para los nuevos módulos
+        document.addEventListener('DOMContentLoaded', function() {
+            // Formulario de nuevo pedido
+            const formNuevoPedido = document.getElementById('formNuevoPedido');
+            if (formNuevoPedido) {
+                formNuevoPedido.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(this);
+                    const dejaSena = formData.get('deja_sena') === 'si';
+                    const sena = dejaSena ? parseInt(formData.get('sena')) || 0 : 0;
+                    
+                    const nuevoPedido = {
+                        id: proximoPedidoId.toString(),
+                        cliente: formData.get('cliente'),
+                        telefono: formData.get('telefono'),
+                        producto: formData.get('producto'),
+                        descripcion: formData.get('descripcion') || '',
+                        sena: sena,
+                        precio_total: parseInt(formData.get('precio_total')),
+                        estado: 'pendiente',
+                        fecha: obtenerFechaActual()
+                    };
+                    
+                    pedidos.push(nuevoPedido);
+                    proximoPedidoId++;
+                    
+                    guardarPedidos();
+                    actualizarListaPedidos();
+                    
+                    this.reset();
+                    document.getElementById('sena-container').style.display = 'none';
+                    
+                    mostrarMensaje('success', 'Pedido creado exitosamente.', 'pedidos-messages');
+                });
+            }
+            
+            // Formulario de configuración del taller
+            const formConfigTaller = document.getElementById('formConfigTaller');
+            if (formConfigTaller) {
+                formConfigTaller.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(this);
+                    configTaller = {
+                        nombre: formData.get('nombre_taller'),
+                        direccion: formData.get('direccion'),
+                        telefono: formData.get('telefono'),
+                        email: formData.get('email')
+                    };
+                    
+                    guardarConfiguracion();
+                    mostrarMensaje('success', 'Información del taller guardada exitosamente.', 'config-messages');
+                });
+            }
+            
+            // Filtros de pedidos
+            const buscarPedidos = document.getElementById('buscar-pedidos');
+            const filtroEstadoPedidos = document.getElementById('filtro-estado-pedidos');
+            
+            if (buscarPedidos) {
+                buscarPedidos.addEventListener('input', actualizarListaPedidos);
+            }
+            
+            if (filtroEstadoPedidos) {
+                filtroEstadoPedidos.addEventListener('change', actualizarListaPedidos);
+            }
+            
+            // Cargar datos iniciales
+            cargarPedidos();
+            cargarConfiguracion();
+        });
+    </script>
+    <!-- Script Clientes (localStorage) -->
 <script>
 (() => {
   const LS_CLIENTS = 'fixly:clients';
@@ -3002,6 +2849,7 @@ window.cargarConfiguracion = function cargarConfiguracion() {
     }
 
     if (act === 'repair') {
+      // En lugar de navegar a Reparaciones, abrimos modal aquí con el cliente precargado
       return openRepairModal(c);
     }
   });
@@ -3036,14 +2884,17 @@ window.cargarConfiguracion = function cargarConfiguracion() {
   });
 
   btnSaveRepair?.addEventListener('click', () => {
+    // Guarda cliente y abre modal reparación
     form.dispatchEvent(new Event('submit', { cancelable: true }));
     setTimeout(() => {
-      if (!modal.classList.contains('hidden')) return; // hubo error/dup
+      // si el modal cliente sigue abierto hubo error (dup)
+      if (!modal.classList.contains('hidden')) return;
       const last = clients[0];
       if (last) openRepairModal(last);
     }, 30);
   });
 
+  // Crear ticket desde modal de reparación
   repForm?.addEventListener('submit', (e) => {
     e.preventDefault();
     if (!currentClient) return;
@@ -3069,26 +2920,13 @@ window.cargarConfiguracion = function cargarConfiguracion() {
     repairs.unshift(ticket);
     saveRepairs(repairs);
     closeRepairModal();
-    // Actualiza badge
+    // Actualiza badge "Activas"
     applyFilter();
     alert(`Ticket creado: ${ticket.code}`);
+    // Si querés, navegar al historial:
+    // location.hash = '#historial';
   });
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', loadAndRender);
-  } else {
-    loadAndRender();
-  }
+  document.addEventListener('DOMContentLoaded', loadAndRender);
 })();
 </script>
-
-<!-- 4) Scripts externos -->
-<script id="html_badge_script1">
-  window.__genspark_remove_badge_link = "https://www.genspark.ai/api/html_badge/remove_badge?token=To%2FBnjzloZ3UfQdcSaYfDuUXOJHRBty4VZVnGULVxJUWI0WDGypcKqoKyoaQT5GzhVwUEVoPGE1Ww0JI1fxjBDdPDETQcgOdf9TBSwVHO9PANzDwZpOZx2nFB2xRwcwPN2LSei862hJqpbl3qo5HL95T8ktHIu1X2NnmEkZlh8eWh4rWtTEvA1JA460KFjOaWVBo22dAd7La60y1xkXa/jqTgjfI0BME5Em3Xys9ahuK3wqViTw+WW6LlIkerxKnbVqr2GQHaBN0r9yDhsWkmt7REl1Y4gEZVEsc+mFKDfuMCKVsdK1mXcpyezIIOja/nmqt1finOu3njhP0qtyjGoqcYctwwt+6Q1cxYOeUsPDqpu9LGiYR40pNL5nNMiVENIGpoa3KK+IpQhh7yhU243GwghGS1iSLYckk1xcgBuWg2f8jPv9SQq+s+hHosmc1De9q+A1BRtMneDuGKkVqCSqZDDkTzU81lq1wDtNvXrz85PaZ9syC7yrENRTIFF74WrY8PGiz1mdY4Gyyi8qyMg==";
-  window.__genspark_locale = "es-ES";
-  window.__genspark_token = "To/BnjzloZ3UfQdcSaYfDuUXOJHRBty4VZVnGULVxJUWI0WDGypcKqoKyoaQT5GzhVwUEVoPGE1Ww0JI1fxjBDdPDETQcgOdf9TBSwVHO9PANzDwZpOZx2nFB2xRwcwPN2LSei862hJqpbl3qo5HL95T8ktHIu1X2NnmEkZlh8eWh4rWtTEvA1JA460KFjOaWVBo22dAd7La60y1xkXa/jqTgjfI0BME5Em3Xys9ahuK3wqViTw+WW6LlIkerxKnbVqr2GQHaBN0r9yDhsWkmt7REl1Y4gEZVEsc+mFKDfuMCKVsdK1mXcpyezIIOja/nmqt1finOu3njhP0qtyjGoqcYctwwt+6Q1cxYOeUsPDqpu9LGiYR40pNL5nNMiVENIGpoa3KK+IpQhh7yhU243GwghGS1iSLYckk1xcgBuWg2f8jPv9SQq+s+hHosmc1De9q+A1BRtMneDuGKkVqCSqZDDkTzU81lq1wDtNvXrz85PaZ9syC7yrENRTIFF74WrY8PGiz1mdY4Gyyi8qyMg==";
-</script>
-<script id="html_notice_dialog_script" src="https://www.genspark.ai/notice_dialog.js"></script>
-
-</body>
-</html>
