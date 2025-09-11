@@ -540,10 +540,10 @@
 </div>
 <div>
 <h1 class="text-lg font-bold text-gray-800">
-         Mundo
+         Fixly
         </h1>
 <h1 class="text-lg font-bold text-blue-600">
-         Electrónico
+         Taller
         </h1>
 </div>
 </div>
@@ -1373,7 +1373,7 @@
 <label class="block text-sm font-medium text-gray-700 mb-2">
            Email
           </label>
-<input class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" name="email" required="" type="email" value="info@mundoelectronico.com"/>
+<input class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" name="email" required="" type="email" value="info@fixlytaller.com"/>
 </div>
 <button class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center" type="submit">
 <i class="fas fa-save mr-2">
@@ -1892,12 +1892,12 @@
   function showMain(){
     if (loginScreen) loginScreen.classList.add('hidden');
     if (mainApp) mainApp.classList.remove('hidden');
-    try { localStorage.setItem('mundoElectronicoLoggedIn', '1'); } catch(e){}
+    try { localStorage.setItem('fixlytallerLoggedIn', '1'); } catch(e){}
   }
 
   // Autologin si ya inició sesión
   try {
-    if (localStorage.getItem('mundoElectronicoLoggedIn') === '1') {
+    if (localStorage.getItem('fixlytallerLoggedIn') === '1') {
       showMain();
       return;
     }
@@ -1912,7 +1912,7 @@
     // Credenciales desde config si existen
     let cfgUser = 'admin', cfgPass = 'admin123';
     try {
-      const raw = localStorage.getItem('mundoElectronicoData');
+      const raw = localStorage.getItem('fixlytallerData');
       if (raw) {
         const d = JSON.parse(raw);
         if (d && d.config) {
@@ -1980,7 +1980,7 @@
 
         // FUNCIONES DE DATOS
         function cargarDatos() {
-            const datosGuardados = localStorage.getItem('mundoElectronicoData');
+            const datosGuardados = localStorage.getItem('fixlytallerData');
             if (datosGuardados) {
                 const datos = JSON.parse(datosGuardados);
                 pedidos = datos.pedidos || [];reparaciones = datos.reparaciones || datosIniciales.reparaciones;
@@ -2008,7 +2008,7 @@
                 historialMensajes: historialMensajes
             };
             datos.pedidos = pedidos;
-            localStorage.setItem('mundoElectronicoData', JSON.stringify(datos));
+            localStorage.setItem('fixlytallerData', JSON.stringify(datos));
         }
 
         function obtenerFechaActual() {
@@ -3042,7 +3042,7 @@ function imprimirComprobantePedido(pedidoId){
         }
 
         function cargarPedidos() {
-            const datos = localStorage.getItem('mundoElectronicoData');
+            const datos = localStorage.getItem('fixlytallerData');
             if (datos) {
                 const datosParseados = JSON.parse(datos);
                 pedidos = datosParseados.pedidos || [];
@@ -3052,10 +3052,10 @@ function imprimirComprobantePedido(pedidoId){
         }
 
         function guardarPedidos() {
-            const datos = JSON.parse(localStorage.getItem('mundoElectronicoData') || '{}');
+            const datos = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
             datos.pedidos = pedidos;
             datos.proximoPedidoId = proximoPedidoId;
-            localStorage.setItem('mundoElectronicoData', JSON.stringify(datos));
+            localStorage.setItem('fixlytallerData', JSON.stringify(datos));
         }
 
         function actualizarListaPedidos() {
@@ -3156,11 +3156,11 @@ function imprimirComprobantePedido(pedidoId){
             nombre: 'Fixly Taller',
             direccion: 'Av. Corrientes 1234, CABA',
             telefono: '+54 11 1234-5678',
-            email: 'info@mundoelectronico.com'
+            email: 'info@fixlytaller.com'
         };
 
         function cargarConfiguracion() {
-            const datos = localStorage.getItem('mundoElectronicoData');
+            const datos = localStorage.getItem('fixlytallerData');
             if (datos) {
                 const datosParseados = JSON.parse(datos);
                 configTaller = datosParseados.configTaller || configTaller;
@@ -3169,9 +3169,9 @@ function imprimirComprobantePedido(pedidoId){
         }
 
         function guardarConfiguracion() {
-            const datos = JSON.parse(localStorage.getItem('mundoElectronicoData') || '{}');
+            const datos = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
             datos.configTaller = configTaller;
-            localStorage.setItem('mundoElectronicoData', JSON.stringify(datos));
+            localStorage.setItem('fixlytallerData', JSON.stringify(datos));
         }
 
         function cargarListaTecnicos() {
@@ -3245,9 +3245,9 @@ function imprimirComprobantePedido(pedidoId){
             }
             
             // Guardar nueva contraseña en localStorage
-            const datos = JSON.parse(localStorage.getItem('mundoElectronicoData') || '{}');
+            const datos = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
             datos.password = nuevaPassword;
-            localStorage.setItem('mundoElectronicoData', JSON.stringify(datos));
+            localStorage.setItem('fixlytallerData', JSON.stringify(datos));
             
             document.getElementById('nueva-password').value = '';
             document.getElementById('confirmar-password').value = '';
@@ -3256,7 +3256,7 @@ function imprimirComprobantePedido(pedidoId){
         }
 
         function exportarDatos() {
-            const datos = localStorage.getItem('mundoElectronicoData');
+            const datos = localStorage.getItem('fixlytallerData');
             if (!datos) {
                 mostrarMensaje('error', 'No hay datos para exportar.', 'config-messages');
                 return;
@@ -3266,7 +3266,7 @@ function imprimirComprobantePedido(pedidoId){
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `mundo-electronico-backup-${__nowISO().split('T')[0]}.json`;
+            a.download = `fixly-taller-backup-${__nowISO().split('T')[0]}.json`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -3287,7 +3287,7 @@ function imprimirComprobantePedido(pedidoId){
                 reader.onload = function(e) {
                     try {
                         const datos = JSON.parse(e.target.result);
-                        localStorage.setItem('mundoElectronicoData', JSON.stringify(datos));
+                        localStorage.setItem('fixlytallerData', JSON.stringify(datos));
                         location.reload(); // Recargar para aplicar los datos importados
                     } catch (error) {
                         mostrarMensaje('error', 'Error al importar datos. Archivo inválido.', 'config-messages');
@@ -3301,7 +3301,7 @@ function imprimirComprobantePedido(pedidoId){
         function limpiarTodosLosDatos() {
             if (confirm('¿Estás seguro de que deseas eliminar TODOS los datos? Esta acción no se puede deshacer.')) {
                 if (confirm('ÚLTIMA CONFIRMACIÓN: Se eliminarán todas las reparaciones, historial, técnicos y configuraciones. ¿Continuar?')) {
-                    localStorage.removeItem('mundoElectronicoData');
+                    localStorage.removeItem('fixlytallerData');
                     location.reload();
                 }
             }
@@ -3715,7 +3715,7 @@ function imprimirPedido(id){
     // Datos del taller (si existen)
     let nombre_taller='Fixly Taller', direccion='', telefono='', email='';
     try{
-        const raw = localStorage.getItem('mundoElectronicoData');
+        const raw = localStorage.getItem('fixlytallerData');
         if (raw){
             const d = JSON.parse(raw);
             if (d && d.config){
@@ -3948,7 +3948,7 @@ function imprimirComprobantePedido(pedidoId){
 <script>
    // ================== MÓDULO DE PEDIDOS (v7 STRICT) ==================
 (function(){
-    const KEY = 'mundoElectronicoPedidos';
+    const KEY = 'fixlytallerPedidos';
     window.pedidos = Array.isArray(window.pedidos) ? window.pedidos : [];
 
     function loadFromOwnKey(){
@@ -3962,7 +3962,7 @@ function imprimirComprobantePedido(pedidoId){
     }
     function maybeMergeWithMain(){
         try{
-            const raw = localStorage.getItem('mundoElectronicoData');
+            const raw = localStorage.getItem('fixlytallerData');
             if (!raw) return;
             const data = JSON.parse(raw);
             if (!data || !Array.isArray(data.pedidos)) return;
@@ -4041,7 +4041,7 @@ function imprimirComprobantePedido(pedidoId){
         if (!p) return;
         let nombreTaller = 'Fixly Taller', direccion='', telefono='', email='';
         try{
-            const raw = localStorage.getItem('mundoElectronicoData');
+            const raw = localStorage.getItem('fixlytallerData');
             if (raw){
                 const d = JSON.parse(raw);
                 if (d && d.config){
@@ -4077,7 +4077,7 @@ function imprimirComprobantePedido(pedidoId){
         if (!p) return;
         let nombre_taller='Fixly Taller', direccion='', telefono='', email='';
         try{
-            const raw = localStorage.getItem('mundoElectronicoData');
+            const raw = localStorage.getItem('fixlytallerData');
             if (raw){
                 const d = JSON.parse(raw);
                 if (d && d.config){
@@ -4247,7 +4247,7 @@ window.imprimirPedido = function(id){
 
   let nombre_taller='Fixly Taller', direccion='', telefono='', email='';
   try{
-    const raw = localStorage.getItem('mundoElectronicoData');
+    const raw = localStorage.getItem('fixlytallerData');
     if (raw){
       const d = JSON.parse(raw);
       if (d && d.config){
@@ -4349,7 +4349,7 @@ window.imprimirPedido = function(id){
   var mainApp = document.getElementById('mainApp') || document.querySelector('#app, .main-app, #main');
 
   // Siempre forzar estado inicial: mostrar login, ocultar app
-  try { localStorage.removeItem('mundoElectronicoLoggedIn'); } catch(e){}
+  try { localStorage.removeItem('fixlytallerLoggedIn'); } catch(e){}
   if (loginScreen) loginScreen.classList.remove('hidden');
   if (mainApp) mainApp.classList.add('hidden');
 
@@ -4364,7 +4364,7 @@ window.imprimirPedido = function(id){
     // Credenciales por defecto + desde config si existe
     var cfgUser = 'admin', cfgPass = 'admin123';
     try {
-      var raw = localStorage.getItem('mundoElectronicoData');
+      var raw = localStorage.getItem('fixlytallerData');
       if (raw) {
         var d = JSON.parse(raw);
         if (d && d.config) {
@@ -4383,7 +4383,7 @@ window.imprimirPedido = function(id){
       return false;
     }
 
-    try { localStorage.setItem('mundoElectronicoLoggedIn', '1'); } catch(e){}
+    try { localStorage.setItem('fixlytallerLoggedIn', '1'); } catch(e){}
     if (loginScreen) loginScreen.classList.add('hidden');
     if (mainApp) mainApp.classList.remove('hidden');
     return false;
@@ -4405,7 +4405,7 @@ window.imprimirPedido = function(id){
 
   // Evitar cualquier auto-login previo que intente ejecutarse después
   window.addEventListener('load', function(){
-    try { localStorage.removeItem('mundoElectronicoLoggedIn'); } catch(e){}
+    try { localStorage.removeItem('fixlytallerLoggedIn'); } catch(e){}
     if (loginScreen) loginScreen.classList.remove('hidden');
     if (mainApp) mainApp.classList.add('hidden');
   });
@@ -4464,7 +4464,7 @@ window.imprimirPedido = function(id){
     window.pedidos = Array.isArray(window.pedidos) ? window.pedidos : [];
     window.pedidos.unshift(pedido);
     try {
-      localStorage.setItem('mundoElectronicoPedidos', JSON.stringify(window.pedidos));
+      localStorage.setItem('fixlytallerPedidos', JSON.stringify(window.pedidos));
     } catch(e){ console.warn('No se pudo guardar pedidos', e); }
 
     // Refrescar lista (compatibilidad con dos UIs)
@@ -4976,7 +4976,7 @@ on = function(){
 })();
 
 <!-- === END AUGMENT === -->
-<!-- === FIX: Ver todo muestra datos reales (lee historialWsp y fallback de mundoElectronicoData) === -->
+<!-- === FIX: Ver todo muestra datos reales (lee historialWsp y fallback de fixlytallerData) === -->
 <script>
 (function(){
   const HIST_KEY = "historialWsp";
@@ -4985,7 +4985,7 @@ on = function(){
   }
   function loadLegacy(){
     try{
-      const raw = localStorage.getItem('mundoElectronicoData');
+      const raw = localStorage.getItem('fixlytallerData');
       if (!raw) return [];
       const data = JSON.parse(raw);
       return Array.isArray(data.historialMensajes) ? data.historialMensajes : [];
