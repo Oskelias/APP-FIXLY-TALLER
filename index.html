@@ -2476,23 +2476,40 @@
         function guardarNuevaReparacion() {
             const formData = new FormData(document.getElementById('formNuevaReparacion'));
             
-            const nuevaReparacion = {
-                id: proximoOrden.toString(),
-                cliente: formData.get('cliente'),
-                dni: formData.get('dni') || '',
-                telefono: formData.get('telefono'),
-                email: formData.get('email') || '',
-                direccion: formData.get('direccion') || '',
-                equipo: formData.get('equipo'),
-                imei: formData.get('imei') || '',
-                estado: 'recibido',
-                tecnico: formData.get('tecnico') || '',
-                fecha: obtenerFechaActual(),
-                problema: formData.get('problema'),
-                anticipo: parseInt(formData.get('anticipo')) || 0,
-                costoEstimado: 0,
-                accesorios: formData.get('accesorios') || ''
-            };
+            <script>
+function guardarNuevaReparacion() {
+  const formData = new FormData(document.getElementById('formNuevaReparacion'));
+
+  // Tomo y limpio observaciones (seguro contra null/undefined)
+  const obs = (formData.get('observaciones') || '').trim();
+
+  const nuevaReparacion = {
+    id: proximoOrden.toString(),
+    cliente: formData.get('cliente'),
+    dni: formData.get('dni') || '',
+    telefono: formData.get('telefono'),
+    email: formData.get('email') || '',
+    direccion: formData.get('direccion') || '',
+    equipo: formData.get('equipo'),
+    imei: formData.get('imei') || '',
+    estado: 'recibido',
+    tecnico: formData.get('tecnico') || '',
+    fecha: obtenerFechaActual(),
+    problema: formData.get('problema'),
+    anticipo: parseInt(formData.get('anticipo')) || 0,
+    costoEstimado: 0,
+    accesorios: formData.get('accesorios') || '',
+    observaciones: obs   // 👈 ÚLTIMO campo, SIN coma después
+  };
+
+  // lo que ya tengas después (guardar, renderizar, cerrar modal, etc.)
+  reparaciones.push(nuevaReparacion);
+  guardarEnStorage?.();         // si lo usás
+  renderReparaciones?.();
+  cerrarModal?.('modalNuevaReparacion');
+}
+</script>
+
             
             reparaciones.push(nuevaReparacion);
             proximoOrden++;
