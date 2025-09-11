@@ -222,6 +222,111 @@
             line-height: 1.2;
         }
 
+        /* ESTILOS DE IMPRESIÓN CORREGIDOS */
+        @media print {
+            @page {
+                margin: 10mm;
+                size: A4;
+            }
+            
+            body * {
+                visibility: hidden;
+            }
+            
+            .print-page, .print-page * {
+                visibility: visible;
+            }
+            
+            .print-page {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: auto;
+                margin: 0;
+                padding: 10mm;
+                box-shadow: none;
+                font-size: 12pt !important;
+                line-height: 1.4 !important;
+            }
+            
+            .print-title {
+                font-size: 18pt !important;
+                font-weight: bold;
+                margin-bottom: 8pt !important;
+            }
+            
+            .print-subtitle {
+                font-size: 14pt !important;
+                font-weight: bold;
+                margin-bottom: 6pt !important;
+            }
+            
+            .print-order {
+                font-size: 16pt !important;
+                font-weight: bold;
+                margin-bottom: 10pt !important;
+            }
+            
+            .print-label {
+                font-weight: bold;
+                width: 80px;
+                flex-shrink: 0;
+                font-size: 12pt !important;
+            }
+            
+            .print-value {
+                flex: 1;
+                margin-right: 8px;
+                font-size: 12pt !important;
+            }
+            
+            .print-section {
+                margin-bottom: 8pt !important;
+            }
+            
+            .print-row {
+                display: flex;
+                margin-bottom: 4pt !important;
+            }
+            
+            .print-separator {
+                border-top: 2px dashed #000;
+                margin: 15pt 0 !important;
+                text-align: center;
+                position: relative;
+            }
+            
+            .print-separator::before {
+                content: "✂ CORTAR AQUÍ ✂";
+                background: white;
+                padding: 0 8px;
+                position: absolute;
+                top: -8pt;
+                left: 50%;
+                transform: translateX(-50%);
+                font-size: 10pt !important;
+            }
+            
+            .print-signature {
+                margin: 15pt 0 !important;
+                border-bottom: 2px solid #000;
+                width: 200px;
+                text-align: center;
+                padding-bottom: 4pt;
+                font-size: 12pt !important;
+            }
+            
+            .print-footer {
+                margin-top: 15pt !important;
+                font-size: 10pt !important;
+                text-align: left;
+                border-top: 2px solid #000;
+                padding-top: 8pt !important;
+                line-height: 1.4 !important;
+            }
+        }
+
          {
             @page {
                 margin: 0;
