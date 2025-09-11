@@ -203,13 +203,13 @@
         
         .print-signature { display: none !important; }
         
-        .print-footer {
-            margin-top: 8px;
-            font-size:12px;
-            text-align: center;
-            border-top: 1px solid #000;
-            padding-top: 4px;
-            line-height: 1.2;
+        ..print-footer {
+  margin-top: 8px;
+  font-size: 8px;
+  text-align: center;   /* 👈 esto lo centra en la hoja */
+  border-top: 1px solid #000;
+  padding-top: 4px;
+  line-height: 1.2;
         }
 
         @media print {
