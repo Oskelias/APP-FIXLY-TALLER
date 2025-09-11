@@ -1571,9 +1571,9 @@
 </div>
 <div>
 <label class="block text-sm font-medium mb-2">
-       IMEI / SERIE / SERIE
+       IMEI / SERIE
       </label>
-<input class="w-full px-4 py-2 border rounded-lg" name="IMEI / SERIE" type="text"/>
+<input class="w-full px-4 py-2 border rounded-lg" name="imei" type="text"/>
 </div>
 <div class="md:col-span-2">
 <label class="block text-sm font-medium mb-2">
@@ -1791,7 +1791,7 @@
                     email: 'maria@email.com',
                     direccion: 'Av. Corrientes 1234',
                     equipo: 'iPhone 13 Pro',
-                    IMEI / SERIE: '123456789012345',
+                    imei: '123456789012345',
                     estado: 'diagnosticando',
                     tecnico: 'Ana Silva',
                     fecha: '08/11/2025',
@@ -1808,7 +1808,7 @@
                     email: 'carlos@email.com',
                     direccion: 'Av. Santa Fe 5678',
                     equipo: 'Samsung Galaxy A54',
-                    IMEI / SERIE: '987654321098765',
+                    imei: '987654321098765',
                     estado: 'listo',
                     tecnico: 'Ana Silva',
                     fecha: '07/11/2025',
@@ -1832,7 +1832,7 @@
                     email: 'pedro@email.com',
                     direccion: 'Av. Rivadavia 1000',
                     equipo: 'iPhone 12',
-                    IMEI / SERIE: '111222333444555',
+                    imei: '111222333444555',
                     estado: 'entregado',
                     tecnico: 'Juan Pérez',
                     fecha: '01/11/2025',
@@ -2331,7 +2331,7 @@
                         <h4 class="font-semibold text-gray-700">Información del Equipo</h4>
                         <p><strong>Orden:</strong> #${equipo.id}</p>
                         <p><strong>Equipo:</strong> ${equipo.equipo}</p>
-                        <p><strong>IMEI / SERIE:</strong> ${equipo.IMEI / SERIE}</p>
+                        <p><strong>IMEI:</strong> ${equipo.imei}</p>
                         <p><strong>Problema:</strong> ${equipo.problema}</p>
                         <p><strong>Accesorios:</strong> ${equipo.accesorios}</p>
                     </div>
@@ -2484,7 +2484,7 @@
                 email: formData.get('email') || '',
                 direccion: formData.get('direccion') || '',
                 equipo: formData.get('equipo'),
-                IMEI / SERIE: formData.get('IMEI / SERIE') || '',
+                imei: formData.get('imei') || '',
                 estado: 'recibido',
                 tecnico: formData.get('tecnico') || '',
                 fecha: obtenerFechaActual(),
@@ -2631,8 +2631,8 @@
                         <div class="print-row">
                             <div class="print-label">DNI:</div>
                             <div class="print-value">${reparacion.dni}</div>
-                            <div class="print-label">IMEI / SERIE:</div>
-                            <div class="print-value">${reparacion.IMEI / SERIE}</div>
+                            <div class="print-label">IMEI:</div>
+                            <div class="print-value">${reparacion.imei}</div>
                         </div>
                         <div class="print-row">
                             <div class="print-label">Tel:</div>
@@ -2683,8 +2683,8 @@
                         <div class="print-row">
                             <div class="print-label">DNI:</div>
                             <div class="print-value">${reparacion.dni}</div>
-                            <div class="print-label">IMEI / SERIE:</div>
-                            <div class="print-value">${reparacion.IMEI / SERIE}</div>
+                            <div class="print-label">IMEI:</div>
+                            <div class="print-value">${reparacion.imei}</div>
                         </div>
                         <div class="print-row">
                             <div class="print-label">Tel:</div>
@@ -5677,7 +5677,7 @@ on = function(){
           <tr><td style="color:#555">Cliente</td><td>${fmt(rep.cliente)}</td></tr>
           <tr><td style="color:#555">Teléfono</td><td>${fmt(rep.telefono)}</td></tr>
           <tr><td style="color:#555">Equipo</td><td>${fmt(rep.equipo)}</td></tr>
-          <tr><td style="color:#555">IMEI / SERIE/Serie</td><td>${fmt(rep.IMEI / SERIE)}</td></tr>
+          <tr><td style="color:#555">IMEI/Serie</td><td>${fmt(rep.imei)}</td></tr>
           <tr><td style="color:#555">Estado</td><td>${fmt(rep.estado)}</td></tr>
           <tr><td style="color:#555">Técnico</td><td>${fmt(rep.tecnico)}</td></tr>
           <tr><td style="color:#555">Fecha</td><td>${fmt(rep.fecha)}</td></tr>
