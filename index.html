@@ -1593,8 +1593,7 @@
 <input class="w-full border rounded-lg p-2" id="costo" name="costo" type="number"/>
 </div><div>
 <label class="block text-sm font-medium mb-2">
-       Técnico Asignado
-      </label>
+       Estado del equipo</label>
 <select class="w-full px-4 py-2 border rounded-lg" id="select-tecnico" name="tecnico">
 <option value="">
         Seleccionar técnico
@@ -2030,7 +2029,7 @@
 
         function cargarTecnicos() {
             const selectTecnico = document.getElementById('select-tecnico');
-            const editTecnico = document.getElementById('edit-tecnico');
+            const editTecnico = document.getElementById('estado-equipo');
             const filterTecnico = document.getElementById('filter-tecnico');
             const filtroTecnicoHistorial = document.getElementById('filtro-tecnico-historial');
             
@@ -2286,7 +2285,7 @@
             document.getElementById('edit-cliente').value = reparacion.cliente;
             document.getElementById('edit-equipo').value = reparacion.equipo;
             document.getElementById('edit-estado').value = reparacion.estado;
-            document.getElementById('edit-tecnico').value = reparacion.tecnico;
+            document.getElementById('estado-equipo').value = reparacion.tecnico;
             document.getElementById('edit-costo').value = reparacion.costoEstimado;
             
             // Resetear mensajes
@@ -2502,10 +2501,26 @@
         }
 
         function guardarCambiosEstado() {
+  // Guardar estado del equipo desde el select
+  (function(){
+    try {
+      var _sel = document.getElementById("estado-equipo");
+      if (_sel && typeof reparacionEditando === "object" && reparacionEditando) {
+        var _val = _sel.value || "";
+        reparacionEditando.estadoEquipo = _val;
+        // Compatibilidad: si la UI antigua usa "tecnico" para mostrar una columna,
+        // reflejamos el mismo valor (no rompe nada si no se usa).
+        if (typeof reparacionEditando.tecnico !== "undefined") {
+          reparacionEditando.tecnico = _val || (reparacionEditando.tecnico || "");
+        }
+      }
+    } catch(e) { /* noop */ }
+  })();
+
             if (!reparacionEditando) return;
 
             const nuevoEstado = document.getElementById('edit-estado').value;
-            const nuevoTecnico = document.getElementById('edit-tecnico').value;
+            const nuevoTecnico = document.getElementById('estado-equipo').value;
             const nuevoCosto = parseInt(document.getElementById('edit-costo').value) || reparacionEditando.costoEstimado;
 
             // Actualizar la reparación
@@ -2760,6 +2775,16 @@ ventanaImpresion.document.close();
         }
 
         function editarReparacion(ordenId) {
+  // Precargar el nuevo campo "estado-equipo"
+  (function(){
+    try {
+      var _sel = document.getElementById("estado-equipo");
+      if (_sel && typeof reparacionEditando === "object" && reparacionEditando) {
+        _sel.value = (reparacionEditando.estadoEquipo || reparacionEditando.tecnico || "");
+      }
+    } catch(e) { /* noop */ }
+  })();
+
             showEditEstado(ordenId);
         }
         function editarReparacion(id){
