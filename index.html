@@ -2762,6 +2762,10 @@ ventanaImpresion.document.close();
         function editarReparacion(ordenId) {
             showEditEstado(ordenId);
         }
+        function editarReparacion(id){
+         const r = reparaciones.find(x => x.id === String(id));
+  if(!r) return alert('Reparación no encontrada');
+          }
 function imprimirComprobantePedido(pedidoId){
   const p = (typeof pedidos!=='undefined' && Array.isArray(pedidos)) 
               ? pedidos.find(x=>String(x.id)===String(pedidoId)) : null;
