@@ -2719,6 +2719,14 @@
   .print-row{ display:flex; margin-bottom:6pt; }
   .print-label{ font-weight:700; width:68pt; flex-shrink:0; font-size:15pt; }
   .print-value{ flex:1; margin-right:8pt; font-size:15pt; }
+  /* Asegura que los valores apilados (como Observaciones) aparezcan debajo de la etiqueta
+     y no se superpongan ni fluyan horizontalmente.  La clase print-row--stack indica
+     que el valor debe ocupar toda la línea bajo su etiqueta. */
+  .print-row.print-row--stack .print-value{
+    margin-left:68pt;
+    white-space: pre-wrap;
+    display:block;
+  }
   .print-separator{ height:10pt; margin:8pt 0; border-top:1px dashed #999; }
   .print-footer{ margin-top:10pt; font-size:13pt; border-top:1px solid #000; padding-top:6pt; line-height:1.25;  text-align: center;  }
   @media print { .print-header, .print-section, .print-footer { page-break-inside: avoid; } html, body { height:auto; overflow:hidden; } body { zoom:0.98; } }
@@ -2779,16 +2787,22 @@
                             <div class="print-label">Serie:</div>
                             <div class="print-value">${reparacion.imei}</div>
                         </div>
+                        <!-- Teléfono en su propia fila -->
                         <div class="print-row">
                             <div class="print-label">Tel:</div>
                             <div class="print-value">${reparacion.telefono}</div>
+                        </div>
+                        <!-- Problema en su propia fila para asegurar correcta alineación -->
+                        <div class="print-row">
                             <div class="print-label">Problema:</div>
                             <div class="print-value">${reparacion.problema}</div>
                         </div>
+                        <!-- Observaciones en su propia fila apilada -->
                         <div class="print-row print-row--stack">
                             <div class="print-label">Observaciones:</div>
                             <div class="print-value">${(reparacion.observaciones || '').trim() || '-'}</div>
                         </div>
+                    </div>
                     
                     <div class="print-section">
                         <div class="print-row">
@@ -2834,12 +2848,17 @@
                             <div class="print-label">Serie:</div>
                             <div class="print-value">${reparacion.imei}</div>
                         </div>
+                        <!-- Teléfono en su propia fila -->
                         <div class="print-row">
                             <div class="print-label">Tel:</div>
                             <div class="print-value">${reparacion.telefono}</div>
+                        </div>
+                        <!-- Problema en su propia fila para asegurar correcta alineación -->
+                        <div class="print-row">
                             <div class="print-label">Problema:</div>
                             <div class="print-value">${reparacion.problema}</div>
                         </div>
+                        <!-- Observaciones en su propia fila apilada -->
                         <div class="print-row print-row--stack">
                             <div class="print-label">Observaciones:</div>
                             <div class="print-value">${(reparacion.observaciones || '').trim() || '-'}</div>
