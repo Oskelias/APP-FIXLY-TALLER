@@ -204,7 +204,31 @@
         
         .print-signature { display: none !important; }
         
-        ..print-footer {
+        .        
+        /* Estilos para observaciones en impresión - CORRECCIÓN */
+        .print-row--stack {
+            display: block !important;
+            margin-bottom: 10pt;
+        }
+
+        .print-row--stack .print-label {
+            font-weight: 700;
+            font-size: 15pt;
+            margin-bottom: 4pt;
+            width: auto !important;
+            display: block;
+        }
+
+        .print-row--stack .print-value {
+            font-size: 15pt;
+            margin-left: 0;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            line-height: 1.3;
+            display: block;
+        }
+
+        .print-footer {
   margin-top: 8px;
   font-size: 8px;
   text-align: center;   
@@ -2642,13 +2666,14 @@
                             <div class="print-value">${reparacion.telefono}</div>
                       
                             </div>
-                            <div class="print-label">Problema:</div>
-                            <div class="print-value">${reparacion.problema}</div>
-                        </div>
-                            <div class="print-row print-row--stack">
-                            <div class="print-label">Observaciones:</div>
-                             <div class="print-value">${(reparacion.observaciones || '').trim() || '-'}</div>
-                    </div>
+                            </div>
+          <div class="print-section">
+              <div class="print-label" style="margin-bottom: 4pt;">Problema:</div>
+              <div style="font-size: 15pt; margin-bottom: 8pt; word-wrap: break-word; white-space: pre-wrap;">\${reparacion.problema}</div>
+
+              <div class="print-label" style="margin-bottom: 4pt;">Observaciones:</div>
+              <div style="font-size: 15pt; margin-bottom: 10pt; word-wrap: break-word; white-space: pre-wrap;">\${(reparacion.observaciones || '').trim() || '-'}</div>
+          </div>
                     
                     <div class="print-section">
                         <div class="print-row">
@@ -2699,14 +2724,14 @@
                             <div class="print-value">${reparacion.telefono}</div>
                       
                             </div>
-                            <div class="print-label">Problema:</div>
-                            <div class="print-value">${reparacion.problema}</div>
-                        </div>
-                            <div class="print-row print-row--stack">
-                            <div class="print-label">Observaciones:</div>
-                            <div class="print-value">${(reparacion.observaciones || '-')}</div>
+                            </div>
+          <div class="print-section">
+              <div class="print-label" style="margin-bottom: 4pt;">Problema:</div>
+              <div style="font-size: 15pt; margin-bottom: 8pt; word-wrap: break-word; white-space: pre-wrap;">\${reparacion.problema}</div>
 
-                    </div>
+              <div class="print-label" style="margin-bottom: 4pt;">Observaciones:</div>
+              <div style="font-size: 15pt; margin-bottom: 10pt; word-wrap: break-word; white-space: pre-wrap;">\${(reparacion.observaciones || '').trim() || '-'}</div>
+          </div>
                     
                     <div class="print-section">
                         <div class="print-row">
