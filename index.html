@@ -2283,8 +2283,11 @@
                             <button onclick="verDetalleHistorial('${equipo.id}')" class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" title="Ver Detalles">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button onclick="imprimirHistorial(${equipo.id})" class="btn-print-orange text-white p-2 rounded" title="Reimprimir">
+                            <button onclick="imprimirHistorial('${equipo.id}')" class="btn-print-orange text-white p-2 rounded" title="Reimprimir">
                                 <i class="fas fa-print"></i>
+                            </button>
+                            <button onclick="eliminarHistorial('${equipo.id}')" class="bg-red-600 text-white p-2 rounded hover:bg-red-700" title="Eliminar">
+                                <i class="fas fa-trash"></i>
                             </button>
                         </div>
                     </td>
@@ -2696,7 +2699,9 @@
         // FUNCIONES DE ACCIONES DE REPARACIÓN
         
         function imprimirComprobante(ordenId) {
-            const reparacion = reparaciones.find(r => r.id === ordenId) || historialEntregados.find(r => r.id === ordenId);
+            // Buscar coincidencia por ID tratando ambas como cadenas para evitar problemas de tipo
+            const reparacion = reparaciones.find(r => String(r.id) === String(ordenId))
+                               || historialEntregados.find(r => String(r.id) === String(ordenId));
             if (!reparacion) return;
 
             const ventanaImpresion = window.open('', '_blank');
@@ -2985,7 +2990,8 @@ function imprimirComprobantePedido(pedidoId){
 
         function eliminarReparacion(ordenId) {
             if (confirm('¿Estás seguro de que deseas eliminar esta reparación? Esta acción no se puede deshacer.')) {
-                const index = reparaciones.findIndex(r => r.id === ordenId);
+                // Comparar ID como cadenas para evitar fallos cuando id es numérico o string
+                const index = reparaciones.findIndex(r => String(r.id) === String(ordenId));
                 if (index !== -1) {
                     reparaciones.splice(index, 1);
                     guardarDatos();
@@ -3615,6 +3621,30 @@ function imprimirComprobantePedido(pedidoId){
         padding: 2px !important;
     }
 }
+
+        /**
+         * Elimina un registro del historial de entregados.
+         * Se solicita confirmación al usuario y, en caso afirmativo,
+         * se elimina el elemento del array historialEntregados, se actualiza
+         * la tabla de historial, se guardan los datos y se muestran KPI y mensaje.
+         * @param {string|number} ordenId Identificador de la reparación entregada
+         */
+        function eliminarHistorial(ordenId) {
+            if (confirm('¿Estás seguro de que deseas eliminar este registro del historial? Esta acción no se puede deshacer.')) {
+                const idx = historialEntregados.findIndex(e => String(e.id) === String(ordenId));
+                if (idx !== -1) {
+                    historialEntregados.splice(idx, 1);
+                    guardarDatos();
+                    cargarTablaHistorial();
+                    // También actualizamos estadísticas generales por si afectan al total
+                    actualizarKPIs && actualizarKPIs();
+                    // Mostrar mensaje de éxito en algún contenedor de mensajes existente
+                    if (typeof mostrarMensaje === 'function') {
+                        mostrarMensaje('success', 'Registro eliminado del historial.', 'edit-messages');
+                    }
+                }
+            }
+        }
 </style>
 
 </head><body>
@@ -3650,7 +3680,9 @@ function imprimirComprobantePedido(pedidoId){
 function editarReparacion(id){ try { showEditEstado(id); } catch(e){ console.warn('showEditEstado no disponible', e); } }
 function imprimirComprobante(id){ 
     try {
-        const rep = reparaciones.find(r=>r.id===id);
+        // Comparar ID como cadenas para evitar fallos cuando id es numérico o string
+        const rep = reparaciones.find(r => String(r.id) === String(id))
+                   || historialEntregados.find(r => String(r.id) === String(id));
         if(!rep){ alert('No se encontró la reparación #' + id); return; }
         const w = window.open('', '_blank');
         w.document.write('<html><head><title>Comprobante #' + id + '</title>
