@@ -5860,7 +5860,7 @@ on = function(){
           <tr><td style="color:#555">Técnico</td><td>${fmt(rep.tecnico)}</td></tr>
           <tr><td style="color:#555">Fecha</td><td>${fmt(rep.fecha)}</td></tr>
           <tr><td style="color:#555">Anticipo</td><td>${fmt(rep.anticipo)}</td></tr>
-          <tr><td style="color:#555">Costo</td><td>${fmt(rep.costo)}</td></tr>
+          <tr><td style="color:#555">Costo</td><td>${fmt(rep.costo !== undefined ? rep.costo : rep.costoEstimado)}</td></tr>
         </table>
         <hr style="margin:8px 0;border:none;border-top:1px solid #e5e7eb">
         <div style="margin-top:6px;">
@@ -5880,9 +5880,14 @@ on = function(){
 
   function getRepById(id){
     try{
-      const r1 = (window.reparaciones||[]).find(r => r.id === id);
+      // Buscar por coincidencia de ID convirtiendo ambos a string.
+      // Usamos las variables de ámbito (reparaciones, historialEntregados) en lugar de window
+      const repList = (typeof reparaciones !== 'undefined' && Array.isArray(reparaciones)) ? reparaciones : [];
+      const histList = (typeof historialEntregados !== 'undefined' && Array.isArray(historialEntregados)) ? historialEntregados : [];
+      const idStr = String(id);
+      const r1 = repList.find(r => String(r.id) === idStr);
       if (r1) return r1;
-      const r2 = (window.historialEntregados||[]).find(r => r.id === id);
+      const r2 = histList.find(r => String(r.id) === idStr);
       if (r2) return r2;
     }catch(_){}
     return null;
@@ -5898,16 +5903,18 @@ on = function(){
     tbody.addEventListener('dblclick', function(e){
       const tr = e.target.closest('tr');
       if (!tr) return;
-      // Ignorar clicks sobre botones de Acciones
+      // Ignorar clics sobre botones, enlaces o el contenedor de acciones
       if (e.target.closest('button, a, .acciones')) return;
       const firstCell = tr.querySelector('td');
       if (!firstCell) return;
-      const idTxt = firstCell.textContent.trim().replace('#','');
-      const id = Number(idTxt);
-      if (!id) return;
-      const rep = getRepById(id);
+      // El identificador viene con un '#' al comienzo (por ejemplo "#1012").
+      // Lo dejamos como cadena para evitar convertir a número y perder coincidencias.
+      const idStr = firstCell.textContent.trim().replace('#','');
+      if (!idStr) return;
+      // Buscar la reparación por ID utilizando la cadena
+      const rep = getRepById(idStr);
       const html = buildPreviewHTML(rep);
-      showPreviewModal(html, id);
+      showPreviewModal(html, idStr);
     });
   }
 
