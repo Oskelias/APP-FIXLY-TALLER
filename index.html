@@ -2475,7 +2475,8 @@
                         <p><strong>Equipo:</strong> ${equipo.equipo}</p>
                         <p><strong>IMEI:</strong> ${equipo.imei}</p>
                         <p><strong>Problema:</strong> ${equipo.problema}</p>
-                        <p><strong>Observaciones:</strong> ${equipo.accesorios}</p>
+                        <!-- Observaciones del equipo (no accesorios) -->
+                        <p><strong>Observaciones:</strong> ${equipo.observaciones || '-'}</p>
                     </div>
                     <div>
                         <h4 class="font-semibold text-gray-700">Información de Reparación</h4>
@@ -2781,15 +2782,13 @@
                         <div class="print-row">
                             <div class="print-label">Tel:</div>
                             <div class="print-value">${reparacion.telefono}</div>
-                      
-                            </div>
                             <div class="print-label">Problema:</div>
                             <div class="print-value">${reparacion.problema}</div>
                         </div>
-                            <div class="print-row print-row--stack">
+                        <div class="print-row print-row--stack">
                             <div class="print-label">Observaciones:</div>
-                             <div class="print-value">${(reparacion.observaciones || '').trim() || '-'}</div>
-                    </div>
+                            <div class="print-value">${(reparacion.observaciones || '').trim() || '-'}</div>
+                        </div>
                     
                     <div class="print-section">
                         <div class="print-row">
@@ -2838,14 +2837,13 @@
                         <div class="print-row">
                             <div class="print-label">Tel:</div>
                             <div class="print-value">${reparacion.telefono}</div>
-                      
-                            </div>
                             <div class="print-label">Problema:</div>
                             <div class="print-value">${reparacion.problema}</div>
                         </div>
-                            <div class="print-row print-row--stack">
+                        <div class="print-row print-row--stack">
                             <div class="print-label">Observaciones:</div>
-                            <div class="print-value">${(reparacion.observaciones || '-')}</div>
+                            <div class="print-value">${(reparacion.observaciones || '').trim() || '-'}</div>
+                        </div>
 
                     </div>
                     
