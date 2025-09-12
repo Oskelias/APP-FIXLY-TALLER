@@ -133,60 +133,61 @@
         .print-page {
             width: 210mm;
             min-height: 297mm;
-            padding: 10mm;
+            padding: 8mm;
             margin: 0 auto;
             background: white;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             font-family: Arial, sans-serif;
-            font-size:13px;
-            line-height: 1.5;
+            font-size: 11px;
+            line-height: 1.2;
+            overflow: hidden;
         }
         
         .print-header {
             text-align: center;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             border-bottom: 1px solid #000;
-            padding-bottom: 4px;
+            padding-bottom: 3px;
         }
         
         .print-title {
-            font-size:18px;
+            font-size: 16px;
             font-weight: bold;
             margin-bottom: 2px;
         }
         
         .print-subtitle {
-            font-size:16px;
+            font-size: 14px;
             font-weight: bold;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
         }
         
         .print-order {
-            font-size:17px;
+            font-size: 15px;
             font-weight: bold;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
         
         .print-section {
-            margin-bottom: 10px;
+            margin-bottom: 6px;
         }
         
         .print-row {
             display: flex;
-            margin-bottom: 6px;
+            margin-bottom: 3px;
         }
         
         .print-label {
             font-weight: bold;
             width: 60px;
             flex-shrink: 0;
-            font-size:13px;
+            font-size: 11px;
         }
         
         .print-value {
             flex: 1;
-            margin-right: 8px;
-            font-size:13px;
+            margin-right: 6px;
+            font-size: 11px;
         }
         
         .print-separator { display: none !important; }
@@ -208,19 +209,19 @@
         /* Estilos para observaciones en impresión - CORRECCIÓN */
         .print-row--stack {
             display: block !important;
-            margin-bottom: 10pt;
+            margin-bottom: 4pt;
         }
 
         .print-row--stack .print-label {
             font-weight: 700;
-            font-size: 15pt;
+            font-size: 11pt;
             margin-bottom: 4pt;
             width: auto !important;
             display: block;
         }
 
         .print-row--stack .print-value {
-            font-size: 15pt;
+            font-size: 11pt;
             margin-left: 0;
             word-wrap: break-word;
             white-space: pre-wrap;
@@ -229,19 +230,61 @@
         }
 
         .print-footer {
-  margin-top: 8px;
-  font-size: 8px;
-  text-align: center;   
-  border-top: 1px solid #000;
-  padding-top: 4px;
-  line-height: 1.2;
+            margin-top: 6px;
+            font-size: 9px;
+            text-align: center;
+            border-top: 1px solid #000;
+            padding-top: 3px;
+            line-height: 1.1;
         }
 
         @media print {
             @page {
-                margin: 0;
+                margin: 5mm;
                 size: A4;
             }
+
+            body * {
+                visibility: hidden;
+            }
+            .print-page, .print-page * {
+                visibility: visible;
+            }
+            .print-page {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 8mm;
+                box-shadow: none;
+                font-size: 10px !important;
+                transform: scale(0.95);
+            }
+
+            .print-header, .print-section, .print-footer {
+                page-break-inside: avoid;
+            }
+
+            .print-separator {
+                height: 6px !important;
+                margin: 4px 0 !important;
+                border-top: 1px dashed #999 !important;
+                position: relative;
+            }
+
+            .print-separator::before {
+                content: "✂  ✂";
+                background: white;
+                padding: 0 3px;
+                position: absolute;
+                top: -5px;
+                left: 50%;
+                transform: translateX(-50%);
+                font-size: 8px;
+            }
+        }
             
             body * {
                 visibility: hidden;
@@ -2669,10 +2712,10 @@
                             </div>
           <div class="print-section">
               <div class="print-label" style="margin-bottom: 4pt;">Problema:</div>
-              <div style="font-size: 15pt; margin-bottom: 8pt; word-wrap: break-word; white-space: pre-wrap;">\${reparacion.problema}</div>
+              <div style="font-size: 11pt; margin-bottom: 3pt; word-wrap: break-word; white-space: pre-wrap;">${reparacion.problema}</div>
 
               <div class="print-label" style="margin-bottom: 4pt;">Observaciones:</div>
-              <div style="font-size: 15pt; margin-bottom: 10pt; word-wrap: break-word; white-space: pre-wrap;">\${(reparacion.observaciones || '').trim() || '-'}</div>
+              <div style="font-size: 11pt; margin-bottom: 4pt; word-wrap: break-word; white-space: pre-wrap;">${(reparacion.observaciones || '').trim() || '-'}</div>
           </div>
                     
                     <div class="print-section">
@@ -2727,10 +2770,10 @@
                             </div>
           <div class="print-section">
               <div class="print-label" style="margin-bottom: 4pt;">Problema:</div>
-              <div style="font-size: 15pt; margin-bottom: 8pt; word-wrap: break-word; white-space: pre-wrap;">\${reparacion.problema}</div>
+              <div style="font-size: 11pt; margin-bottom: 3pt; word-wrap: break-word; white-space: pre-wrap;">${reparacion.problema}</div>
 
               <div class="print-label" style="margin-bottom: 4pt;">Observaciones:</div>
-              <div style="font-size: 15pt; margin-bottom: 10pt; word-wrap: break-word; white-space: pre-wrap;">\${(reparacion.observaciones || '').trim() || '-'}</div>
+              <div style="font-size: 11pt; margin-bottom: 4pt; word-wrap: break-word; white-space: pre-wrap;">${(reparacion.observaciones || '').trim() || '-'}</div>
           </div>
                     
                     <div class="print-section">
