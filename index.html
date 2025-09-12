@@ -2580,122 +2580,16 @@
 
         // FUNCIONES DE ACCIONES DE REPARACIÓN
         
-        
-function imprimirComprobante(ordenId) {
-    const reparacion = reparaciones.find(r => r.id === ordenId) || historialEntregados.find(r => r.id === ordenId);
-    if (!reparacion) return;
+        function imprimirComprobante(ordenId) {
+            const reparacion = reparaciones.find(r => r.id === ordenId) || historialEntregados.find(r => r.id === ordenId);
+            if (!reparacion) return;
 
-    // Observaciones correctas (no accesorios)
-    const observaciones = (reparacion.observaciones || '').trim();
-
-    const ventanaImpresion = window.open('', '_blank');
-    ventanaImpresion.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8" />
-            <title>Comprobante #\${reparacion.id}</title>
-            <style>
-              @page { size: A4; margin: 10mm; }
-              html, body { margin:0; padding:0; }
-              body { font-family: Arial, sans-serif; margin:0; padding:0; width:190mm; margin-left:auto; margin-right:auto; font-size:14pt; line-height:1.2; }
-              .print-header { text-align:center; margin-bottom:8pt; border-bottom:1px solid #000; padding-bottom:4pt; }
-              .print-title { font-size:20pt; font-weight:700; margin-bottom:2pt; }
-              .print-subtitle{ font-size:18pt; font-weight:700; margin-bottom:3pt; }
-              .print-order{ font-size:19pt; font-weight:700; margin-bottom:6pt; }
-              .print-section{ margin-bottom:10pt; }
-              .print-row{ display:flex; margin-bottom:6pt; }
-              .print-label{ font-weight:700; width:120px; flex-shrink:0; font-size:15pt; }
-              .print-value{ flex:1; margin-right:8pt; font-size:15pt; word-break: break-word; }
-              .print-separator{ height:10pt; margin:20px 0; border-top:2px dashed #000; }
-              .print-footer{ margin-top:10pt; font-size:13pt; border-top:1px solid #000; padding-top:6pt; line-height:1.25;  text-align: center;  }
-              .print-row-stack { flex-direction: column; align-items: flex-start; }
-              .print-row-stack .print-label { margin-bottom: 2px; }
-              @media print { .print-header, .print-section, .print-footer { page-break-inside: avoid; } html, body { height:auto; overflow:hidden; } body { zoom:0.98; } }
-            </style>
-        </head>
-        <body>
-            <div class="print-page">
-                <!-- ORIGINAL -->
-                <div class="print-header">
-                    <div class="print-title">Fixly Taller</div>
-                    <div class="print-subtitle">ORIGINAL</div>
-                    <div class="print-order">ORDEN #\${reparacion.id}</div>
-                </div>
-                <div class="print-section">
-                    <div class="print-row"><div class="print-label">Cliente:</div><div class="print-value">\${reparacion.cliente}</div></div>
-                    <div class="print-row"><div class="print-label">DNI:</div><div class="print-value">\${reparacion.dni || ''}</div></div>
-                    <div class="print-row"><div class="print-label">Tel:</div><div class="print-value">\${reparacion.telefono || ''}</div></div>
-                    <div class="print-row"><div class="print-label">Equipo:</div><div class="print-value">\${reparacion.equipo}</div></div>
-                    <div class="print-row print-row-stack">
-                        <div class="print-label">Problema:</div>
-                        <div class="print-value">\${reparacion.problema}</div>
-                    </div>
-                    <div class="print-row print-row-stack">
-                        <div class="print-label">Observaciones:</div>
-                        <div class="print-value">\${observaciones || '-'}</div>
-                    </div>
-                    <div class="print-row"><div class="print-label">Técnico:</div><div class="print-value">\${reparacion.tecnico || ''}</div></div>
-                    <div class="print-row"><div class="print-label">Estado:</div><div class="print-value">\${(reparacion.estado || '').toUpperCase()}</div></div>
-                    <div class="print-row"><div class="print-label">Fecha:</div><div class="print-value">\${reparacion.fecha || ''}</div></div>
-                    <div class="print-row"><div class="print-label">Anticipo:</div><div class="print-value">\$ \${(reparacion.anticipo || 0).toLocaleString()}</div></div>
-                    <div class="print-row"><div class="print-label">Total:</div><div class="print-value">\$ \${(reparacion.costoEstimado || 0).toLocaleString()}</div></div>
-                    <div class="print-row"><div class="print-label">Saldo:</div><div class="print-value">\$ \${((reparacion.costoEstimado || 0) - (reparacion.anticipo || 0)).toLocaleString()}</div></div>
-                </div>
-                
-                <div class="print-separator"></div>
-
-                <!-- COPIA CLIENTE -->
-                <div class="print-header">
-                    <div class="print-title">Fixly Taller</div>
-                    <div class="print-subtitle">COPIA CLIENTE</div>
-                    <div class="print-order">ORDEN #\${reparacion.id}</div>
-                </div>
-                <div class="print-section">
-                    <div class="print-row"><div class="print-label">Cliente:</div><div class="print-value">\${reparacion.cliente}</div></div>
-                    <div class="print-row"><div class="print-label">DNI:</div><div class="print-value">\${reparacion.dni || ''}</div></div>
-                    <div class="print-row"><div class="print-label">Tel:</div><div class="print-value">\${reparacion.telefono || ''}</div></div>
-                    <div class="print-row"><div class="print-label">Equipo:</div><div class="print-value">\${reparacion.equipo}</div></div>
-                    <div class="print-row print-row-stack">
-                        <div class="print-label">Problema:</div>
-                        <div class="print-value">\${reparacion.problema}</div>
-                    </div>
-                    <div class="print-row print-row-stack">
-                        <div class="print-label">Observaciones:</div>
-                        <div class="print-value">\${observaciones || '-'}</div>
-                    </div>
-                    <div class="print-row"><div class="print-label">Técnico:</div><div class="print-value">\${reparacion.tecnico || ''}</div></div>
-                    <div class="print-row"><div class="print-label">Estado:</div><div class="print-value">\${(reparacion.estado || '').toUpperCase()}</div></div>
-                    <div class="print-row"><div class="print-label">Fecha:</div><div class="print-value">\${reparacion.fecha || ''}</div></div>
-                    <div class="print-row"><div class="print-label">Anticipo:</div><div class="print-value">\$ \${(reparacion.anticipo || 0).toLocaleString()}</div></div>
-                    <div class="print-row"><div class="print-label">Total:</div><div class="print-value">\$ \${(reparacion.costoEstimado || 0).toLocaleString()}</div></div>
-                    <div class="print-row"><div class="print-label">Saldo:</div><div class="print-value">\$ \${((reparacion.costoEstimado || 0) - (reparacion.anticipo || 0)).toLocaleString()}</div></div>
-                </div>
-
-                <div class="print-footer">
-                    <strong>Mundo Electronico - Moreno 1878 - Tel 11 3820-8152</strong>  
-                    <br/>Las reparaciones tienen una garantía de 60 días únicamente por la misma falla reparada.  
-                    <br/>Los repuestos están garantizados solo por defectos de fábrica.  
-                    <br/>La garantía no cubre daños ocasionados por golpes, roturas, líquidos o uso indebido.  
-                    <br/>Los trabajos de software y configuraciones no tienen garantía.
-                </div>
-            </div>
-        </body>
-        </html>
-    `);
-    
-    ventanaImpresion.document.close();
-    const cerrar = () => { try { ventanaImpresion.close(); } catch(e){} };
-    try { ventanaImpresion.addEventListener('afterprint', cerrar); } catch(e){}
-    ventanaImpresion.onafterprint = cerrar;
-    setTimeout(() => {
-      try { ventanaImpresion.focus(); } catch(e){}
-      try { ventanaImpresion.print(); } catch(e){}
-      setTimeout(cerrar, 1200);
-    }, 100);
-}
-
-</title>
+            const ventanaImpresion = window.open('', '_blank');
+            ventanaImpresion.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Comprobante #${reparacion.id}</title>
                     <style>
   @page { size: A4; margin: 10mm; }
   body { font-family: Arial, sans-serif; margin:0; padding:0; width:190mm; margin-left:auto; margin-right:auto; font-size:14pt; line-height:1.2; }
@@ -3618,122 +3512,11 @@ function imprimirComprobantePedido(pedidoId){
 
 // ==== Stubs y mejoras para evitar errores de runtime ====
 function editarReparacion(id){ try { showEditEstado(id); } catch(e){ console.warn('showEditEstado no disponible', e); } }
-
-function imprimirComprobante(ordenId) {
-    const reparacion = reparaciones.find(r => r.id === ordenId) || historialEntregados.find(r => r.id === ordenId);
-    if (!reparacion) return;
-
-    // Observaciones correctas (no accesorios)
-    const observaciones = (reparacion.observaciones || '').trim();
-
-    const ventanaImpresion = window.open('', '_blank');
-    ventanaImpresion.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8" />
-            <title>Comprobante #\${reparacion.id}</title>
-            <style>
-              @page { size: A4; margin: 10mm; }
-              html, body { margin:0; padding:0; }
-              body { font-family: Arial, sans-serif; margin:0; padding:0; width:190mm; margin-left:auto; margin-right:auto; font-size:14pt; line-height:1.2; }
-              .print-header { text-align:center; margin-bottom:8pt; border-bottom:1px solid #000; padding-bottom:4pt; }
-              .print-title { font-size:20pt; font-weight:700; margin-bottom:2pt; }
-              .print-subtitle{ font-size:18pt; font-weight:700; margin-bottom:3pt; }
-              .print-order{ font-size:19pt; font-weight:700; margin-bottom:6pt; }
-              .print-section{ margin-bottom:10pt; }
-              .print-row{ display:flex; margin-bottom:6pt; }
-              .print-label{ font-weight:700; width:120px; flex-shrink:0; font-size:15pt; }
-              .print-value{ flex:1; margin-right:8pt; font-size:15pt; word-break: break-word; }
-              .print-separator{ height:10pt; margin:20px 0; border-top:2px dashed #000; }
-              .print-footer{ margin-top:10pt; font-size:13pt; border-top:1px solid #000; padding-top:6pt; line-height:1.25;  text-align: center;  }
-              .print-row-stack { flex-direction: column; align-items: flex-start; }
-              .print-row-stack .print-label { margin-bottom: 2px; }
-              @media print { .print-header, .print-section, .print-footer { page-break-inside: avoid; } html, body { height:auto; overflow:hidden; } body { zoom:0.98; } }
-            </style>
-        </head>
-        <body>
-            <div class="print-page">
-                <!-- ORIGINAL -->
-                <div class="print-header">
-                    <div class="print-title">Fixly Taller</div>
-                    <div class="print-subtitle">ORIGINAL</div>
-                    <div class="print-order">ORDEN #\${reparacion.id}</div>
-                </div>
-                <div class="print-section">
-                    <div class="print-row"><div class="print-label">Cliente:</div><div class="print-value">\${reparacion.cliente}</div></div>
-                    <div class="print-row"><div class="print-label">DNI:</div><div class="print-value">\${reparacion.dni || ''}</div></div>
-                    <div class="print-row"><div class="print-label">Tel:</div><div class="print-value">\${reparacion.telefono || ''}</div></div>
-                    <div class="print-row"><div class="print-label">Equipo:</div><div class="print-value">\${reparacion.equipo}</div></div>
-                    <div class="print-row print-row-stack">
-                        <div class="print-label">Problema:</div>
-                        <div class="print-value">\${reparacion.problema}</div>
-                    </div>
-                    <div class="print-row print-row-stack">
-                        <div class="print-label">Observaciones:</div>
-                        <div class="print-value">\${observaciones || '-'}</div>
-                    </div>
-                    <div class="print-row"><div class="print-label">Técnico:</div><div class="print-value">\${reparacion.tecnico || ''}</div></div>
-                    <div class="print-row"><div class="print-label">Estado:</div><div class="print-value">\${(reparacion.estado || '').toUpperCase()}</div></div>
-                    <div class="print-row"><div class="print-label">Fecha:</div><div class="print-value">\${reparacion.fecha || ''}</div></div>
-                    <div class="print-row"><div class="print-label">Anticipo:</div><div class="print-value">\$ \${(reparacion.anticipo || 0).toLocaleString()}</div></div>
-                    <div class="print-row"><div class="print-label">Total:</div><div class="print-value">\$ \${(reparacion.costoEstimado || 0).toLocaleString()}</div></div>
-                    <div class="print-row"><div class="print-label">Saldo:</div><div class="print-value">\$ \${((reparacion.costoEstimado || 0) - (reparacion.anticipo || 0)).toLocaleString()}</div></div>
-                </div>
-                
-                <div class="print-separator"></div>
-
-                <!-- COPIA CLIENTE -->
-                <div class="print-header">
-                    <div class="print-title">Fixly Taller</div>
-                    <div class="print-subtitle">COPIA CLIENTE</div>
-                    <div class="print-order">ORDEN #\${reparacion.id}</div>
-                </div>
-                <div class="print-section">
-                    <div class="print-row"><div class="print-label">Cliente:</div><div class="print-value">\${reparacion.cliente}</div></div>
-                    <div class="print-row"><div class="print-label">DNI:</div><div class="print-value">\${reparacion.dni || ''}</div></div>
-                    <div class="print-row"><div class="print-label">Tel:</div><div class="print-value">\${reparacion.telefono || ''}</div></div>
-                    <div class="print-row"><div class="print-label">Equipo:</div><div class="print-value">\${reparacion.equipo}</div></div>
-                    <div class="print-row print-row-stack">
-                        <div class="print-label">Problema:</div>
-                        <div class="print-value">\${reparacion.problema}</div>
-                    </div>
-                    <div class="print-row print-row-stack">
-                        <div class="print-label">Observaciones:</div>
-                        <div class="print-value">\${observaciones || '-'}</div>
-                    </div>
-                    <div class="print-row"><div class="print-label">Técnico:</div><div class="print-value">\${reparacion.tecnico || ''}</div></div>
-                    <div class="print-row"><div class="print-label">Estado:</div><div class="print-value">\${(reparacion.estado || '').toUpperCase()}</div></div>
-                    <div class="print-row"><div class="print-label">Fecha:</div><div class="print-value">\${reparacion.fecha || ''}</div></div>
-                    <div class="print-row"><div class="print-label">Anticipo:</div><div class="print-value">\$ \${(reparacion.anticipo || 0).toLocaleString()}</div></div>
-                    <div class="print-row"><div class="print-label">Total:</div><div class="print-value">\$ \${(reparacion.costoEstimado || 0).toLocaleString()}</div></div>
-                    <div class="print-row"><div class="print-label">Saldo:</div><div class="print-value">\$ \${((reparacion.costoEstimado || 0) - (reparacion.anticipo || 0)).toLocaleString()}</div></div>
-                </div>
-
-                <div class="print-footer">
-                    <strong>Mundo Electronico - Moreno 1878 - Tel 11 3820-8152</strong>  
-                    <br/>Las reparaciones tienen una garantía de 60 días únicamente por la misma falla reparada.  
-                    <br/>Los repuestos están garantizados solo por defectos de fábrica.  
-                    <br/>La garantía no cubre daños ocasionados por golpes, roturas, líquidos o uso indebido.  
-                    <br/>Los trabajos de software y configuraciones no tienen garantía.
-                </div>
-            </div>
-        </body>
-        </html>
-    `);
-    
-    ventanaImpresion.document.close();
-    const cerrar = () => { try { ventanaImpresion.close(); } catch(e){} };
-    try { ventanaImpresion.addEventListener('afterprint', cerrar); } catch(e){}
-    ventanaImpresion.onafterprint = cerrar;
-    setTimeout(() => {
-      try { ventanaImpresion.focus(); } catch(e){}
-      try { ventanaImpresion.print(); } catch(e){}
-      setTimeout(cerrar, 1200);
-    }, 100);
-}
-
-const w = window.open('', '_blank');
+function imprimirComprobante(id){ 
+    try {
+        const rep = reparaciones.find(r=>r.id===id);
+        if(!rep){ alert('No se encontró la reparación #' + id); return; }
+        const w = window.open('', '_blank');
         w.document.write('<html><head><title>Comprobante #' + id + '</title>
 <style>
 @media print {
