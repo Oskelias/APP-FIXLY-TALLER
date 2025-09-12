@@ -1,6 +1,7 @@
 
 
 
+
 <!DOCTYPE html>
 
 <!-- saved from url=(0053)file:///C:/Users/Osk/Downloads/megusta_adjusted.html# -->
@@ -86,6 +87,11 @@
         .status-diagnosticando { background-color: #dbeafe; color: #2563eb; }
         .status-listo { background-color: #d1fae5; color: #059669; }
         .status-entregado { background-color: #e5e7eb; color: #6b7280; }
+        /* Estados adicionales para resultado de reparación */
+        .status-reparado { background-color: #d1fae5; color: #059669; }
+        .status-no-reparado { background-color: #fee2e2; color: #b91c1c; }
+        .status-no-repuesto { background-color: #fef9c3; color: #eab308; }
+        .status-devolver { background-color: #fce7f3; color: #be185d; }
         
         .modal {
             display: none;
@@ -1631,6 +1637,69 @@
 </form>
 </div>
 </div>
+<!-- Modal Estado del Equipo -->
+<div class="modal" id="estado-equipo-modal">
+<div class="modal-content">
+<div class="flex justify-between items-center mb-6">
+<h2 class="text-2xl font-bold">
+      Estado del Equipo
+     </h2>
+<button class="text-gray-500 hover:text-gray-700" onclick="hideEstadoEquipo()">
+<i class="fas fa-times text-xl">
+</i>
+</button>
+</div>
+<div id="estado-equipo-messages"></div>
+<form class="space-y-4" id="formEstadoEquipo">
+<div>
+<label class="block text-sm font-medium mb-2">
+       Cliente
+      </label>
+<input class="w-full px-4 py-2 border rounded-lg bg-gray-50" id="estado-equipo-cliente" readonly="" type="text"/>
+</div>
+<div>
+<label class="block text-sm font-medium mb-2">
+       Equipo
+      </label>
+<input class="w-full px-4 py-2 border rounded-lg bg-gray-50" id="estado-equipo-equipo" readonly="" type="text"/>
+</div>
+<div>
+<label class="block text-sm font-medium mb-2">
+       Resultado
+      </label>
+<select class="w-full px-4 py-2 border rounded-lg" id="estado-equipo-resultado" required="">
+<option value="">
+        Seleccionar…
+       </option>
+<option value="reparado">
+        Reparado
+       </option>
+<option value="no-reparado">
+        No reparado
+       </option>
+<option value="no-repuesto">
+        No hay repuesto
+       </option>
+<option value="devolver">
+        Devolver
+       </option>
+</select>
+</div>
+<div class="flex gap-4 mt-6">
+<button class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700" type="submit">
+<i class="fas fa-save mr-2">
+</i>
+       Guardar
+      </button>
+<button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600" onclick="hideEstadoEquipo()" type="button">
+<i class="fas fa-times mr-2">
+</i>
+       Cancelar
+      </button>
+</div>
+</form>
+</div>
+</div>
 <!-- Modal Editar Estado -->
 <div class="modal" id="edit-estado-modal">
 <div class="modal-content">
@@ -1777,6 +1846,8 @@
         let mensajeOriginal = '';
         let modoEdicion = false;
         let reparacionEditando = null;
+        // Variable para la edición del estado del equipo (resultado final)
+        let reparacionEditandoEstado = null;
         let historialEntregados = [];
         let historialMensajes = [];
         let equipoDetalleActual = null;
@@ -1948,6 +2019,11 @@
             document.getElementById('formEditEstado').addEventListener('submit', function(e) {
                 e.preventDefault();
                 guardarCambiosEstado();
+            });
+            // Configurar formulario de estado del equipo
+            document.getElementById('formEstadoEquipo').addEventListener('submit', function(e) {
+                e.preventDefault();
+                guardarEstadoEquipo();
             });
         });
 
@@ -2151,9 +2227,12 @@
                     <td class="py-3 px-4">${reparacion.fecha}</td>
                     <td class="py-3 px-4">
                         <div class="flex gap-2">
-                            <button onclick="imprimirComprobante('${reparacion.id}')" class="btn-print-orange text-white p-2 rounded" title="Imprimir">
-                                <i class="fas fa-print"></i>
-                            </button>
+            <button onclick="imprimirComprobante('${reparacion.id}')" class="btn-print-orange text-white p-2 rounded" title="Imprimir">
+                <i class="fas fa-print"></i>
+            </button>
+            <button onclick="editarEstadoEquipo('${reparacion.id}')" class="bg-purple-600 text-white p-2 rounded hover:bg-purple-700" title="Estado Equipo">
+                <i class="fas fa-tools"></i>
+            </button>
                             <button onclick="editarReparacion('${reparacion.id}')" class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" title="Editar">
                                 <i class="fas fa-edit"></i>
                             </button>
@@ -2309,6 +2388,51 @@
         function hideEditEstado() {
             document.getElementById('edit-estado-modal').classList.remove('show');
             reparacionEditando = null;
+        }
+
+        // Mostrar el modal de estado del equipo
+        function showEstadoEquipo(ordenId) {
+            const reparacion = reparaciones.find(r => r.id === ordenId);
+            if (!reparacion) return;
+            reparacionEditandoEstado = reparacion;
+            document.getElementById('estado-equipo-cliente').value = reparacion.cliente;
+            document.getElementById('estado-equipo-equipo').value = reparacion.equipo;
+            document.getElementById('estado-equipo-resultado').value = reparacion.estadoEquipo || '';
+            document.getElementById('estado-equipo-messages').innerHTML = '';
+            document.getElementById('estado-equipo-modal').classList.add('show');
+        }
+
+        // Ocultar el modal de estado del equipo
+        function hideEstadoEquipo() {
+            document.getElementById('estado-equipo-modal').classList.remove('show');
+            reparacionEditandoEstado = null;
+        }
+
+        // Abrir el modal de estado del equipo desde las acciones
+        function editarEstadoEquipo(ordenId) {
+            showEstadoEquipo(ordenId);
+        }
+
+        // Guardar el resultado del estado del equipo
+        function guardarEstadoEquipo() {
+            if (!reparacionEditandoEstado) return;
+            const resultado = document.getElementById('estado-equipo-resultado').value;
+            // Asignar la propiedad estadoEquipo al objeto
+            reparacionEditandoEstado.estadoEquipo = resultado;
+            // Mensaje de confirmación
+            mostrarMensaje('success', 'Estado del equipo actualizado exitosamente.', 'estado-equipo-messages');
+            guardarDatos();
+            cargarTablaReparaciones();
+            cargarTablaHistorial();
+            if (typeof cargarReparacionesEnSelect === 'function') {
+                cargarReparacionesEnSelect();
+            }
+            if (typeof actualizarKPIs === 'function') {
+                actualizarKPIs();
+            }
+            setTimeout(() => {
+                hideEstadoEquipo();
+            }, 1500);
         }
 
         function verDetalleHistorial(equipoId) {
