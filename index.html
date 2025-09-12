@@ -1,4 +1,6 @@
 
+
+
 <!DOCTYPE html>
 
 <!-- saved from url=(0053)file:///C:/Users/Osk/Downloads/megusta_adjusted.html# -->
@@ -130,7 +132,7 @@
         /* Estilos para la hoja de impresión - ULTRA COMPACTO */
         .print-page {
             width: 210mm;
-            min-height: 297mm;
+            
             padding: 10mm;
             margin: 0 auto;
             background: white;
@@ -5788,3 +5790,9 @@ on = function(){
 </script>
 </body>
 </html>
+<style>
+@media print {
+  .print-row-stack{display:flex;flex-direction:column;gap:2px;margin-bottom:8px}
+  .print-row-stack .print-value{line-height:1.4;word-break:break-word;white-space:pre-wrap}
+}
+</style>
