@@ -1074,6 +1074,9 @@
 <option value="recordatorio">
             Recordatorio - Equipo Listo
            </option>
+<option value="no-reparable">
+            No Reparable
+           </option>
 </select>
 </div>
 <div>
@@ -1133,6 +1136,14 @@
            Hola [Nombre], su [Equipo] está listo para retirar desde hace varios días. Por favor coordine su retiro. Gracias.
           </p>
 </div>
+        <div class="border-l-4 border-gray-500 pl-4">
+<h4 class="font-semibold text-green-600">
+           No Reparable
+          </h4>
+<p class="text-sm text-gray-600">
+           Hola [Nombre], lamentablemente su [Equipo] no se puede reparar debido a [Problema]. Puede pasar a retirarlo sin cargo. Gracias.
+          </p>
+        </div>
 </div>
 <div class="mt-8">
 <h4 class="font-semibold mb-4">
@@ -3028,6 +3039,14 @@ function imprimirComprobantePedido(pedidoId){
                     default:
                         tipoSeleccionado = 'recibido';
                 }
+                // Si hay un estado de equipo que indique no reparable, preseleccionar ese tipo
+                if (reparacionSeleccionada.estadoEquipo === 'no-reparado' || reparacionSeleccionada.estadoEquipo === 'no-repuesto' || reparacionSeleccionada.estadoEquipo === 'devolver') {
+                    tipoSeleccionado = 'no-reparable';
+                }
+                // Si hay un estado de equipo que indique no reparable, preseleccionar ese tipo
+                if (reparacion.estadoEquipo === 'no-reparado' || reparacion.estadoEquipo === 'no-repuesto' || reparacion.estadoEquipo === 'devolver') {
+                    tipoSeleccionado = 'no-reparable';
+                }
                 
                 tipoMensaje.value = tipoSeleccionado;
                 generarMensaje();
@@ -3095,6 +3114,9 @@ function imprimirComprobantePedido(pedidoId){
                     break;
                 case 'recordatorio':
                     mensaje = `Hola ${reparacionSeleccionada.cliente}, su ${reparacionSeleccionada.equipo} está listo para retirar desde hace varios días. Por favor coordine su retiro. Gracias.`;
+                    break;
+                case 'no-reparable':
+                    mensaje = `Hola ${reparacionSeleccionada.cliente}, lamentablemente su ${reparacionSeleccionada.equipo} no se puede reparar debido a ${reparacionSeleccionada.problema}. Puede pasar a retirarlo sin cargo. Gracias.`;
                     break;
             }
             
