@@ -3004,6 +3004,28 @@ function imprimirComprobantePedido(pedidoId){
             }
         }
 
+        /**
+         * Elimina un registro del historial de entregados.
+         * Confirma la acción y actualiza la tabla, los datos guardados y los indicadores.
+         * @param {string|number} ordenId Identificador de la reparación entregada
+         */
+        function eliminarHistorial(ordenId) {
+            if (confirm('¿Estás seguro de que deseas eliminar este registro del historial? Esta acción no se puede deshacer.')) {
+                const idx = historialEntregados.findIndex(e => String(e.id) === String(ordenId));
+                if (idx !== -1) {
+                    historialEntregados.splice(idx, 1);
+                    guardarDatos();
+                    cargarTablaHistorial();
+                    // Actualizar KPIs si la función existe
+                    if (typeof actualizarKPIs === 'function') actualizarKPIs();
+                    // Mostrar mensaje de éxito
+                    if (typeof mostrarMensaje === 'function') {
+                        mostrarMensaje('success', 'Registro eliminado del historial.', 'edit-messages');
+                    }
+                }
+            }
+        }
+
         // FUNCIONES DE WHATSAPP
         function cargarReparacionesEnSelect() {
             const select = document.getElementById('select-reparacion');
@@ -3622,29 +3644,7 @@ function imprimirComprobantePedido(pedidoId){
     }
 }
 
-        /**
-         * Elimina un registro del historial de entregados.
-         * Se solicita confirmación al usuario y, en caso afirmativo,
-         * se elimina el elemento del array historialEntregados, se actualiza
-         * la tabla de historial, se guardan los datos y se muestran KPI y mensaje.
-         * @param {string|number} ordenId Identificador de la reparación entregada
-         */
-        function eliminarHistorial(ordenId) {
-            if (confirm('¿Estás seguro de que deseas eliminar este registro del historial? Esta acción no se puede deshacer.')) {
-                const idx = historialEntregados.findIndex(e => String(e.id) === String(ordenId));
-                if (idx !== -1) {
-                    historialEntregados.splice(idx, 1);
-                    guardarDatos();
-                    cargarTablaHistorial();
-                    // También actualizamos estadísticas generales por si afectan al total
-                    actualizarKPIs && actualizarKPIs();
-                    // Mostrar mensaje de éxito en algún contenedor de mensajes existente
-                    if (typeof mostrarMensaje === 'function') {
-                        mostrarMensaje('success', 'Registro eliminado del historial.', 'edit-messages');
-                    }
-                }
-            }
-        }
+        /* La función eliminarHistorial se declara en el script principal. */
 </style>
 
 </head><body>
