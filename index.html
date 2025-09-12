@@ -2642,18 +2642,13 @@
                             <div class="print-value">${reparacion.telefono}</div>
                       
                           <div class="print-row">
-  <div class="print-label">Problema:</div>
-  <div class="print-value" style="white-space: pre-wrap; word-break: break-word;">
-    ${reparacion.problema || "-"}
-  </div>
+                          <div class="print-label">Problema:</div>
+                          <div class="print-value" style="white-space: pre-wrap; word-break: break-word;">${reparacion.problema || "-"}</div>
 </div>
                            <div class="print-row">
-  <div class="print-label">Observaciones:</div>
-  <div class="print-value" style="white-space: pre-wrap; word-break: break-word;">
-    ${(reparacion.observaciones || "").trim() || "-"}
-  </div>
+                           <div class="print-label">Observaciones:</div><div class="print-value" style="white-space: pre-wrap; word-break: break-word;">${(reparacion.observaciones || "").trim() || "-"}</div>
 </div>
-                    
+    
                     <div class="print-section">
                         <div class="print-row">
                             <div class="print-label">Técnico:</div>
