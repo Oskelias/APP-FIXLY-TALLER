@@ -564,22 +564,22 @@
 </div>
 </div>
 <nav class="mt-6">
-<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="file:///C:/Users/Osk/Downloads/megusta_adjusted.html#" onclick="showSection(event,'dashboard')">
+<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="#" onclick="showSection(event,'dashboard')">
 <i class="fas fa-tachometer-alt mr-3">
 </i>
        Dashboard
       </a>
-<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100 active" href="file:///C:/Users/Osk/Downloads/megusta_adjusted.html#" onclick="showSection(event,'reparaciones')">
+<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100 active" href="#" onclick="showSection(event,'reparaciones')">
 <i class="fas fa-tools mr-3">
 </i>
        Reparaciones
       </a>
-<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="file:///C:/Users/Osk/Downloads/megusta_adjusted.html#" onclick="showSection(event,'historial')">
+<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="#" onclick="showSection(event,'historial')">
 <i class="fas fa-history mr-3">
 </i>
        Historial
       </a>
-<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="file:///C:/Users/Osk/Downloads/megusta_adjusted.html#" onclick="showSection(event,'clientes')">
+<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="#" onclick="showSection(event,'clientes')">
 <i class="fas fa-users mr-3">
 </i>
        Clientes
@@ -589,12 +589,12 @@
 </i>
        WhatsApp
       </a>
-<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="file:///C:/Users/Osk/Downloads/megusta_adjusted.html#" onclick="showSection(event,'pedidos')">
+<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="#" onclick="showSection(event,'pedidos')">
 <i class="fas fa-shopping-cart mr-3">
 </i>
        Formulario de Pedidos
       </a>
-<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="file:///C:/Users/Osk/Downloads/megusta_adjusted.html#" onclick="showSection(event,'configuracion')">
+<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="#" onclick="showSection(event,'configuracion')">
 <i class="fas fa-cog mr-3">
 </i>
        Configuración
@@ -6031,5 +6031,95 @@ on = function(){
   });
 })();
 </script>
+
+<script>
+// --- FIX: Recargar configuración guardada al iniciar sesión y al montar la app ---
+(function(){
+  function readData(){
+    try { return JSON.parse(localStorage.getItem('fixlytallerData') || '{}'); } catch(e){ return {}; }
+  }
+  function ensureShape(d){
+    if (!d || typeof d !== 'object') d = {};
+    d.config = d.config || {};
+    return d;
+  }
+  function preloadConfigIntoForm(){
+    var form = document.getElementById('formConfigTaller');
+    if (!form) return;
+    var d = ensureShape(readData());
+    var c = d.config || {};
+    if (form.nombre_taller && (c.nombre_taller || c.nombre || c.nombreTaller)) form.nombre_taller.value = c.nombre_taller || c.nombre || c.nombreTaller || '';
+    if (form.direccion && c.direccion)   form.direccion.value   = c.direccion;
+    if (form.telefono  && c.telefono)    form.telefono.value    = c.telefono;
+    if (form.email     && c.email)       form.email.value       = c.email;
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    try {
+      var mainApp = document.getElementById('mainApp');
+      var hidden = mainApp && (mainApp.classList.contains('hidden'));
+      if (!hidden) preloadConfigIntoForm();
+    } catch(e){}
+  });
+
+  // Observa aparición de mainApp post-login y recarga config una sola vez
+  (function(){
+    var once=false;
+    try{
+      var observer = new MutationObserver(function(){
+        var mainApp = document.getElementById('mainApp');
+        if (!once && mainApp && !mainApp.classList.contains('hidden')){
+          once=true; try{ preloadConfigIntoForm(); }catch(e){}
+        }
+      });
+      observer.observe(document.documentElement, {subtree:true,childList:true,attributes:true});
+    }catch(e){}
+  })();
+
+  window.preloadFixlyConfig = preloadConfigIntoForm;
+})();
+</script>
+
+
+<script>
+// --- FIX: Guardado de Config sin cerrar sesión ---
+(function(){
+  document.addEventListener('DOMContentLoaded', function(){
+    var form = document.getElementById('formConfigTaller');
+    if (!form) return;
+    function readData(){
+      try { return JSON.parse(localStorage.getItem('fixlytallerData') || '{}'); } catch(e){ return {}; }
+    }
+    function writeData(d){
+      try { localStorage.setItem('fixlytallerData', JSON.stringify(d)); } catch(e){}
+    }
+    function ensureShape(d){
+      if (!d || typeof d !== 'object') d = {};
+      d.config = d.config || {};
+      return d;
+    }
+    form.addEventListener('submit', function(e){
+      try { e.preventDefault(); } catch(_){}
+      var fd = new FormData(form);
+      var d = ensureShape(readData());
+      d.config.nombre_taller = fd.get('nombre_taller') || '';
+      d.config.direccion     = fd.get('direccion') || '';
+      d.config.telefono      = fd.get('telefono') || '';
+      d.config.email         = fd.get('email') || '';
+      writeData(d);
+      try { localStorage.setItem('fixlytallerLoggedIn','1'); } catch(_){}
+      try {
+        var box = document.getElementById('config-messages') || form;
+        var ok = document.createElement('div');
+        ok.className='mt-3 p-3 rounded bg-green-50 text-green-700 border border-green-200';
+        ok.textContent='Información guardada correctamente.';
+        box.innerHTML=''; box.appendChild(ok);
+        setTimeout(function(){ ok.remove(); }, 2500);
+      } catch(_){}
+    });
+  });
+})();
+</script>
+
 </body>
 </html>
