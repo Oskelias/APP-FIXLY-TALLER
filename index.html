@@ -1289,69 +1289,7 @@
 </select>
 </div>
 </div>
-<div class="space-y-3" id="lista-pedidos">
-<div class="p-4 rounded-lg border border-gray-200 bg-white flex items-start justify-between gap-4">
-<div class="flex-1">
-<div class="flex items-center gap-2 text-sm text-gray-500">
-<span class="font-semibold text-gray-800">
-             #P001
-            </span>
-<span>
-             • 19/08/2025
-            </span>
-<span class="px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-700">
-             PENDIENTE
-            </span>
-</div>
-<div class="mt-1 font-medium">
-            sasc • 1213131313
-           </div>
-<div class="text-sm text-gray-700 mt-1">
-<div>
-<span class="font-semibold">
-              Producto:
-             </span>
-             cdscdcds
-            </div>
-<div class="mt-1">
-<span class="font-semibold">
-              Total:
-             </span>
-             $23.232
-            </div>
-</div>
-</div>
-<div class="flex flex-col gap-2 shrink-0">
-<div class="flex gap-2">
-<button class="btn-print-orange text-white px-3 py-2 rounded-lg" onclick="imprimirPedido('P001')" title="Imprimir">
-<i class="fas fa-print">
-</i>
-</button>
-<button class="hover:bg-green-700 bg-green-600 px-3 py-2 rounded-lg text-white btn-whatsapp" onclick="enviarWhatsAppDesdeBoton(this)" title="WhatsApp" type="button">
-<i class="fab fa-whatsapp">
-</i>
-</button>
-<button class="bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700" onclick="eliminarPedido('P001')" title="Eliminar">
-<i class="fas fa-trash">
-</i>
-</button>
-</div>
-<div class="flex gap-2">
-<select class="px-2 py-1 border border-gray-300 rounded-lg text-sm" onchange="cambiarEstadoPedido('P001', this.value)">
-<option selected="" value="pendiente">
-              Pendiente
-             </option>
-<option value="listo">
-              Listo
-             </option>
-<option value="entregado">
-              Entregado
-             </option>
-</select>
-</div>
-</div>
-</div>
-</div>
+<div class="space-y-3" id="lista-pedidos"></div>
 </div>
 </div>
 </div>
@@ -3348,12 +3286,21 @@ function imprimirComprobantePedido(pedidoId){
 
         function eliminarPedido(pedidoId) {
             if (confirm('¿Estás seguro de que deseas eliminar este pedido?')) {
-                const index = pedidos.findIndex(p => p.id === pedidoId);
-                if (index !== -1) {
-                    pedidos.splice(index, 1);
-                    guardarPedidos();
-                    actualizarListaPedidos();
-                    mostrarMensaje('success', 'Pedido eliminado exitosamente.', 'pedidos-messages');
+                // Usar el array global de pedidos si está disponible
+                const list = Array.isArray(window.pedidos) ? window.pedidos : pedidos;
+                const idx = list.findIndex(p => String(p.id) === String(pedidoId));
+                if (idx !== -1) {
+                    list.splice(idx, 1);
+                    // Guardar cambios según el método disponible
+                    if (typeof saveToOwnKey === 'function') saveToOwnKey();
+                    if (typeof guardarPedidos === 'function') guardarPedidos();
+                    // Actualizar la interfaz
+                    if (typeof window.renderListaPedidos === 'function') window.renderListaPedidos();
+                    else if (typeof actualizarListaPedidos === 'function') actualizarListaPedidos();
+                    // Mostrar mensaje de éxito
+                    if (typeof mostrarMensaje === 'function') {
+                        mostrarMensaje('success', 'Pedido eliminado exitosamente.', 'pedidos-messages');
+                    }
                 }
             }
         }
@@ -3521,34 +3468,48 @@ function imprimirComprobantePedido(pedidoId){
             if (formNuevoPedido) {
                 formNuevoPedido.addEventListener('submit', function(e) {
                     e.preventDefault();
-                    
-                    const formData = new FormData(this);
-                    const dejaSena = formData.get('deja_sena') === 'si';
-                    const sena = dejaSena ? parseInt(formData.get('sena')) || 0 : 0;
-                    
-                    const nuevoPedido = {
-                        id: proximoPedidoId.toString(),
-                        cliente: formData.get('cliente'),
-                        telefono: formData.get('telefono'),
-                        producto: formData.get('producto'),
-                        descripcion: formData.get('descripcion') || '',
-                        sena: sena,
-                        precio_total: parseInt(formData.get('precio_total')),
-                        estado: 'pendiente',
-                        fecha: obtenerFechaActual()
-                    };
-                    
-                    pedidos.push(nuevoPedido);
-                    proximoPedidoId++;
-                    
-                    guardarPedidos();
-                    actualizarListaPedidos();
-                    
+                    // Utilizar la lógica centralizada de pedidos (v7) si está disponible
+                    try {
+                        if (typeof window.crearNuevoPedido === 'function') {
+                            window.crearNuevoPedido(new FormData(this));
+                        } else {
+                            // Fallback: construir el pedido de forma básica y agregar a window.pedidos
+                            const formData = new FormData(this);
+                            const dejaSena = formData.get('deja_sena') === 'si';
+                            const sena = dejaSena ? parseInt(formData.get('sena')) || 0 : 0;
+                            const pedido = {
+                                id: 'P' + String(Date.now()).slice(-8),
+                                cliente: formData.get('cliente') || '',
+                                telefono: formData.get('telefono') || '',
+                                producto: formData.get('producto') || '',
+                                descripcion: formData.get('descripcion') || '',
+                                deja_sena: dejaSena,
+                                sena: sena,
+                                precio_total: parseInt(formData.get('precio_total')) || 0,
+                                saldo: Math.max((parseInt(formData.get('precio_total'))||0) - sena, 0),
+                                estado: 'pendiente',
+                                fecha: (typeof obtenerFechaActual === 'function') ? obtenerFechaActual() : ''
+                            };
+                            window.pedidos = Array.isArray(window.pedidos) ? window.pedidos : [];
+                            window.pedidos.unshift(pedido);
+                            // Guardar en storage mediante la función si está disponible
+                            if (typeof guardarPedidos === 'function') guardarPedidos();
+                            if (typeof window.renderListaPedidos === 'function') window.renderListaPedidos();
+                        }
+                    } catch(ex) {
+                        console.error('Error al crear pedido', ex);
+                    }
+                    // Resetear formulario y ocultar la sección de seña
                     this.reset();
-                    document.getElementById('sena-container').style.display = 'none';
-                    
-                    mostrarMensaje('success', 'Pedido creado exitosamente.', 'pedidos-messages');
+                    const senaCont = document.getElementById('sena-container');
+                    if (senaCont) senaCont.style.display = 'none';
+                    // Mostrar mensaje de éxito
+                    if (typeof mostrarMensaje === 'function') {
+                        mostrarMensaje('success', 'Pedido creado exitosamente.', 'pedidos-messages');
+                    }
                 });
+                // Marcar el formulario como ya configurado para evitar que otros módulos añadan otro listener
+                formNuevoPedido.__wired = true;
             }
             
             // Formulario de configuración del taller
@@ -4415,7 +4376,7 @@ function imprimirComprobantePedido(pedidoId){
                         </button>
                     </div>
                     <div class="flex gap-2">
-                        <select onchange="cambiarEstadoPedido('${p.id}', this.value)" class="px-2 py-1 border border-gray-300 rounded-lg text-sm">
+                        <select onchange="window.cambiarEstadoPedido('${p.id}', this.value)" class="px-2 py-1 border border-gray-300 rounded-lg text-sm">
                             <option value="pendiente" ${'pendiente'===(p.estado||'')?'selected':''}>Pendiente</option>
                             <option value="listo" ${'listo'===(p.estado||'')?'selected':''}>Listo</option>
                             <option value="entregado" ${'entregado'===(p.estado||'')?'selected':''}>Entregado</option>
