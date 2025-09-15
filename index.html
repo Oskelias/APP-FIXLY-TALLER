@@ -2738,7 +2738,7 @@
                         <div class="print-title">${nombre_taller}</div>
                         <div class="print-subtitle">ORIGINAL</div>
                         <div class="print-order">ORDEN #${reparacion.id}</div>
-                        ${infoTaller ? `<div class="print-contact" style="font-size:10pt">${infoTaller}</div>` : ''}
+                        <!-- En la copia original no se muestran los datos del taller -->
                     </div>
                     
                     <div class="print-section">
@@ -2797,7 +2797,7 @@
                         <div class="print-title">${nombre_taller}</div>
                         <div class="print-subtitle">COPIA CLIENTE</div>
                         <div class="print-order">ORDEN #${reparacion.id}</div>
-                        ${infoTaller ? `<div class="print-contact" style="font-size:10pt">${infoTaller}</div>` : ''}
+                        ${infoTaller ? `<div class="print-contact" style="font-size:10pt; font-weight:bold;">${infoTaller}</div>` : ''}
                     </div>
                     
                     <div class="print-section">
@@ -2853,7 +2853,7 @@
   <div class="print-separator"></div>
                     
   <div class="print-footer" style="text-align: center;">
-                        ${infoTaller || nombre_taller}<br>
+                        ${infoTaller ? `<strong>${infoTaller}</strong>` : nombre_taller}<br>
                         Las reparaciones tienen una garantía de 60 días únicamente por la misma falla reparada.<br>
                         Los repuestos están garantizados solo por defectos de fábrica.<br>
                         La garantía no cubre daños ocasionados por golpes, roturas, líquidos o uso indebido.<br>
