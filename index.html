@@ -2016,7 +2016,10 @@
             const datosGuardados = localStorage.getItem('fixlytallerData');
             if (datosGuardados) {
                 const datos = JSON.parse(datosGuardados);
-                pedidos = datos.pedidos || [];reparaciones = datos.reparaciones || datosIniciales.reparaciones;
+                // Cargar pedidos en la variable global y en la local para mantener sincronía
+                window.pedidos = Array.isArray(datos.pedidos) ? datos.pedidos : [];
+                pedidos = window.pedidos;
+                reparaciones = datos.reparaciones || datosIniciales.reparaciones;
                 tecnicos = datos.tecnicos || datosIniciales.tecnicos;
                 proximoOrden = datos.proximoOrden || 1003;
                 historialEntregados = datos.historialEntregados || datosIniciales.historialEntregados;
@@ -2027,7 +2030,8 @@
                 proximoOrden = 1003;
                 historialEntregados = [...datosIniciales.historialEntregados];
                 historialMensajes = [];
-                pedidos = [];
+                window.pedidos = [];
+                pedidos = window.pedidos;
                 guardarDatos();
             }
         }
@@ -3171,7 +3175,8 @@ function imprimirComprobantePedido(pedidoId){
         }
 
         // FUNCIONES PARA MÓDULO DE PEDIDOS
-        let pedidos = [];
+        // Sincronizar el listado local de pedidos con la variable global
+        let pedidos = Array.isArray(window.pedidos) ? window.pedidos : [];
         let proximoPedidoId = 1;
 
         function toggleSena() {
@@ -3198,40 +3203,42 @@ function imprimirComprobantePedido(pedidoId){
 
         function guardarPedidos() {
             const datos = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
-            datos.pedidos = pedidos;
+            // Persistir pedidos tanto en la estructura general como en la clave propia
+            datos.pedidos = Array.isArray(window.pedidos) ? window.pedidos : pedidos;
             datos.proximoPedidoId = proximoPedidoId;
             localStorage.setItem('fixlytallerData', JSON.stringify(datos));
+            if (typeof saveToOwnKey === 'function') saveToOwnKey();
         }
 
         function actualizarListaPedidos() {
+            // Utilizar la función centralizada para renderizar la lista si está disponible
+            if (typeof window.renderListaPedidos === 'function') {
+                window.renderListaPedidos();
+                return;
+            }
+            // Si no existe la función centralizada, dejar la implementación anterior como respaldo
             const lista = document.getElementById('lista-pedidos');
             const busqueda = document.getElementById('buscar-pedidos').value.toLowerCase();
             const filtroEstadoPedidos = document.getElementById('filtro-estado-pedidos');
             const filtroEstado = filtroEstadoPedidos ? filtroEstadoPedidos.value : '';
-            
             lista.innerHTML = '';
-            
             const pedidosFiltrados = pedidos.filter(pedido => {
                 const coincideBusqueda = pedido.cliente.toLowerCase().includes(busqueda) || 
                                        pedido.producto.toLowerCase().includes(busqueda);
                 const coincideEstado = !filtroEstado || pedido.estado === filtroEstado;
                 return coincideBusqueda && coincideEstado;
             });
-            
             if (pedidosFiltrados.length === 0) {
                 lista.innerHTML = '<div class="text-center text-gray-500 py-4">No hay pedidos que mostrar</div>';
                 return;
             }
-            
             pedidosFiltrados.forEach(pedido => {
                 const estadoColor = {
                     'pendiente': 'bg-yellow-100 text-yellow-800',
                     'listo': 'bg-green-100 text-green-800',
                     'entregado': 'bg-gray-100 text-gray-800'
                 };
-                
                 const saldo = pedido.precio_total - pedido.sena;
-                
                 const pedidoDiv = document.createElement('div');
                 pedidoDiv.className = 'border border-gray-200 rounded-lg p-4 hover:bg-gray-50';
                 pedidoDiv.innerHTML = `
@@ -3252,13 +3259,13 @@ function imprimirComprobantePedido(pedidoId){
                         <button onclick="cambiarEstadoPedido('${pedido.id}')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700">
                             <i class="fas fa-edit mr-1"></i>Estado
                         </button>
-                        <button onclick="eliminarPedido('${pedido.id}')" class="bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700">
+                        <button onclick="window.eliminarPedido('${pedido.id}')" class="bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700">
                             <i class="fas fa-trash mr-1"></i>Eliminar
                         </button>
-                        <button onclick="imprimirComprobantePedido('${pedido.id}')" class="btn-print-orange text-white px-3 py-1 rounded text-xs" title="Imprimir">
+                        <button onclick="window.imprimirPedido('${pedido.id}')" class="btn-print-orange text-white px-3 py-1 rounded text-xs" title="Imprimir">
                             <i class="fas fa-print mr-1"></i>Imprimir
                         </button>
-                        <button onclick="enviarWhatsAppPedido('${pedido.id}')" class="bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700" title="WhatsApp">
+                        <button onclick="window.enviarWhatsAppPedido('${pedido.id}')" class="bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700" title="WhatsApp">
                             <i class="fab fa-whatsapp mr-1"></i>WhatsApp
                         </button>
                     </div>
@@ -3268,19 +3275,22 @@ function imprimirComprobantePedido(pedidoId){
         }
 
         function cambiarEstadoPedido(pedidoId) {
-            const pedido = pedidos.find(p => p.id === pedidoId);
+            // Utilizar la lista global de pedidos si existe
+            const list = Array.isArray(window.pedidos) ? window.pedidos : pedidos;
+            const pedido = list.find(p => String(p.id) === String(pedidoId));
             if (!pedido) return;
-            
             const nuevoEstado = prompt(`Estado actual: ${pedido.estado}\n\nSeleccione nuevo estado:\n1. pendiente\n2. listo\n3. entregado\n\nIngrese el número:`);
-            
             const estados = ['pendiente', 'listo', 'entregado'];
             const estadoIndex = parseInt(nuevoEstado) - 1;
-            
             if (estadoIndex >= 0 && estadoIndex < estados.length) {
                 pedido.estado = estados[estadoIndex];
-                guardarPedidos();
-                actualizarListaPedidos();
-                mostrarMensaje('success', `Estado del pedido #${pedidoId} actualizado a "${pedido.estado}".`, 'pedidos-messages');
+                if (typeof saveToOwnKey === 'function') saveToOwnKey();
+                if (typeof guardarPedidos === 'function') guardarPedidos();
+                if (typeof window.renderListaPedidos === 'function') window.renderListaPedidos();
+                else if (typeof actualizarListaPedidos === 'function') actualizarListaPedidos();
+                if (typeof mostrarMensaje === 'function') {
+                    mostrarMensaje('success', `Estado del pedido #${pedidoId} actualizado a "${pedido.estado}".`, 'pedidos-messages');
+                }
             }
         }
 
