@@ -2646,6 +2646,21 @@
                                || historialEntregados.find(r => String(r.id) === String(ordenId));
             if (!reparacion) return;
 
+            // Cargar datos del taller para personalizar el comprobante
+            let nombre_taller = 'Fixly Taller', direccion = '', telefono = '', email = '';
+            try {
+                const raw = localStorage.getItem('fixlytallerData');
+                if (raw) {
+                    const d = JSON.parse(raw);
+                    if (d && d.config) {
+                        nombre_taller = d.config.nombre_taller || nombre_taller;
+                        direccion = d.config.direccion || '';
+                        telefono = d.config.telefono || '';
+                        email = d.config.email || '';
+                    }
+                }
+            } catch (e) { /* ignore errors, use defaults */ }
+
             const ventanaImpresion = window.open('', '_blank');
             ventanaImpresion.document.write(`
                 <!DOCTYPE html>
@@ -2713,7 +2728,7 @@
 </head>
                 <body>
                     <div class="print-header">
-                        <div class="print-title">Fixly Taller</div>
+                        <div class="print-title">${nombre_taller}</div>
                         <div class="print-subtitle">ORIGINAL</div>
                         <div class="print-order">ORDEN #${reparacion.id}</div>
                     </div>
@@ -2771,7 +2786,7 @@
                     <div class="print-separator"></div>
                     
                     <div class="print-header">
-                        <div class="print-title">Fixly Taller</div>
+                        <div class="print-title">${nombre_taller}</div>
                         <div class="print-subtitle">COPIA CLIENTE</div>
                         <div class="print-order">ORDEN #${reparacion.id}</div>
                     </div>
@@ -2828,9 +2843,8 @@
 
   <div class="print-separator"></div>
                     
-                    <div class="print-footer" style="text-align: center;">
-                        <strong> Mundo Electronico - Moreno 1878 - Tel 11 3820-8152 </strong><br>
-                  
+  <div class="print-footer" style="text-align: center;">
+                        ${[direccion, telefono, email].filter(Boolean).join(' • ')}<br>
                         Las reparaciones tienen una garantía de 60 días únicamente por la misma falla reparada.<br>
                         Los repuestos están garantizados solo por defectos de fábrica.<br>
                         La garantía no cubre daños ocasionados por golpes, roturas, líquidos o uso indebido.<br>
@@ -3105,8 +3119,23 @@ function imprimirComprobantePedido(pedidoId){
                     break;
             }
             
-            mensaje += '\n\nFixly Taller';
-            
+            // Append the workshop name from configuration instead of a fixed label
+            // Default to "Fixly Taller" but override if config provides a nombre_taller
+            try {
+                let nombreConf = 'Fixly Taller';
+                const rawConf = localStorage.getItem('fixlytallerData');
+                if (rawConf) {
+                    const parsed = JSON.parse(rawConf);
+                    if (parsed && parsed.config && parsed.config.nombre_taller) {
+                        nombreConf = parsed.config.nombre_taller || nombreConf;
+                    }
+                }
+                mensaje += '\n\n' + nombreConf;
+            } catch (err) {
+                // In case of any error reading config, fall back to default
+                mensaje += '\n\nFixly Taller';
+            }
+
             mensajeOriginal = mensaje;
             mensajeTextarea.value = mensaje;
             document.getElementById('mensaje-controls').style.display = 'flex';
@@ -4098,10 +4127,24 @@ function imprimirComprobantePedido(pedidoId){
         if (typeof getPedido === 'function') { p = getPedido(pedidoId); }
         else if (Array.isArray(window.pedidos)) { p = window.pedidos.find(x=>String(x.id)===String(pedidoId)); }
         if(!p){ alert('Pedido no encontrado (#' + pedidoId + ')'); return; }
+        // Obtener datos del taller para el encabezado
+        let nombre_taller = 'Fixly Taller', direccion = '', telefono = '', email = '';
+        try {
+            const raw = localStorage.getItem('fixlytallerData');
+            if (raw) {
+                const d = JSON.parse(raw);
+                if (d && d.config) {
+                    nombre_taller = d.config.nombre_taller || nombre_taller;
+                    direccion = d.config.direccion || '';
+                    telefono = d.config.telefono || '';
+                    email = d.config.email || '';
+                }
+            }
+        } catch (e) { /* continuar con valores por defecto */ }
         const cuerpo = `
         <div class="print-page">
             <div class="print-header">
-                <div class="print-title">Fixly Taller</div>
+                <div class="print-title">${nombre_taller}</div>
                 <div class="print-subtitle">Comprobante de Pedido</div>
                 <div class="print-order">Pedido #${p.id}</div>
             </div>
@@ -4117,6 +4160,7 @@ function imprimirComprobantePedido(pedidoId){
             </div>
             
             <div class="print-footer">
+                ${[direccion, telefono, email].filter(Boolean).join(' • ')}<br>
                 Las reparaciones tienen una garantía de 60 días únicamente por la misma falla reparada. Los repuestos están garantizados solo por defectos de fábrica. La garantía no cubre daños ocasionados por golpes, roturas, líquidos o uso indebido. Los trabajos de software y configuraciones no tienen garantía.
             </div>
         </div>`;
@@ -4794,7 +4838,19 @@ function enviarWhatsApp(telefono, mensaje) {
   }
 }
 function armarMensaje(det) {
-  const taller = 'Fixly Taller';
+  // Obtener nombre del taller de la configuración o usar valor por defecto
+  let taller = 'Fixly Taller';
+  try {
+    const rawConf = localStorage.getItem('fixlytallerData');
+    if (rawConf) {
+      const parsed = JSON.parse(rawConf);
+      if (parsed && parsed.config && parsed.config.nombre_taller) {
+        taller = parsed.config.nombre_taller || taller;
+      }
+    }
+  } catch (e) {
+    /* si hay error, mantener el nombre por defecto */
+  }
   const estado = (det.estado || '').toLowerCase();
   let textoEstado = det.estado || '';
   if (estado.includes('listo')) textoEstado = 'LISTO para retirar';
@@ -5846,10 +5902,22 @@ on = function(){
   function buildPreviewHTML(rep){
     if(!rep) return '<p>No se encontraron datos de la reparación.</p>';
     const fmt = (v)=> (v==null || v==='') ? '-' : String(v);
+    // Leer nombre del taller de la configuración para mostrar en la vista previa
+    let nombreConfPreview = 'Fixly Taller';
+    try {
+        const rawConf = localStorage.getItem('fixlytallerData');
+        if (rawConf) {
+            const parsedConf = JSON.parse(rawConf);
+            if (parsedConf && parsedConf.config && parsedConf.config.nombre_taller) {
+                nombreConfPreview = parsedConf.config.nombre_taller || nombreConfPreview;
+            }
+        }
+    } catch (e) { /* ignorar errores y usar valor por defecto */ }
+
     return `
       <div style="font-family:Arial, sans-serif">
         <div style="text-align:center;margin-bottom:8px;">
-          <div style="font-size:22px;font-weight:700;">Fixly Taller</div>
+          <div style="font-size:22px;font-weight:700;">${nombreConfPreview}</div>
           <div style="font-size:13px;color:#555">Comprobante de reparación</div>
         </div>
         <hr style="margin:8px 0;border:none;border-top:1px solid #e5e7eb">
