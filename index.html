@@ -2652,16 +2652,23 @@
                 const raw = localStorage.getItem('fixlytallerData');
                 if (raw) {
                     const d = JSON.parse(raw);
-                    if (d && d.config) {
-                        nombre_taller = d.config.nombre_taller || nombre_taller;
-                        direccion = d.config.direccion || '';
-                        telefono = d.config.telefono || '';
-                        email = d.config.email || '';
+                    if (d) {
+                        const cfg = d.configTaller || d.config;
+                        if (cfg) {
+                            // compatibilidad con distintos nombres de propiedad
+                            nombre_taller = cfg.nombre || cfg.nombre_taller || nombre_taller;
+                            direccion = cfg.direccion || direccion;
+                            telefono = cfg.telefono || telefono;
+                            email = cfg.email || email;
+                        }
                     }
                 }
             } catch (e) { /* ignore errors, use defaults */ }
 
             const ventanaImpresion = window.open('', '_blank');
+            // Construir una línea con la información del taller para encabezado y pie de página.
+            const infoTaller = [nombre_taller, direccion, telefono, email].filter(Boolean).join(' • ');
+
             ventanaImpresion.document.write(`
                 <!DOCTYPE html>
                 <html>
@@ -2731,6 +2738,7 @@
                         <div class="print-title">${nombre_taller}</div>
                         <div class="print-subtitle">ORIGINAL</div>
                         <div class="print-order">ORDEN #${reparacion.id}</div>
+                        ${infoTaller ? `<div class="print-contact" style="font-size:10pt">${infoTaller}</div>` : ''}
                     </div>
                     
                     <div class="print-section">
@@ -2789,6 +2797,7 @@
                         <div class="print-title">${nombre_taller}</div>
                         <div class="print-subtitle">COPIA CLIENTE</div>
                         <div class="print-order">ORDEN #${reparacion.id}</div>
+                        ${infoTaller ? `<div class="print-contact" style="font-size:10pt">${infoTaller}</div>` : ''}
                     </div>
                     
                     <div class="print-section">
@@ -2844,7 +2853,7 @@
   <div class="print-separator"></div>
                     
   <div class="print-footer" style="text-align: center;">
-                        ${[direccion, telefono, email].filter(Boolean).join(' • ')}<br>
+                        ${infoTaller || nombre_taller}<br>
                         Las reparaciones tienen una garantía de 60 días únicamente por la misma falla reparada.<br>
                         Los repuestos están garantizados solo por defectos de fábrica.<br>
                         La garantía no cubre daños ocasionados por golpes, roturas, líquidos o uso indebido.<br>
@@ -3120,14 +3129,17 @@ function imprimirComprobantePedido(pedidoId){
             }
             
             // Append the workshop name from configuration instead of a fixed label
-            // Default to "Fixly Taller" but override if config provides a nombre_taller
+            // Default to "Fixly Taller" but override if config provides a nombre/nombre_taller
             try {
                 let nombreConf = 'Fixly Taller';
                 const rawConf = localStorage.getItem('fixlytallerData');
                 if (rawConf) {
                     const parsed = JSON.parse(rawConf);
-                    if (parsed && parsed.config && parsed.config.nombre_taller) {
-                        nombreConf = parsed.config.nombre_taller || nombreConf;
+                    if (parsed) {
+                        const cfg = parsed.configTaller || parsed.config;
+                        if (cfg) {
+                            nombreConf = cfg.nombre || cfg.nombre_taller || nombreConf;
+                        }
                     }
                 }
                 mensaje += '\n\n' + nombreConf;
@@ -4133,20 +4145,27 @@ function imprimirComprobantePedido(pedidoId){
             const raw = localStorage.getItem('fixlytallerData');
             if (raw) {
                 const d = JSON.parse(raw);
-                if (d && d.config) {
-                    nombre_taller = d.config.nombre_taller || nombre_taller;
-                    direccion = d.config.direccion || '';
-                    telefono = d.config.telefono || '';
-                    email = d.config.email || '';
+                if (d) {
+                    const cfg = d.configTaller || d.config;
+                    if (cfg) {
+                        nombre_taller = cfg.nombre || cfg.nombre_taller || nombre_taller;
+                        direccion = cfg.direccion || direccion;
+                        telefono = cfg.telefono || telefono;
+                        email = cfg.email || email;
+                    }
                 }
             }
         } catch (e) { /* continuar con valores por defecto */ }
+        // Construir información del taller para encabezado y pie de página
+        const infoTaller = [nombre_taller, direccion, telefono, email].filter(Boolean).join(' • ');
+
         const cuerpo = `
         <div class="print-page">
             <div class="print-header">
                 <div class="print-title">${nombre_taller}</div>
                 <div class="print-subtitle">Comprobante de Pedido</div>
                 <div class="print-order">Pedido #${p.id}</div>
+                ${infoTaller ? `<div style="font-size:10pt">${infoTaller}</div>` : ''}
             </div>
             <div class="print-section">
                 <div class="print-row"><span class="print-label">Cliente:</span><span class="print-value">${p.cliente||''}</span></div>
@@ -4160,7 +4179,7 @@ function imprimirComprobantePedido(pedidoId){
             </div>
             
             <div class="print-footer">
-                ${[direccion, telefono, email].filter(Boolean).join(' • ')}<br>
+                ${(infoTaller || nombre_taller)}<br>
                 Las reparaciones tienen una garantía de 60 días únicamente por la misma falla reparada. Los repuestos están garantizados solo por defectos de fábrica. La garantía no cubre daños ocasionados por golpes, roturas, líquidos o uso indebido. Los trabajos de software y configuraciones no tienen garantía.
             </div>
         </div>`;
@@ -4270,11 +4289,14 @@ function imprimirComprobantePedido(pedidoId){
             const raw = localStorage.getItem('fixlytallerData');
             if (raw){
                 const d = JSON.parse(raw);
-                if (d && d.config){
-                    nombreTaller = d.config.nombre_taller || nombreTaller;
-                    direccion = d.config.direccion || '';
-                    telefono = d.config.telefono || '';
-                    email = d.config.email || '';
+                if (d){
+                    const cfg = d.configTaller || d.config;
+                    if (cfg){
+                        nombreTaller = cfg.nombre || cfg.nombre_taller || nombreTaller;
+                        direccion = cfg.direccion || direccion;
+                        telefono = cfg.telefono || telefono;
+                        email = cfg.email || email;
+                    }
                 }
             }
         }catch(e){}
@@ -4844,8 +4866,11 @@ function armarMensaje(det) {
     const rawConf = localStorage.getItem('fixlytallerData');
     if (rawConf) {
       const parsed = JSON.parse(rawConf);
-      if (parsed && parsed.config && parsed.config.nombre_taller) {
-        taller = parsed.config.nombre_taller || taller;
+      if (parsed) {
+        const cfg = parsed.configTaller || parsed.config;
+        if (cfg) {
+          taller = cfg.nombre || cfg.nombre_taller || taller;
+        }
       }
     }
   } catch (e) {
@@ -5908,8 +5933,11 @@ on = function(){
         const rawConf = localStorage.getItem('fixlytallerData');
         if (rawConf) {
             const parsedConf = JSON.parse(rawConf);
-            if (parsedConf && parsedConf.config && parsedConf.config.nombre_taller) {
-                nombreConfPreview = parsedConf.config.nombre_taller || nombreConfPreview;
+            if (parsedConf) {
+                const cfg = parsedConf.configTaller || parsedConf.config;
+                if (cfg) {
+                    nombreConfPreview = cfg.nombre || cfg.nombre_taller || nombreConfPreview;
+                }
             }
         }
     } catch (e) { /* ignorar errores y usar valor por defecto */ }
