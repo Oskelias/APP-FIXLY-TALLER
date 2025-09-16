@@ -6331,5 +6331,100 @@ on = function(){
 })();
 </script>
 
+
+<script>
+// --- PATCH: Guardar y precargar Código Maestro en Configuración ---
+(function(){
+  function readData(){ try { return JSON.parse(localStorage.getItem('fixlytallerData')||'{}'); } catch(e){ return {}; } }
+  function writeData(d){ try { localStorage.setItem('fixlytallerData', JSON.stringify(d)); } catch(e){} }
+  function ensureShape(d){ if(!d||typeof d!=='object') d={}; d.config=d.config||{}; return d; }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    var form = document.getElementById('formConfigTaller');
+    if (!form) return;
+
+    // Preload
+    try {
+      var d = ensureShape(readData());
+      if (form.codigo_maestro && d.config.codigo_maestro){
+        form.codigo_maestro.value = d.config.codigo_maestro;
+      }
+    } catch(e){}
+
+    // Save
+    form.addEventListener('submit', function(){
+      try {
+        var d = ensureShape(readData());
+        if (form.codigo_maestro){
+          d.config.codigo_maestro = form.codigo_maestro.value || '';
+          writeData(d);
+        }
+      } catch(e){}
+    });
+  });
+})();
+</script>
+
+
+<script>
+// --- SECURITY: Requerir Código Maestro para eliminar o acciones críticas ---
+(function(){
+  var VALIDATED_KEY = 'fixlyMasterValidated';
+  function readData(){ try { return JSON.parse(localStorage.getItem('fixlytallerData')||'{}'); } catch(e){ return {}; } }
+  function getMaster(){
+    var d = readData(); d = (d && d.config) ? d : {config:{}};
+    return d.config.codigo_maestro || '';
+  }
+  function isDangerEl(el){
+    if (!el) return false;
+    var t = (el.getAttribute('title')||'').toLowerCase();
+    var aria = (el.getAttribute('aria-label')||'').toLowerCase();
+    var cls = el.className||'';
+    var dact = el.getAttribute('data-action')||'';
+    var txt = (el.textContent||'').toLowerCase();
+    // heurísticas típicas de los botones de borrar
+    return (
+      el.matches('[data-requires-master]') ||
+      /eliminar|borrar|delete|trash/.test(t) ||
+      /eliminar|borrar|delete/.test(aria) ||
+      /btn-danger|delete|trash|btn-delete/.test(cls) ||
+      /delete|remove/.test(dact) ||
+      /eliminar|borrar/.test(txt)
+    );
+  }
+  function askMasterIfNeeded(){
+    var code = getMaster();
+    if (!code) return true; // no hay protección configurada
+    // Si ya validado en esta sesión, OK
+    try { if (sessionStorage.getItem(VALIDATED_KEY)==='1') return true; } catch(e){}
+    var entered = prompt('Ingresá el Código Maestro para continuar:');
+    if (entered === null) return false;
+    if ((entered||'') === code){
+      try { sessionStorage.setItem(VALIDATED_KEY,'1'); } catch(e){}
+      return true;
+    } else {
+      alert('Código Maestro incorrecto.');
+      return false;
+    }
+  }
+
+  // Captura clicks en fase de captura y verifica si el target o algún padre es "peligroso"
+  document.addEventListener('click', function(ev){
+    var el = ev.target;
+    // sube hasta 3 niveles para encontrar el botón real
+    for (var i=0;i<3 && el; i++){ if (isDangerEl(el)) break; el = el.parentElement; }
+    if (!el || !isDangerEl(el)) return;
+
+    if (!askMasterIfNeeded()){
+      ev.preventDefault();
+      ev.stopPropagation();
+      return false;
+    }
+    // Marca el elemento como validado para este click
+    el.setAttribute('data-requires-master','ok');
+  }, true);
+})();
+</script>
+
 </body>
 </html>
