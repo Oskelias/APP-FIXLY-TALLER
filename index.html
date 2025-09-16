@@ -2860,49 +2860,7 @@
                         La garantía no cubre daños ocasionados por golpes, roturas, líquidos o uso indebido.<br>
                         Los trabajos de software y configuraciones no tienen garantía.
                     </div>
-                
-<script>
-// Clonar "Respaldo y Datos" al primer grid (solo en pantallas lg+)
-document.addEventListener('DOMContentLoaded', function(){
-  try {
-    var grids = Array.from(document.querySelectorAll('div.grid.grid-cols-1'));
-    if (!grids.length) return;
-    // primer grid: el que NO tiene mt-8
-    var firstGrid = grids.find(g => !g.className.includes('mt-8')) || grids[0];
-
-    // localizar card "Respaldo y Datos"
-    var cards = Array.from(document.querySelectorAll('.card'));
-    var respaldoCard = cards.find(c => {
-      var h = c.querySelector('h1,h2,h3,h4,h5,h6');
-      return h && /Respaldo\s+y\s+Datos/i.test(h.textContent.trim());
-    });
-    if (!respaldoCard || !firstGrid) return;
-
-    // Clonar y ubicar después de Técnicos dentro del primer grid
-    var clone = respaldoCard.cloneNode(true);
-    // visibilidad: mostrar clone solo en lg+, ocultar original en lg+
-    clone.classList.add('hidden','lg:block');
-    respaldoCard.classList.add('block','lg:hidden');
-
-    // buscar tarjeta Técnicos dentro del primer grid para insertar a continuación
-    var tecnicosCard = Array.from(firstGrid.querySelectorAll('.card')).find(c => {
-      var h = c.querySelector('h1,h2,h3,h4,h5,h6');
-      return h && /T[é|e]cnicos/i.test(h.textContent);
-    });
-    if (tecnicosCard && tecnicosCard.parentElement === firstGrid) {
-      // intentar ponerlo en la columna derecha
-      clone.classList.add('lg:col-start-2');
-      firstGrid.insertBefore(clone, tecnicosCard.nextSibling);
-    } else {
-      // fallback: al final del primer grid
-      clone.classList.add('lg:col-start-2');
-      firstGrid.appendChild(clone);
-    }
-  } catch(e) { /* silencioso */ }
-});
-</script>
-
-</body>
+                </body>
                 </html>
             `);
             
