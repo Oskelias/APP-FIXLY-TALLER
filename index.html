@@ -2859,11 +2859,7 @@
                     </div>
                 
 <script>
-// --- SECURITY OWNER KEY v4 ---
-// Cobertura total para ELIMINAR en todos los módulos:
-// 1) Captura clicks en botones de borrar (trash/delete/remove).
-// 2) Envuelve window.confirm: si el mensaje contiene "eliminar/borrar/limpiar",
-//    pide la clave del dueño antes de mostrar la confirmación.
+// --- SECURITY: Clave del dueño SOLO para ELIMINAR (versión mínima y segura) ---
 (function(){
   var OWNER_KEY_LS = 'fixlyOwnerKey';
   var SESSION_OK   = 'fixlyOwnerValidated';
@@ -2872,57 +2868,51 @@
     try {
       var k = localStorage.getItem(OWNER_KEY_LS) || '';
       if (k) return k;
+      // compat con blob de config si existiera
       var d = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
-      if (d && d.config && d.config.codigo_maestro){
-        k = d.config.codigo_maestro || '';
-        localStorage.setItem(OWNER_KEY_LS, k);
-      }
+      if (d && d.config && d.config.codigo_maestro){ k = d.config.codigo_maestro || ''; localStorage.setItem(OWNER_KEY_LS, k); }
       return k || '';
-    } catch(_) { return ''; }
+    } catch(_){ return ''; }
   }
   function setOwnerKey(k){
     try {
       localStorage.setItem(OWNER_KEY_LS, k);
       var d = JSON.parse(localStorage.getItem('fixlytallerData') || '{}'); d=d||{}; d.config=d.config||{};
       d.config.codigo_maestro = k; localStorage.setItem('fixlytallerData', JSON.stringify(d));
-    } catch(_) {}
+    } catch(_){}
   }
   function ensureOwnerKey(){
     var key = getOwnerKey();
     if (key && key.length >= 4) return true;
     var entered = prompt('Configurar clave del dueño (mínimo 4 caracteres):');
     if (entered === null) return false;
-    entered = (entered || '').trim();
+    entered = (entered||'').trim();
     if (entered.length < 4){ alert('La clave debe tener al menos 4 caracteres.'); return false; }
     setOwnerKey(entered); return true;
   }
   function isValidated(){
-    try { return sessionStorage.getItem(SESSION_OK) === '1'; } catch(_) { return false; }
+    try { return sessionStorage.getItem(SESSION_OK) === '1'; } catch(_){ return false; }
   }
   function validateOnce(){
     if (isValidated()) return true;
-    var k = getOwnerKey(); if (!k) return true;
-    var entered = prompt('Confirmá la clave del dueño:');
+    var k = getOwnerKey(); if (!k) return true; // sin clave => no pedir
+    var entered = prompt('Ingresá la clave del dueño:');
     if (entered === null) return false;
-    if ((entered || '') === k){ try { sessionStorage.setItem(SESSION_OK,'1'); } catch(_){}; return true; }
+    if ((entered||'') === k){ try { sessionStorage.setItem(SESSION_OK,'1'); } catch(_){ } return true; }
     alert('Clave incorrecta.'); return false;
   }
 
+  // Detectar SOLO botones/íconos de eliminar (no toca otras acciones)
   function isDeleteButton(el){
     if (!el) return false;
-    var txt  = (el.textContent || '').toLowerCase();
-    var tit  = (el.getAttribute && (el.getAttribute('title') || '').toLowerCase()) || '';
-    var aria = (el.getAttribute && (el.getAttribute('aria-label') || '').toLowerCase()) || '';
-    var act  = (el.getAttribute && (el.getAttribute('data-action') || '').toLowerCase()) || '';
-    var cls  = (el.className || '').toLowerCase();
-    var icon = el.matches && (el.matches('.fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash, [data-icon="trash"]'));
-    return icon ||
-           /(^|\s)(delete|remove|trash|btn-delete)(\s|$)/.test(cls) ||
-           /eliminar|borrar|delete|remove|trash/.test(txt + ' ' + tit + ' ' + aria + ' ' + act) ||
-           (el.matches && el.matches('[data-action="delete"], [data-action*="delete"], .btn-delete, .delete'));
+    if (el.matches && el.matches('[data-owner-only="delete"], [data-owner="delete"], [data-action="delete"], [data-action*="delete"], .btn-delete, .delete')) return true;
+    if (el.matches && el.matches('.fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash, [data-icon="trash"]')) return true;
+    var txt  = ((el.textContent||'') + ' ' + (el.getAttribute && (el.getAttribute('title')||'') || '') + ' ' + (el.getAttribute && (el.getAttribute('aria-label')||'') || '')).toLowerCase();
+    if (/(\beliminar\b|\bborrar\b|\blimpiar\b)/.test(txt)) return true;
+    return false;
   }
 
-  // Click capture: exigir clave antes de que se dispare la lógica del botón
+  // Interceptar clicks en FASE DE CAPTURA y pedir clave sólo para eliminar
   document.addEventListener('click', function(ev){
     var node = ev.target;
     for (var i=0; i<4 && node; i++){
@@ -2931,37 +2921,22 @@
     }
     if (!node || !isDeleteButton(node)) return;
     if (!ensureOwnerKey() || !validateOnce()){
-      ev.preventDefault(); ev.stopPropagation(); return false;
+      ev.preventDefault(); ev.stopImmediatePropagation(); ev.stopPropagation();
+      return false;
     }
   }, true);
 
-  // Wrap window.confirm: si el mensaje sugiere borrado, pedimos clave primero
-  (function(){
-    var _origConfirm = window.confirm;
-    window.confirm = function(msg){
-      try {
-        var s = (msg || '').toString().toLowerCase();
-        if (/eliminar|borrar|limpiar/.test(s)){
-          if (!ensureOwnerKey() || !validateOnce()){
-            return false;
-          }
-        }
-      } catch(_) {}
-      return _origConfirm.call(window, msg);
-    };
-  })();
-
-  // Tooltip en iconos/botones de eliminar
+  // Tooltip para feedback (no oculta ni modifica botones)
   function markDeletes(){
     var list = document.querySelectorAll('button, a, [role="button"], .fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash, [data-icon="trash"]');
     list.forEach(function(el){
-      if (isDeleteButton(el) && !el.getAttribute('title')){
-        try { el.setAttribute('title', 'Solo dueño (requiere clave)'); } catch(_){}
-      }
+      try {
+        if (isDeleteButton(el) && !el.getAttribute('title')) el.setAttribute('title','Solo dueño (requiere clave)');
+      } catch(_){}
     });
   }
   document.addEventListener('DOMContentLoaded', markDeletes);
-  try { new MutationObserver(markDeletes).observe(document.body, {subtree:true, childList:true}); } catch(_) {}
+  try { new MutationObserver(markDeletes).observe(document.body, {subtree:true, childList:true}); } catch(_){}
 })();
 </script>
 
@@ -3788,11 +3763,7 @@ function imprimirComprobantePedido(pedidoId){
     <div class="gracias">GRACIAS POR ELEGIRNOS</div>
   
 <script>
-// --- SECURITY OWNER KEY v4 ---
-// Cobertura total para ELIMINAR en todos los módulos:
-// 1) Captura clicks en botones de borrar (trash/delete/remove).
-// 2) Envuelve window.confirm: si el mensaje contiene "eliminar/borrar/limpiar",
-//    pide la clave del dueño antes de mostrar la confirmación.
+// --- SECURITY: Clave del dueño SOLO para ELIMINAR (versión mínima y segura) ---
 (function(){
   var OWNER_KEY_LS = 'fixlyOwnerKey';
   var SESSION_OK   = 'fixlyOwnerValidated';
@@ -3801,57 +3772,51 @@ function imprimirComprobantePedido(pedidoId){
     try {
       var k = localStorage.getItem(OWNER_KEY_LS) || '';
       if (k) return k;
+      // compat con blob de config si existiera
       var d = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
-      if (d && d.config && d.config.codigo_maestro){
-        k = d.config.codigo_maestro || '';
-        localStorage.setItem(OWNER_KEY_LS, k);
-      }
+      if (d && d.config && d.config.codigo_maestro){ k = d.config.codigo_maestro || ''; localStorage.setItem(OWNER_KEY_LS, k); }
       return k || '';
-    } catch(_) { return ''; }
+    } catch(_){ return ''; }
   }
   function setOwnerKey(k){
     try {
       localStorage.setItem(OWNER_KEY_LS, k);
       var d = JSON.parse(localStorage.getItem('fixlytallerData') || '{}'); d=d||{}; d.config=d.config||{};
       d.config.codigo_maestro = k; localStorage.setItem('fixlytallerData', JSON.stringify(d));
-    } catch(_) {}
+    } catch(_){}
   }
   function ensureOwnerKey(){
     var key = getOwnerKey();
     if (key && key.length >= 4) return true;
     var entered = prompt('Configurar clave del dueño (mínimo 4 caracteres):');
     if (entered === null) return false;
-    entered = (entered || '').trim();
+    entered = (entered||'').trim();
     if (entered.length < 4){ alert('La clave debe tener al menos 4 caracteres.'); return false; }
     setOwnerKey(entered); return true;
   }
   function isValidated(){
-    try { return sessionStorage.getItem(SESSION_OK) === '1'; } catch(_) { return false; }
+    try { return sessionStorage.getItem(SESSION_OK) === '1'; } catch(_){ return false; }
   }
   function validateOnce(){
     if (isValidated()) return true;
-    var k = getOwnerKey(); if (!k) return true;
-    var entered = prompt('Confirmá la clave del dueño:');
+    var k = getOwnerKey(); if (!k) return true; // sin clave => no pedir
+    var entered = prompt('Ingresá la clave del dueño:');
     if (entered === null) return false;
-    if ((entered || '') === k){ try { sessionStorage.setItem(SESSION_OK,'1'); } catch(_){}; return true; }
+    if ((entered||'') === k){ try { sessionStorage.setItem(SESSION_OK,'1'); } catch(_){ } return true; }
     alert('Clave incorrecta.'); return false;
   }
 
+  // Detectar SOLO botones/íconos de eliminar (no toca otras acciones)
   function isDeleteButton(el){
     if (!el) return false;
-    var txt  = (el.textContent || '').toLowerCase();
-    var tit  = (el.getAttribute && (el.getAttribute('title') || '').toLowerCase()) || '';
-    var aria = (el.getAttribute && (el.getAttribute('aria-label') || '').toLowerCase()) || '';
-    var act  = (el.getAttribute && (el.getAttribute('data-action') || '').toLowerCase()) || '';
-    var cls  = (el.className || '').toLowerCase();
-    var icon = el.matches && (el.matches('.fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash, [data-icon="trash"]'));
-    return icon ||
-           /(^|\s)(delete|remove|trash|btn-delete)(\s|$)/.test(cls) ||
-           /eliminar|borrar|delete|remove|trash/.test(txt + ' ' + tit + ' ' + aria + ' ' + act) ||
-           (el.matches && el.matches('[data-action="delete"], [data-action*="delete"], .btn-delete, .delete'));
+    if (el.matches && el.matches('[data-owner-only="delete"], [data-owner="delete"], [data-action="delete"], [data-action*="delete"], .btn-delete, .delete')) return true;
+    if (el.matches && el.matches('.fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash, [data-icon="trash"]')) return true;
+    var txt  = ((el.textContent||'') + ' ' + (el.getAttribute && (el.getAttribute('title')||'') || '') + ' ' + (el.getAttribute && (el.getAttribute('aria-label')||'') || '')).toLowerCase();
+    if (/(\beliminar\b|\bborrar\b|\blimpiar\b)/.test(txt)) return true;
+    return false;
   }
 
-  // Click capture: exigir clave antes de que se dispare la lógica del botón
+  // Interceptar clicks en FASE DE CAPTURA y pedir clave sólo para eliminar
   document.addEventListener('click', function(ev){
     var node = ev.target;
     for (var i=0; i<4 && node; i++){
@@ -3860,37 +3825,22 @@ function imprimirComprobantePedido(pedidoId){
     }
     if (!node || !isDeleteButton(node)) return;
     if (!ensureOwnerKey() || !validateOnce()){
-      ev.preventDefault(); ev.stopPropagation(); return false;
+      ev.preventDefault(); ev.stopImmediatePropagation(); ev.stopPropagation();
+      return false;
     }
   }, true);
 
-  // Wrap window.confirm: si el mensaje sugiere borrado, pedimos clave primero
-  (function(){
-    var _origConfirm = window.confirm;
-    window.confirm = function(msg){
-      try {
-        var s = (msg || '').toString().toLowerCase();
-        if (/eliminar|borrar|limpiar/.test(s)){
-          if (!ensureOwnerKey() || !validateOnce()){
-            return false;
-          }
-        }
-      } catch(_) {}
-      return _origConfirm.call(window, msg);
-    };
-  })();
-
-  // Tooltip en iconos/botones de eliminar
+  // Tooltip para feedback (no oculta ni modifica botones)
   function markDeletes(){
     var list = document.querySelectorAll('button, a, [role="button"], .fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash, [data-icon="trash"]');
     list.forEach(function(el){
-      if (isDeleteButton(el) && !el.getAttribute('title')){
-        try { el.setAttribute('title', 'Solo dueño (requiere clave)'); } catch(_){}
-      }
+      try {
+        if (isDeleteButton(el) && !el.getAttribute('title')) el.setAttribute('title','Solo dueño (requiere clave)');
+      } catch(_){}
     });
   }
   document.addEventListener('DOMContentLoaded', markDeletes);
-  try { new MutationObserver(markDeletes).observe(document.body, {subtree:true, childList:true}); } catch(_) {}
+  try { new MutationObserver(markDeletes).observe(document.body, {subtree:true, childList:true}); } catch(_){}
 })();
 </script>
 
@@ -3956,11 +3906,7 @@ function imprimirComprobante(id){
         w.document.write('<div class="print-footer">Las reparaciones tienen una garantía de 60 días únicamente por la misma falla reparada. Los repuestos están garantizados solo por defectos de fábrica. La garantía no cubre daños ocasionados por golpes, roturas, líquidos o uso indebido. Los trabajos de software y configuraciones no tienen garantía.</div>');
         w.document.write('</div>
 <script>
-// --- SECURITY OWNER KEY v4 ---
-// Cobertura total para ELIMINAR en todos los módulos:
-// 1) Captura clicks en botones de borrar (trash/delete/remove).
-// 2) Envuelve window.confirm: si el mensaje contiene "eliminar/borrar/limpiar",
-//    pide la clave del dueño antes de mostrar la confirmación.
+// --- SECURITY: Clave del dueño SOLO para ELIMINAR (versión mínima y segura) ---
 (function(){
   var OWNER_KEY_LS = 'fixlyOwnerKey';
   var SESSION_OK   = 'fixlyOwnerValidated';
@@ -3969,57 +3915,51 @@ function imprimirComprobante(id){
     try {
       var k = localStorage.getItem(OWNER_KEY_LS) || '';
       if (k) return k;
+      // compat con blob de config si existiera
       var d = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
-      if (d && d.config && d.config.codigo_maestro){
-        k = d.config.codigo_maestro || '';
-        localStorage.setItem(OWNER_KEY_LS, k);
-      }
+      if (d && d.config && d.config.codigo_maestro){ k = d.config.codigo_maestro || ''; localStorage.setItem(OWNER_KEY_LS, k); }
       return k || '';
-    } catch(_) { return ''; }
+    } catch(_){ return ''; }
   }
   function setOwnerKey(k){
     try {
       localStorage.setItem(OWNER_KEY_LS, k);
       var d = JSON.parse(localStorage.getItem('fixlytallerData') || '{}'); d=d||{}; d.config=d.config||{};
       d.config.codigo_maestro = k; localStorage.setItem('fixlytallerData', JSON.stringify(d));
-    } catch(_) {}
+    } catch(_){}
   }
   function ensureOwnerKey(){
     var key = getOwnerKey();
     if (key && key.length >= 4) return true;
     var entered = prompt('Configurar clave del dueño (mínimo 4 caracteres):');
     if (entered === null) return false;
-    entered = (entered || '').trim();
+    entered = (entered||'').trim();
     if (entered.length < 4){ alert('La clave debe tener al menos 4 caracteres.'); return false; }
     setOwnerKey(entered); return true;
   }
   function isValidated(){
-    try { return sessionStorage.getItem(SESSION_OK) === '1'; } catch(_) { return false; }
+    try { return sessionStorage.getItem(SESSION_OK) === '1'; } catch(_){ return false; }
   }
   function validateOnce(){
     if (isValidated()) return true;
-    var k = getOwnerKey(); if (!k) return true;
-    var entered = prompt('Confirmá la clave del dueño:');
+    var k = getOwnerKey(); if (!k) return true; // sin clave => no pedir
+    var entered = prompt('Ingresá la clave del dueño:');
     if (entered === null) return false;
-    if ((entered || '') === k){ try { sessionStorage.setItem(SESSION_OK,'1'); } catch(_){}; return true; }
+    if ((entered||'') === k){ try { sessionStorage.setItem(SESSION_OK,'1'); } catch(_){ } return true; }
     alert('Clave incorrecta.'); return false;
   }
 
+  // Detectar SOLO botones/íconos de eliminar (no toca otras acciones)
   function isDeleteButton(el){
     if (!el) return false;
-    var txt  = (el.textContent || '').toLowerCase();
-    var tit  = (el.getAttribute && (el.getAttribute('title') || '').toLowerCase()) || '';
-    var aria = (el.getAttribute && (el.getAttribute('aria-label') || '').toLowerCase()) || '';
-    var act  = (el.getAttribute && (el.getAttribute('data-action') || '').toLowerCase()) || '';
-    var cls  = (el.className || '').toLowerCase();
-    var icon = el.matches && (el.matches('.fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash, [data-icon="trash"]'));
-    return icon ||
-           /(^|\s)(delete|remove|trash|btn-delete)(\s|$)/.test(cls) ||
-           /eliminar|borrar|delete|remove|trash/.test(txt + ' ' + tit + ' ' + aria + ' ' + act) ||
-           (el.matches && el.matches('[data-action="delete"], [data-action*="delete"], .btn-delete, .delete'));
+    if (el.matches && el.matches('[data-owner-only="delete"], [data-owner="delete"], [data-action="delete"], [data-action*="delete"], .btn-delete, .delete')) return true;
+    if (el.matches && el.matches('.fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash, [data-icon="trash"]')) return true;
+    var txt  = ((el.textContent||'') + ' ' + (el.getAttribute && (el.getAttribute('title')||'') || '') + ' ' + (el.getAttribute && (el.getAttribute('aria-label')||'') || '')).toLowerCase();
+    if (/(\beliminar\b|\bborrar\b|\blimpiar\b)/.test(txt)) return true;
+    return false;
   }
 
-  // Click capture: exigir clave antes de que se dispare la lógica del botón
+  // Interceptar clicks en FASE DE CAPTURA y pedir clave sólo para eliminar
   document.addEventListener('click', function(ev){
     var node = ev.target;
     for (var i=0; i<4 && node; i++){
@@ -4028,37 +3968,22 @@ function imprimirComprobante(id){
     }
     if (!node || !isDeleteButton(node)) return;
     if (!ensureOwnerKey() || !validateOnce()){
-      ev.preventDefault(); ev.stopPropagation(); return false;
+      ev.preventDefault(); ev.stopImmediatePropagation(); ev.stopPropagation();
+      return false;
     }
   }, true);
 
-  // Wrap window.confirm: si el mensaje sugiere borrado, pedimos clave primero
-  (function(){
-    var _origConfirm = window.confirm;
-    window.confirm = function(msg){
-      try {
-        var s = (msg || '').toString().toLowerCase();
-        if (/eliminar|borrar|limpiar/.test(s)){
-          if (!ensureOwnerKey() || !validateOnce()){
-            return false;
-          }
-        }
-      } catch(_) {}
-      return _origConfirm.call(window, msg);
-    };
-  })();
-
-  // Tooltip en iconos/botones de eliminar
+  // Tooltip para feedback (no oculta ni modifica botones)
   function markDeletes(){
     var list = document.querySelectorAll('button, a, [role="button"], .fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash, [data-icon="trash"]');
     list.forEach(function(el){
-      if (isDeleteButton(el) && !el.getAttribute('title')){
-        try { el.setAttribute('title', 'Solo dueño (requiere clave)'); } catch(_){}
-      }
+      try {
+        if (isDeleteButton(el) && !el.getAttribute('title')) el.setAttribute('title','Solo dueño (requiere clave)');
+      } catch(_){}
     });
   }
   document.addEventListener('DOMContentLoaded', markDeletes);
-  try { new MutationObserver(markDeletes).observe(document.body, {subtree:true, childList:true}); } catch(_) {}
+  try { new MutationObserver(markDeletes).observe(document.body, {subtree:true, childList:true}); } catch(_){}
 })();
 </script>
 
@@ -4119,11 +4044,7 @@ function imprimirHistorial(id){
         w.document.write('<div class="print-footer">Gracias por elegirnos.</div>');
         w.document.write('</div>
 <script>
-// --- SECURITY OWNER KEY v4 ---
-// Cobertura total para ELIMINAR en todos los módulos:
-// 1) Captura clicks en botones de borrar (trash/delete/remove).
-// 2) Envuelve window.confirm: si el mensaje contiene "eliminar/borrar/limpiar",
-//    pide la clave del dueño antes de mostrar la confirmación.
+// --- SECURITY: Clave del dueño SOLO para ELIMINAR (versión mínima y segura) ---
 (function(){
   var OWNER_KEY_LS = 'fixlyOwnerKey';
   var SESSION_OK   = 'fixlyOwnerValidated';
@@ -4132,57 +4053,51 @@ function imprimirHistorial(id){
     try {
       var k = localStorage.getItem(OWNER_KEY_LS) || '';
       if (k) return k;
+      // compat con blob de config si existiera
       var d = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
-      if (d && d.config && d.config.codigo_maestro){
-        k = d.config.codigo_maestro || '';
-        localStorage.setItem(OWNER_KEY_LS, k);
-      }
+      if (d && d.config && d.config.codigo_maestro){ k = d.config.codigo_maestro || ''; localStorage.setItem(OWNER_KEY_LS, k); }
       return k || '';
-    } catch(_) { return ''; }
+    } catch(_){ return ''; }
   }
   function setOwnerKey(k){
     try {
       localStorage.setItem(OWNER_KEY_LS, k);
       var d = JSON.parse(localStorage.getItem('fixlytallerData') || '{}'); d=d||{}; d.config=d.config||{};
       d.config.codigo_maestro = k; localStorage.setItem('fixlytallerData', JSON.stringify(d));
-    } catch(_) {}
+    } catch(_){}
   }
   function ensureOwnerKey(){
     var key = getOwnerKey();
     if (key && key.length >= 4) return true;
     var entered = prompt('Configurar clave del dueño (mínimo 4 caracteres):');
     if (entered === null) return false;
-    entered = (entered || '').trim();
+    entered = (entered||'').trim();
     if (entered.length < 4){ alert('La clave debe tener al menos 4 caracteres.'); return false; }
     setOwnerKey(entered); return true;
   }
   function isValidated(){
-    try { return sessionStorage.getItem(SESSION_OK) === '1'; } catch(_) { return false; }
+    try { return sessionStorage.getItem(SESSION_OK) === '1'; } catch(_){ return false; }
   }
   function validateOnce(){
     if (isValidated()) return true;
-    var k = getOwnerKey(); if (!k) return true;
-    var entered = prompt('Confirmá la clave del dueño:');
+    var k = getOwnerKey(); if (!k) return true; // sin clave => no pedir
+    var entered = prompt('Ingresá la clave del dueño:');
     if (entered === null) return false;
-    if ((entered || '') === k){ try { sessionStorage.setItem(SESSION_OK,'1'); } catch(_){}; return true; }
+    if ((entered||'') === k){ try { sessionStorage.setItem(SESSION_OK,'1'); } catch(_){ } return true; }
     alert('Clave incorrecta.'); return false;
   }
 
+  // Detectar SOLO botones/íconos de eliminar (no toca otras acciones)
   function isDeleteButton(el){
     if (!el) return false;
-    var txt  = (el.textContent || '').toLowerCase();
-    var tit  = (el.getAttribute && (el.getAttribute('title') || '').toLowerCase()) || '';
-    var aria = (el.getAttribute && (el.getAttribute('aria-label') || '').toLowerCase()) || '';
-    var act  = (el.getAttribute && (el.getAttribute('data-action') || '').toLowerCase()) || '';
-    var cls  = (el.className || '').toLowerCase();
-    var icon = el.matches && (el.matches('.fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash, [data-icon="trash"]'));
-    return icon ||
-           /(^|\s)(delete|remove|trash|btn-delete)(\s|$)/.test(cls) ||
-           /eliminar|borrar|delete|remove|trash/.test(txt + ' ' + tit + ' ' + aria + ' ' + act) ||
-           (el.matches && el.matches('[data-action="delete"], [data-action*="delete"], .btn-delete, .delete'));
+    if (el.matches && el.matches('[data-owner-only="delete"], [data-owner="delete"], [data-action="delete"], [data-action*="delete"], .btn-delete, .delete')) return true;
+    if (el.matches && el.matches('.fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash, [data-icon="trash"]')) return true;
+    var txt  = ((el.textContent||'') + ' ' + (el.getAttribute && (el.getAttribute('title')||'') || '') + ' ' + (el.getAttribute && (el.getAttribute('aria-label')||'') || '')).toLowerCase();
+    if (/(\beliminar\b|\bborrar\b|\blimpiar\b)/.test(txt)) return true;
+    return false;
   }
 
-  // Click capture: exigir clave antes de que se dispare la lógica del botón
+  // Interceptar clicks en FASE DE CAPTURA y pedir clave sólo para eliminar
   document.addEventListener('click', function(ev){
     var node = ev.target;
     for (var i=0; i<4 && node; i++){
@@ -4191,37 +4106,22 @@ function imprimirHistorial(id){
     }
     if (!node || !isDeleteButton(node)) return;
     if (!ensureOwnerKey() || !validateOnce()){
-      ev.preventDefault(); ev.stopPropagation(); return false;
+      ev.preventDefault(); ev.stopImmediatePropagation(); ev.stopPropagation();
+      return false;
     }
   }, true);
 
-  // Wrap window.confirm: si el mensaje sugiere borrado, pedimos clave primero
-  (function(){
-    var _origConfirm = window.confirm;
-    window.confirm = function(msg){
-      try {
-        var s = (msg || '').toString().toLowerCase();
-        if (/eliminar|borrar|limpiar/.test(s)){
-          if (!ensureOwnerKey() || !validateOnce()){
-            return false;
-          }
-        }
-      } catch(_) {}
-      return _origConfirm.call(window, msg);
-    };
-  })();
-
-  // Tooltip en iconos/botones de eliminar
+  // Tooltip para feedback (no oculta ni modifica botones)
   function markDeletes(){
     var list = document.querySelectorAll('button, a, [role="button"], .fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash, [data-icon="trash"]');
     list.forEach(function(el){
-      if (isDeleteButton(el) && !el.getAttribute('title')){
-        try { el.setAttribute('title', 'Solo dueño (requiere clave)'); } catch(_){}
-      }
+      try {
+        if (isDeleteButton(el) && !el.getAttribute('title')) el.setAttribute('title','Solo dueño (requiere clave)');
+      } catch(_){}
     });
   }
   document.addEventListener('DOMContentLoaded', markDeletes);
-  try { new MutationObserver(markDeletes).observe(document.body, {subtree:true, childList:true}); } catch(_) {}
+  try { new MutationObserver(markDeletes).observe(document.body, {subtree:true, childList:true}); } catch(_){}
 })();
 </script>
 
@@ -4468,11 +4368,7 @@ function imprimirPedido(id){
 
 </head><body>${htmlComprobante}
 <script>
-// --- SECURITY OWNER KEY v4 ---
-// Cobertura total para ELIMINAR en todos los módulos:
-// 1) Captura clicks en botones de borrar (trash/delete/remove).
-// 2) Envuelve window.confirm: si el mensaje contiene "eliminar/borrar/limpiar",
-//    pide la clave del dueño antes de mostrar la confirmación.
+// --- SECURITY: Clave del dueño SOLO para ELIMINAR (versión mínima y segura) ---
 (function(){
   var OWNER_KEY_LS = 'fixlyOwnerKey';
   var SESSION_OK   = 'fixlyOwnerValidated';
@@ -4481,57 +4377,51 @@ function imprimirPedido(id){
     try {
       var k = localStorage.getItem(OWNER_KEY_LS) || '';
       if (k) return k;
+      // compat con blob de config si existiera
       var d = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
-      if (d && d.config && d.config.codigo_maestro){
-        k = d.config.codigo_maestro || '';
-        localStorage.setItem(OWNER_KEY_LS, k);
-      }
+      if (d && d.config && d.config.codigo_maestro){ k = d.config.codigo_maestro || ''; localStorage.setItem(OWNER_KEY_LS, k); }
       return k || '';
-    } catch(_) { return ''; }
+    } catch(_){ return ''; }
   }
   function setOwnerKey(k){
     try {
       localStorage.setItem(OWNER_KEY_LS, k);
       var d = JSON.parse(localStorage.getItem('fixlytallerData') || '{}'); d=d||{}; d.config=d.config||{};
       d.config.codigo_maestro = k; localStorage.setItem('fixlytallerData', JSON.stringify(d));
-    } catch(_) {}
+    } catch(_){}
   }
   function ensureOwnerKey(){
     var key = getOwnerKey();
     if (key && key.length >= 4) return true;
     var entered = prompt('Configurar clave del dueño (mínimo 4 caracteres):');
     if (entered === null) return false;
-    entered = (entered || '').trim();
+    entered = (entered||'').trim();
     if (entered.length < 4){ alert('La clave debe tener al menos 4 caracteres.'); return false; }
     setOwnerKey(entered); return true;
   }
   function isValidated(){
-    try { return sessionStorage.getItem(SESSION_OK) === '1'; } catch(_) { return false; }
+    try { return sessionStorage.getItem(SESSION_OK) === '1'; } catch(_){ return false; }
   }
   function validateOnce(){
     if (isValidated()) return true;
-    var k = getOwnerKey(); if (!k) return true;
-    var entered = prompt('Confirmá la clave del dueño:');
+    var k = getOwnerKey(); if (!k) return true; // sin clave => no pedir
+    var entered = prompt('Ingresá la clave del dueño:');
     if (entered === null) return false;
-    if ((entered || '') === k){ try { sessionStorage.setItem(SESSION_OK,'1'); } catch(_){}; return true; }
+    if ((entered||'') === k){ try { sessionStorage.setItem(SESSION_OK,'1'); } catch(_){ } return true; }
     alert('Clave incorrecta.'); return false;
   }
 
+  // Detectar SOLO botones/íconos de eliminar (no toca otras acciones)
   function isDeleteButton(el){
     if (!el) return false;
-    var txt  = (el.textContent || '').toLowerCase();
-    var tit  = (el.getAttribute && (el.getAttribute('title') || '').toLowerCase()) || '';
-    var aria = (el.getAttribute && (el.getAttribute('aria-label') || '').toLowerCase()) || '';
-    var act  = (el.getAttribute && (el.getAttribute('data-action') || '').toLowerCase()) || '';
-    var cls  = (el.className || '').toLowerCase();
-    var icon = el.matches && (el.matches('.fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash, [data-icon="trash"]'));
-    return icon ||
-           /(^|\s)(delete|remove|trash|btn-delete)(\s|$)/.test(cls) ||
-           /eliminar|borrar|delete|remove|trash/.test(txt + ' ' + tit + ' ' + aria + ' ' + act) ||
-           (el.matches && el.matches('[data-action="delete"], [data-action*="delete"], .btn-delete, .delete'));
+    if (el.matches && el.matches('[data-owner-only="delete"], [data-owner="delete"], [data-action="delete"], [data-action*="delete"], .btn-delete, .delete')) return true;
+    if (el.matches && el.matches('.fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash, [data-icon="trash"]')) return true;
+    var txt  = ((el.textContent||'') + ' ' + (el.getAttribute && (el.getAttribute('title')||'') || '') + ' ' + (el.getAttribute && (el.getAttribute('aria-label')||'') || '')).toLowerCase();
+    if (/(\beliminar\b|\bborrar\b|\blimpiar\b)/.test(txt)) return true;
+    return false;
   }
 
-  // Click capture: exigir clave antes de que se dispare la lógica del botón
+  // Interceptar clicks en FASE DE CAPTURA y pedir clave sólo para eliminar
   document.addEventListener('click', function(ev){
     var node = ev.target;
     for (var i=0; i<4 && node; i++){
@@ -4540,37 +4430,22 @@ function imprimirPedido(id){
     }
     if (!node || !isDeleteButton(node)) return;
     if (!ensureOwnerKey() || !validateOnce()){
-      ev.preventDefault(); ev.stopPropagation(); return false;
+      ev.preventDefault(); ev.stopImmediatePropagation(); ev.stopPropagation();
+      return false;
     }
   }, true);
 
-  // Wrap window.confirm: si el mensaje sugiere borrado, pedimos clave primero
-  (function(){
-    var _origConfirm = window.confirm;
-    window.confirm = function(msg){
-      try {
-        var s = (msg || '').toString().toLowerCase();
-        if (/eliminar|borrar|limpiar/.test(s)){
-          if (!ensureOwnerKey() || !validateOnce()){
-            return false;
-          }
-        }
-      } catch(_) {}
-      return _origConfirm.call(window, msg);
-    };
-  })();
-
-  // Tooltip en iconos/botones de eliminar
+  // Tooltip para feedback (no oculta ni modifica botones)
   function markDeletes(){
     var list = document.querySelectorAll('button, a, [role="button"], .fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash, [data-icon="trash"]');
     list.forEach(function(el){
-      if (isDeleteButton(el) && !el.getAttribute('title')){
-        try { el.setAttribute('title', 'Solo dueño (requiere clave)'); } catch(_){}
-      }
+      try {
+        if (isDeleteButton(el) && !el.getAttribute('title')) el.setAttribute('title','Solo dueño (requiere clave)');
+      } catch(_){}
     });
   }
   document.addEventListener('DOMContentLoaded', markDeletes);
-  try { new MutationObserver(markDeletes).observe(document.body, {subtree:true, childList:true}); } catch(_) {}
+  try { new MutationObserver(markDeletes).observe(document.body, {subtree:true, childList:true}); } catch(_){}
 })();
 </script>
 
@@ -4663,11 +4538,7 @@ function _imprimirTicketBase(htmlBody){
 
 </head><body>${htmlBody}
 <script>
-// --- SECURITY OWNER KEY v4 ---
-// Cobertura total para ELIMINAR en todos los módulos:
-// 1) Captura clicks en botones de borrar (trash/delete/remove).
-// 2) Envuelve window.confirm: si el mensaje contiene "eliminar/borrar/limpiar",
-//    pide la clave del dueño antes de mostrar la confirmación.
+// --- SECURITY: Clave del dueño SOLO para ELIMINAR (versión mínima y segura) ---
 (function(){
   var OWNER_KEY_LS = 'fixlyOwnerKey';
   var SESSION_OK   = 'fixlyOwnerValidated';
@@ -4676,57 +4547,51 @@ function _imprimirTicketBase(htmlBody){
     try {
       var k = localStorage.getItem(OWNER_KEY_LS) || '';
       if (k) return k;
+      // compat con blob de config si existiera
       var d = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
-      if (d && d.config && d.config.codigo_maestro){
-        k = d.config.codigo_maestro || '';
-        localStorage.setItem(OWNER_KEY_LS, k);
-      }
+      if (d && d.config && d.config.codigo_maestro){ k = d.config.codigo_maestro || ''; localStorage.setItem(OWNER_KEY_LS, k); }
       return k || '';
-    } catch(_) { return ''; }
+    } catch(_){ return ''; }
   }
   function setOwnerKey(k){
     try {
       localStorage.setItem(OWNER_KEY_LS, k);
       var d = JSON.parse(localStorage.getItem('fixlytallerData') || '{}'); d=d||{}; d.config=d.config||{};
       d.config.codigo_maestro = k; localStorage.setItem('fixlytallerData', JSON.stringify(d));
-    } catch(_) {}
+    } catch(_){}
   }
   function ensureOwnerKey(){
     var key = getOwnerKey();
     if (key && key.length >= 4) return true;
     var entered = prompt('Configurar clave del dueño (mínimo 4 caracteres):');
     if (entered === null) return false;
-    entered = (entered || '').trim();
+    entered = (entered||'').trim();
     if (entered.length < 4){ alert('La clave debe tener al menos 4 caracteres.'); return false; }
     setOwnerKey(entered); return true;
   }
   function isValidated(){
-    try { return sessionStorage.getItem(SESSION_OK) === '1'; } catch(_) { return false; }
+    try { return sessionStorage.getItem(SESSION_OK) === '1'; } catch(_){ return false; }
   }
   function validateOnce(){
     if (isValidated()) return true;
-    var k = getOwnerKey(); if (!k) return true;
-    var entered = prompt('Confirmá la clave del dueño:');
+    var k = getOwnerKey(); if (!k) return true; // sin clave => no pedir
+    var entered = prompt('Ingresá la clave del dueño:');
     if (entered === null) return false;
-    if ((entered || '') === k){ try { sessionStorage.setItem(SESSION_OK,'1'); } catch(_){}; return true; }
+    if ((entered||'') === k){ try { sessionStorage.setItem(SESSION_OK,'1'); } catch(_){ } return true; }
     alert('Clave incorrecta.'); return false;
   }
 
+  // Detectar SOLO botones/íconos de eliminar (no toca otras acciones)
   function isDeleteButton(el){
     if (!el) return false;
-    var txt  = (el.textContent || '').toLowerCase();
-    var tit  = (el.getAttribute && (el.getAttribute('title') || '').toLowerCase()) || '';
-    var aria = (el.getAttribute && (el.getAttribute('aria-label') || '').toLowerCase()) || '';
-    var act  = (el.getAttribute && (el.getAttribute('data-action') || '').toLowerCase()) || '';
-    var cls  = (el.className || '').toLowerCase();
-    var icon = el.matches && (el.matches('.fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash, [data-icon="trash"]'));
-    return icon ||
-           /(^|\s)(delete|remove|trash|btn-delete)(\s|$)/.test(cls) ||
-           /eliminar|borrar|delete|remove|trash/.test(txt + ' ' + tit + ' ' + aria + ' ' + act) ||
-           (el.matches && el.matches('[data-action="delete"], [data-action*="delete"], .btn-delete, .delete'));
+    if (el.matches && el.matches('[data-owner-only="delete"], [data-owner="delete"], [data-action="delete"], [data-action*="delete"], .btn-delete, .delete')) return true;
+    if (el.matches && el.matches('.fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash, [data-icon="trash"]')) return true;
+    var txt  = ((el.textContent||'') + ' ' + (el.getAttribute && (el.getAttribute('title')||'') || '') + ' ' + (el.getAttribute && (el.getAttribute('aria-label')||'') || '')).toLowerCase();
+    if (/(\beliminar\b|\bborrar\b|\blimpiar\b)/.test(txt)) return true;
+    return false;
   }
 
-  // Click capture: exigir clave antes de que se dispare la lógica del botón
+  // Interceptar clicks en FASE DE CAPTURA y pedir clave sólo para eliminar
   document.addEventListener('click', function(ev){
     var node = ev.target;
     for (var i=0; i<4 && node; i++){
@@ -4735,37 +4600,22 @@ function _imprimirTicketBase(htmlBody){
     }
     if (!node || !isDeleteButton(node)) return;
     if (!ensureOwnerKey() || !validateOnce()){
-      ev.preventDefault(); ev.stopPropagation(); return false;
+      ev.preventDefault(); ev.stopImmediatePropagation(); ev.stopPropagation();
+      return false;
     }
   }, true);
 
-  // Wrap window.confirm: si el mensaje sugiere borrado, pedimos clave primero
-  (function(){
-    var _origConfirm = window.confirm;
-    window.confirm = function(msg){
-      try {
-        var s = (msg || '').toString().toLowerCase();
-        if (/eliminar|borrar|limpiar/.test(s)){
-          if (!ensureOwnerKey() || !validateOnce()){
-            return false;
-          }
-        }
-      } catch(_) {}
-      return _origConfirm.call(window, msg);
-    };
-  })();
-
-  // Tooltip en iconos/botones de eliminar
+  // Tooltip para feedback (no oculta ni modifica botones)
   function markDeletes(){
     var list = document.querySelectorAll('button, a, [role="button"], .fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash, [data-icon="trash"]');
     list.forEach(function(el){
-      if (isDeleteButton(el) && !el.getAttribute('title')){
-        try { el.setAttribute('title', 'Solo dueño (requiere clave)'); } catch(_){}
-      }
+      try {
+        if (isDeleteButton(el) && !el.getAttribute('title')) el.setAttribute('title','Solo dueño (requiere clave)');
+      } catch(_){}
     });
   }
   document.addEventListener('DOMContentLoaded', markDeletes);
-  try { new MutationObserver(markDeletes).observe(document.body, {subtree:true, childList:true}); } catch(_) {}
+  try { new MutationObserver(markDeletes).observe(document.body, {subtree:true, childList:true}); } catch(_){}
 })();
 </script>
 
@@ -5046,11 +4896,7 @@ function imprimirComprobantePedido(pedidoId){
 
 </head><body><div class="print-page">${copia('')}<div class="print-separator"></div>${copia('')}</div>
 <script>
-// --- SECURITY OWNER KEY v4 ---
-// Cobertura total para ELIMINAR en todos los módulos:
-// 1) Captura clicks en botones de borrar (trash/delete/remove).
-// 2) Envuelve window.confirm: si el mensaje contiene "eliminar/borrar/limpiar",
-//    pide la clave del dueño antes de mostrar la confirmación.
+// --- SECURITY: Clave del dueño SOLO para ELIMINAR (versión mínima y segura) ---
 (function(){
   var OWNER_KEY_LS = 'fixlyOwnerKey';
   var SESSION_OK   = 'fixlyOwnerValidated';
@@ -5059,57 +4905,51 @@ function imprimirComprobantePedido(pedidoId){
     try {
       var k = localStorage.getItem(OWNER_KEY_LS) || '';
       if (k) return k;
+      // compat con blob de config si existiera
       var d = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
-      if (d && d.config && d.config.codigo_maestro){
-        k = d.config.codigo_maestro || '';
-        localStorage.setItem(OWNER_KEY_LS, k);
-      }
+      if (d && d.config && d.config.codigo_maestro){ k = d.config.codigo_maestro || ''; localStorage.setItem(OWNER_KEY_LS, k); }
       return k || '';
-    } catch(_) { return ''; }
+    } catch(_){ return ''; }
   }
   function setOwnerKey(k){
     try {
       localStorage.setItem(OWNER_KEY_LS, k);
       var d = JSON.parse(localStorage.getItem('fixlytallerData') || '{}'); d=d||{}; d.config=d.config||{};
       d.config.codigo_maestro = k; localStorage.setItem('fixlytallerData', JSON.stringify(d));
-    } catch(_) {}
+    } catch(_){}
   }
   function ensureOwnerKey(){
     var key = getOwnerKey();
     if (key && key.length >= 4) return true;
     var entered = prompt('Configurar clave del dueño (mínimo 4 caracteres):');
     if (entered === null) return false;
-    entered = (entered || '').trim();
+    entered = (entered||'').trim();
     if (entered.length < 4){ alert('La clave debe tener al menos 4 caracteres.'); return false; }
     setOwnerKey(entered); return true;
   }
   function isValidated(){
-    try { return sessionStorage.getItem(SESSION_OK) === '1'; } catch(_) { return false; }
+    try { return sessionStorage.getItem(SESSION_OK) === '1'; } catch(_){ return false; }
   }
   function validateOnce(){
     if (isValidated()) return true;
-    var k = getOwnerKey(); if (!k) return true;
-    var entered = prompt('Confirmá la clave del dueño:');
+    var k = getOwnerKey(); if (!k) return true; // sin clave => no pedir
+    var entered = prompt('Ingresá la clave del dueño:');
     if (entered === null) return false;
-    if ((entered || '') === k){ try { sessionStorage.setItem(SESSION_OK,'1'); } catch(_){}; return true; }
+    if ((entered||'') === k){ try { sessionStorage.setItem(SESSION_OK,'1'); } catch(_){ } return true; }
     alert('Clave incorrecta.'); return false;
   }
 
+  // Detectar SOLO botones/íconos de eliminar (no toca otras acciones)
   function isDeleteButton(el){
     if (!el) return false;
-    var txt  = (el.textContent || '').toLowerCase();
-    var tit  = (el.getAttribute && (el.getAttribute('title') || '').toLowerCase()) || '';
-    var aria = (el.getAttribute && (el.getAttribute('aria-label') || '').toLowerCase()) || '';
-    var act  = (el.getAttribute && (el.getAttribute('data-action') || '').toLowerCase()) || '';
-    var cls  = (el.className || '').toLowerCase();
-    var icon = el.matches && (el.matches('.fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash, [data-icon="trash"]'));
-    return icon ||
-           /(^|\s)(delete|remove|trash|btn-delete)(\s|$)/.test(cls) ||
-           /eliminar|borrar|delete|remove|trash/.test(txt + ' ' + tit + ' ' + aria + ' ' + act) ||
-           (el.matches && el.matches('[data-action="delete"], [data-action*="delete"], .btn-delete, .delete'));
+    if (el.matches && el.matches('[data-owner-only="delete"], [data-owner="delete"], [data-action="delete"], [data-action*="delete"], .btn-delete, .delete')) return true;
+    if (el.matches && el.matches('.fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash, [data-icon="trash"]')) return true;
+    var txt  = ((el.textContent||'') + ' ' + (el.getAttribute && (el.getAttribute('title')||'') || '') + ' ' + (el.getAttribute && (el.getAttribute('aria-label')||'') || '')).toLowerCase();
+    if (/(\beliminar\b|\bborrar\b|\blimpiar\b)/.test(txt)) return true;
+    return false;
   }
 
-  // Click capture: exigir clave antes de que se dispare la lógica del botón
+  // Interceptar clicks en FASE DE CAPTURA y pedir clave sólo para eliminar
   document.addEventListener('click', function(ev){
     var node = ev.target;
     for (var i=0; i<4 && node; i++){
@@ -5118,37 +4958,22 @@ function imprimirComprobantePedido(pedidoId){
     }
     if (!node || !isDeleteButton(node)) return;
     if (!ensureOwnerKey() || !validateOnce()){
-      ev.preventDefault(); ev.stopPropagation(); return false;
+      ev.preventDefault(); ev.stopImmediatePropagation(); ev.stopPropagation();
+      return false;
     }
   }, true);
 
-  // Wrap window.confirm: si el mensaje sugiere borrado, pedimos clave primero
-  (function(){
-    var _origConfirm = window.confirm;
-    window.confirm = function(msg){
-      try {
-        var s = (msg || '').toString().toLowerCase();
-        if (/eliminar|borrar|limpiar/.test(s)){
-          if (!ensureOwnerKey() || !validateOnce()){
-            return false;
-          }
-        }
-      } catch(_) {}
-      return _origConfirm.call(window, msg);
-    };
-  })();
-
-  // Tooltip en iconos/botones de eliminar
+  // Tooltip para feedback (no oculta ni modifica botones)
   function markDeletes(){
     var list = document.querySelectorAll('button, a, [role="button"], .fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash, [data-icon="trash"]');
     list.forEach(function(el){
-      if (isDeleteButton(el) && !el.getAttribute('title')){
-        try { el.setAttribute('title', 'Solo dueño (requiere clave)'); } catch(_){}
-      }
+      try {
+        if (isDeleteButton(el) && !el.getAttribute('title')) el.setAttribute('title','Solo dueño (requiere clave)');
+      } catch(_){}
     });
   }
   document.addEventListener('DOMContentLoaded', markDeletes);
-  try { new MutationObserver(markDeletes).observe(document.body, {subtree:true, childList:true}); } catch(_) {}
+  try { new MutationObserver(markDeletes).observe(document.body, {subtree:true, childList:true}); } catch(_){}
 })();
 </script>
 
@@ -5338,11 +5163,7 @@ window.imprimirPedido = function(id){
 
 </head><body>${comprobante}
 <script>
-// --- SECURITY OWNER KEY v4 ---
-// Cobertura total para ELIMINAR en todos los módulos:
-// 1) Captura clicks en botones de borrar (trash/delete/remove).
-// 2) Envuelve window.confirm: si el mensaje contiene "eliminar/borrar/limpiar",
-//    pide la clave del dueño antes de mostrar la confirmación.
+// --- SECURITY: Clave del dueño SOLO para ELIMINAR (versión mínima y segura) ---
 (function(){
   var OWNER_KEY_LS = 'fixlyOwnerKey';
   var SESSION_OK   = 'fixlyOwnerValidated';
@@ -5351,57 +5172,51 @@ window.imprimirPedido = function(id){
     try {
       var k = localStorage.getItem(OWNER_KEY_LS) || '';
       if (k) return k;
+      // compat con blob de config si existiera
       var d = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
-      if (d && d.config && d.config.codigo_maestro){
-        k = d.config.codigo_maestro || '';
-        localStorage.setItem(OWNER_KEY_LS, k);
-      }
+      if (d && d.config && d.config.codigo_maestro){ k = d.config.codigo_maestro || ''; localStorage.setItem(OWNER_KEY_LS, k); }
       return k || '';
-    } catch(_) { return ''; }
+    } catch(_){ return ''; }
   }
   function setOwnerKey(k){
     try {
       localStorage.setItem(OWNER_KEY_LS, k);
       var d = JSON.parse(localStorage.getItem('fixlytallerData') || '{}'); d=d||{}; d.config=d.config||{};
       d.config.codigo_maestro = k; localStorage.setItem('fixlytallerData', JSON.stringify(d));
-    } catch(_) {}
+    } catch(_){}
   }
   function ensureOwnerKey(){
     var key = getOwnerKey();
     if (key && key.length >= 4) return true;
     var entered = prompt('Configurar clave del dueño (mínimo 4 caracteres):');
     if (entered === null) return false;
-    entered = (entered || '').trim();
+    entered = (entered||'').trim();
     if (entered.length < 4){ alert('La clave debe tener al menos 4 caracteres.'); return false; }
     setOwnerKey(entered); return true;
   }
   function isValidated(){
-    try { return sessionStorage.getItem(SESSION_OK) === '1'; } catch(_) { return false; }
+    try { return sessionStorage.getItem(SESSION_OK) === '1'; } catch(_){ return false; }
   }
   function validateOnce(){
     if (isValidated()) return true;
-    var k = getOwnerKey(); if (!k) return true;
-    var entered = prompt('Confirmá la clave del dueño:');
+    var k = getOwnerKey(); if (!k) return true; // sin clave => no pedir
+    var entered = prompt('Ingresá la clave del dueño:');
     if (entered === null) return false;
-    if ((entered || '') === k){ try { sessionStorage.setItem(SESSION_OK,'1'); } catch(_){}; return true; }
+    if ((entered||'') === k){ try { sessionStorage.setItem(SESSION_OK,'1'); } catch(_){ } return true; }
     alert('Clave incorrecta.'); return false;
   }
 
+  // Detectar SOLO botones/íconos de eliminar (no toca otras acciones)
   function isDeleteButton(el){
     if (!el) return false;
-    var txt  = (el.textContent || '').toLowerCase();
-    var tit  = (el.getAttribute && (el.getAttribute('title') || '').toLowerCase()) || '';
-    var aria = (el.getAttribute && (el.getAttribute('aria-label') || '').toLowerCase()) || '';
-    var act  = (el.getAttribute && (el.getAttribute('data-action') || '').toLowerCase()) || '';
-    var cls  = (el.className || '').toLowerCase();
-    var icon = el.matches && (el.matches('.fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash, [data-icon="trash"]'));
-    return icon ||
-           /(^|\s)(delete|remove|trash|btn-delete)(\s|$)/.test(cls) ||
-           /eliminar|borrar|delete|remove|trash/.test(txt + ' ' + tit + ' ' + aria + ' ' + act) ||
-           (el.matches && el.matches('[data-action="delete"], [data-action*="delete"], .btn-delete, .delete'));
+    if (el.matches && el.matches('[data-owner-only="delete"], [data-owner="delete"], [data-action="delete"], [data-action*="delete"], .btn-delete, .delete')) return true;
+    if (el.matches && el.matches('.fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash, [data-icon="trash"]')) return true;
+    var txt  = ((el.textContent||'') + ' ' + (el.getAttribute && (el.getAttribute('title')||'') || '') + ' ' + (el.getAttribute && (el.getAttribute('aria-label')||'') || '')).toLowerCase();
+    if (/(\beliminar\b|\bborrar\b|\blimpiar\b)/.test(txt)) return true;
+    return false;
   }
 
-  // Click capture: exigir clave antes de que se dispare la lógica del botón
+  // Interceptar clicks en FASE DE CAPTURA y pedir clave sólo para eliminar
   document.addEventListener('click', function(ev){
     var node = ev.target;
     for (var i=0; i<4 && node; i++){
@@ -5410,37 +5225,22 @@ window.imprimirPedido = function(id){
     }
     if (!node || !isDeleteButton(node)) return;
     if (!ensureOwnerKey() || !validateOnce()){
-      ev.preventDefault(); ev.stopPropagation(); return false;
+      ev.preventDefault(); ev.stopImmediatePropagation(); ev.stopPropagation();
+      return false;
     }
   }, true);
 
-  // Wrap window.confirm: si el mensaje sugiere borrado, pedimos clave primero
-  (function(){
-    var _origConfirm = window.confirm;
-    window.confirm = function(msg){
-      try {
-        var s = (msg || '').toString().toLowerCase();
-        if (/eliminar|borrar|limpiar/.test(s)){
-          if (!ensureOwnerKey() || !validateOnce()){
-            return false;
-          }
-        }
-      } catch(_) {}
-      return _origConfirm.call(window, msg);
-    };
-  })();
-
-  // Tooltip en iconos/botones de eliminar
+  // Tooltip para feedback (no oculta ni modifica botones)
   function markDeletes(){
     var list = document.querySelectorAll('button, a, [role="button"], .fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash, [data-icon="trash"]');
     list.forEach(function(el){
-      if (isDeleteButton(el) && !el.getAttribute('title')){
-        try { el.setAttribute('title', 'Solo dueño (requiere clave)'); } catch(_){}
-      }
+      try {
+        if (isDeleteButton(el) && !el.getAttribute('title')) el.setAttribute('title','Solo dueño (requiere clave)');
+      } catch(_){}
     });
   }
   document.addEventListener('DOMContentLoaded', markDeletes);
-  try { new MutationObserver(markDeletes).observe(document.body, {subtree:true, childList:true}); } catch(_) {}
+  try { new MutationObserver(markDeletes).observe(document.body, {subtree:true, childList:true}); } catch(_){}
 })();
 </script>
 
@@ -7197,102 +6997,7 @@ on = function(){
 
 
 <script>
-// --- PATCH: Guardar y precargar Código Maestro en Configuración ---
-(function(){
-  function readData(){ try { return JSON.parse(localStorage.getItem('fixlytallerData')||'{}'); } catch(e){ return {}; } }
-  function writeData(d){ try { localStorage.setItem('fixlytallerData', JSON.stringify(d)); } catch(e){} }
-  function ensureShape(d){ if(!d||typeof d!=='object') d={}; d.config=d.config||{}; return d; }
-
-  document.addEventListener('DOMContentLoaded', function(){
-    var form = document.getElementById('formConfigTaller');
-    if (!form) return;
-
-    // Preload
-    try {
-      var d = ensureShape(readData());
-      if (form.codigo_maestro && d.config.codigo_maestro){
-        form.codigo_maestro.value = d.config.codigo_maestro;
-      }
-    } catch(e){}
-
-    // Save
-    form.addEventListener('submit', function(){
-      try {
-        var d = ensureShape(readData());
-        if (form.codigo_maestro){
-          d.config.codigo_maestro = form.codigo_maestro.value || '';
-          writeData(d);
-        }
-      } catch(e){}
-    });
-  });
-})();
-</script>
-
-
-<script>
-// --- SECURITY: Requerir Código Maestro para eliminar o acciones críticas ---
-(function(){
-  var VALIDATED_KEY = 'fixlyMasterValidated';
-  function readData(){ try { return JSON.parse(localStorage.getItem('fixlytallerData')||'{}'); } catch(e){ return {}; } }
-  function getMaster(){
-    var d = readData(); d = (d && d.config) ? d : {config:{}};
-    return d.config.codigo_maestro || '';
-  }
-  function isDangerEl(el){
-    if (!el) return false;
-    var t = (el.getAttribute('title')||'').toLowerCase();
-    var aria = (el.getAttribute('aria-label')||'').toLowerCase();
-    var cls = el.className||'';
-    var dact = el.getAttribute('data-action')||'';
-    var txt = (el.textContent||'').toLowerCase();
-    // heurísticas típicas de los botones de borrar
-    return (
-      el.matches('[data-requires-master]') ||
-      /eliminar|borrar|delete|trash/.test(t) ||
-      /eliminar|borrar|delete/.test(aria) ||
-      /btn-danger|delete|trash|btn-delete/.test(cls) ||
-      /delete|remove/.test(dact) ||
-      /eliminar|borrar/.test(txt)
-    );
-  }
-  function askMasterIfNeeded(){
-    var code = getMaster();
-    if (!code) return true; // no hay protección configurada
-    // Si ya validado en esta sesión, OK
-    try { if (sessionStorage.getItem(VALIDATED_KEY)==='1') return true; } catch(e){}
-    var entered = prompt('Ingresá el Código Maestro para continuar:');
-    if (entered === null) return false;
-    if ((entered||'') === code){
-      try { sessionStorage.setItem(VALIDATED_KEY,'1'); } catch(e){}
-      return true;
-    } else {
-      alert('Código Maestro incorrecto.');
-      return false;
-    }
-  }
-
-  // Captura clicks en fase de captura y verifica si el target o algún padre es "peligroso"
-  document.addEventListener('click', function(ev){
-    var el = ev.target;
-    // sube hasta 3 niveles para encontrar el botón real
-    for (var i=0;i<3 && el; i++){ if (isDangerEl(el)) break; el = el.parentElement; }
-    if (!el || !isDangerEl(el)) return;
-
-    if (!askMasterIfNeeded()){
-      ev.preventDefault();
-      ev.stopPropagation();
-      return false;
-    }
-    // Marca el elemento como validado para este click
-    el.setAttribute('data-requires-master','ok');
-  }, true);
-})();
-</script>
-
-
-<script>
-// --- SECURITY OWNER KEY: aplicar SOLO a botones de eliminar en todos los módulos ---
+// --- SECURITY: Clave del dueño SOLO para ELIMINAR (versión mínima y segura) ---
 (function(){
   var OWNER_KEY_LS = 'fixlyOwnerKey';
   var SESSION_OK   = 'fixlyOwnerValidated';
@@ -7301,154 +7006,51 @@ on = function(){
     try {
       var k = localStorage.getItem(OWNER_KEY_LS) || '';
       if (k) return k;
-      // Compat con blob de config
+      // compat con blob de config si existiera
       var d = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
-      if (d && d.config && d.config.codigo_maestro){
-        k = d.config.codigo_maestro;
-        localStorage.setItem(OWNER_KEY_LS, k || '');
-      }
+      if (d && d.config && d.config.codigo_maestro){ k = d.config.codigo_maestro || ''; localStorage.setItem(OWNER_KEY_LS, k); }
       return k || '';
-    } catch(_) { return ''; }
-  }
-  function setOwnerKey(k){
-    try {
-      localStorage.setItem(OWNER_KEY_LS, k);
-      var d = JSON.parse(localStorage.getItem('fixlytallerData') || '{}'); d=d||{}; d.config=d.config||{};
-      d.config.codigo_maestro = k;
-      localStorage.setItem('fixlytallerData', JSON.stringify(d));
-    } catch(_) {}
-  }
-  function ensureOwnerKey(){
-    var key = getOwnerKey();
-    if (key && key.length >= 4) return true;
-    var entered = prompt('Configurar clave del dueño (mínimo 4 caracteres):');
-    if (entered === null) return false;
-    entered = (entered || '').trim();
-    if (entered.length < 4){ alert('La clave debe tener al menos 4 caracteres.'); return false; }
-    setOwnerKey(entered); return true;
-  }
-  function isValidated(){
-    try { return sessionStorage.getItem(SESSION_OK) === '1'; } catch(_) { return false; }
-  }
-  function validateOnce(){
-    if (isValidated()) return true;
-    var k = getOwnerKey(); if (!k) return true;
-    var entered = prompt('Confirmá la clave del dueño:');
-    if (entered === null) return false;
-    if ((entered || '') === k){ try { sessionStorage.setItem(SESSION_OK,'1'); } catch(_){}; return true; }
-    alert('Clave incorrecta.'); return false;
-  }
-
-  // Detecta si el elemento es un botón de ELIMINAR/BORRAR
-  function isDeleteButton(el){
-    if (!el) return false;
-    var txt  = (el.textContent || '').toLowerCase();
-    var tit  = (el.getAttribute && (el.getAttribute('title') || '').toLowerCase()) || '';
-    var aria = (el.getAttribute && (el.getAttribute('aria-label') || '').toLowerCase()) || '';
-    var act  = (el.getAttribute && (el.getAttribute('data-action') || '').toLowerCase()) || '';
-    var cls  = (el.className || '').toLowerCase();
-    // Íconos trash típicos
-    var icon = el.matches && (el.matches('.fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash') || false);
-
-    return icon ||
-           /eliminar|borrar|delete|remove|trash/.test(txt + tit + aria + act + cls) ||
-           el.matches && el.matches('[data-action="delete"], [data-action*="delete"], .btn-delete, .delete, .btn-danger.delete');
-  }
-
-  // Intercepta clicks en fase de captura y exige clave SOLO para eliminar
-  document.addEventListener('click', function(ev){
-    var node = ev.target;
-    // subir unos niveles por si el click fue sobre un ícono dentro del botón
-    for (var i=0; i<4 && node; i++){
-      if (isDeleteButton(node)) break;
-      node = node.parentElement;
-    }
-    if (!node || !isDeleteButton(node)) return;
-
-    if (!ensureOwnerKey()){ ev.preventDefault(); ev.stopPropagation(); return false; }
-    if (!validateOnce()){   ev.preventDefault(); ev.stopPropagation(); return false; }
-  }, true);
-
-  // Tip visual: agregar title si falta
-  function markDeletes(){
-    var btns = document.querySelectorAll('button, a, [role="button"], .fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash');
-    btns.forEach(function(b){
-      if (isDeleteButton(b) && !b.getAttribute('title')){
-        try { b.setAttribute('title','Solo dueño (requiere clave)'); } catch(_){}
-      }
-    });
-  }
-  document.addEventListener('DOMContentLoaded', markDeletes);
-  try { new MutationObserver(markDeletes).observe(document.body, {subtree:true, childList:true}); } catch(_){}
-})();
-</script>
-
-
-<script>
-// --- SECURITY OWNER KEY v4 ---
-// Cobertura total para ELIMINAR en todos los módulos:
-// 1) Captura clicks en botones de borrar (trash/delete/remove).
-// 2) Envuelve window.confirm: si el mensaje contiene "eliminar/borrar/limpiar",
-//    pide la clave del dueño antes de mostrar la confirmación.
-(function(){
-  var OWNER_KEY_LS = 'fixlyOwnerKey';
-  var SESSION_OK   = 'fixlyOwnerValidated';
-
-  function getOwnerKey(){
-    try {
-      var k = localStorage.getItem(OWNER_KEY_LS) || '';
-      if (k) return k;
-      var d = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
-      if (d && d.config && d.config.codigo_maestro){
-        k = d.config.codigo_maestro || '';
-        localStorage.setItem(OWNER_KEY_LS, k);
-      }
-      return k || '';
-    } catch(_) { return ''; }
+    } catch(_){ return ''; }
   }
   function setOwnerKey(k){
     try {
       localStorage.setItem(OWNER_KEY_LS, k);
       var d = JSON.parse(localStorage.getItem('fixlytallerData') || '{}'); d=d||{}; d.config=d.config||{};
       d.config.codigo_maestro = k; localStorage.setItem('fixlytallerData', JSON.stringify(d));
-    } catch(_) {}
+    } catch(_){}
   }
   function ensureOwnerKey(){
     var key = getOwnerKey();
     if (key && key.length >= 4) return true;
     var entered = prompt('Configurar clave del dueño (mínimo 4 caracteres):');
     if (entered === null) return false;
-    entered = (entered || '').trim();
+    entered = (entered||'').trim();
     if (entered.length < 4){ alert('La clave debe tener al menos 4 caracteres.'); return false; }
     setOwnerKey(entered); return true;
   }
   function isValidated(){
-    try { return sessionStorage.getItem(SESSION_OK) === '1'; } catch(_) { return false; }
+    try { return sessionStorage.getItem(SESSION_OK) === '1'; } catch(_){ return false; }
   }
   function validateOnce(){
     if (isValidated()) return true;
-    var k = getOwnerKey(); if (!k) return true;
-    var entered = prompt('Confirmá la clave del dueño:');
+    var k = getOwnerKey(); if (!k) return true; // sin clave => no pedir
+    var entered = prompt('Ingresá la clave del dueño:');
     if (entered === null) return false;
-    if ((entered || '') === k){ try { sessionStorage.setItem(SESSION_OK,'1'); } catch(_){}; return true; }
+    if ((entered||'') === k){ try { sessionStorage.setItem(SESSION_OK,'1'); } catch(_){ } return true; }
     alert('Clave incorrecta.'); return false;
   }
 
+  // Detectar SOLO botones/íconos de eliminar (no toca otras acciones)
   function isDeleteButton(el){
     if (!el) return false;
-    var txt  = (el.textContent || '').toLowerCase();
-    var tit  = (el.getAttribute && (el.getAttribute('title') || '').toLowerCase()) || '';
-    var aria = (el.getAttribute && (el.getAttribute('aria-label') || '').toLowerCase()) || '';
-    var act  = (el.getAttribute && (el.getAttribute('data-action') || '').toLowerCase()) || '';
-    var cls  = (el.className || '').toLowerCase();
-    var icon = el.matches && (el.matches('.fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash, [data-icon="trash"]'));
-    return icon ||
-           /(^|\s)(delete|remove|trash|btn-delete)(\s|$)/.test(cls) ||
-           /eliminar|borrar|delete|remove|trash/.test(txt + ' ' + tit + ' ' + aria + ' ' + act) ||
-           (el.matches && el.matches('[data-action="delete"], [data-action*="delete"], .btn-delete, .delete'));
+    if (el.matches && el.matches('[data-owner-only="delete"], [data-owner="delete"], [data-action="delete"], [data-action*="delete"], .btn-delete, .delete')) return true;
+    if (el.matches && el.matches('.fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash, [data-icon="trash"]')) return true;
+    var txt  = ((el.textContent||'') + ' ' + (el.getAttribute && (el.getAttribute('title')||'') || '') + ' ' + (el.getAttribute && (el.getAttribute('aria-label')||'') || '')).toLowerCase();
+    if (/(\beliminar\b|\bborrar\b|\blimpiar\b)/.test(txt)) return true;
+    return false;
   }
 
-  // Click capture: exigir clave antes de que se dispare la lógica del botón
+  // Interceptar clicks en FASE DE CAPTURA y pedir clave sólo para eliminar
   document.addEventListener('click', function(ev){
     var node = ev.target;
     for (var i=0; i<4 && node; i++){
@@ -7457,37 +7059,22 @@ on = function(){
     }
     if (!node || !isDeleteButton(node)) return;
     if (!ensureOwnerKey() || !validateOnce()){
-      ev.preventDefault(); ev.stopPropagation(); return false;
+      ev.preventDefault(); ev.stopImmediatePropagation(); ev.stopPropagation();
+      return false;
     }
   }, true);
 
-  // Wrap window.confirm: si el mensaje sugiere borrado, pedimos clave primero
-  (function(){
-    var _origConfirm = window.confirm;
-    window.confirm = function(msg){
-      try {
-        var s = (msg || '').toString().toLowerCase();
-        if (/eliminar|borrar|limpiar/.test(s)){
-          if (!ensureOwnerKey() || !validateOnce()){
-            return false;
-          }
-        }
-      } catch(_) {}
-      return _origConfirm.call(window, msg);
-    };
-  })();
-
-  // Tooltip en iconos/botones de eliminar
+  // Tooltip para feedback (no oculta ni modifica botones)
   function markDeletes(){
     var list = document.querySelectorAll('button, a, [role="button"], .fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash, [data-icon="trash"]');
     list.forEach(function(el){
-      if (isDeleteButton(el) && !el.getAttribute('title')){
-        try { el.setAttribute('title', 'Solo dueño (requiere clave)'); } catch(_){}
-      }
+      try {
+        if (isDeleteButton(el) && !el.getAttribute('title')) el.setAttribute('title','Solo dueño (requiere clave)');
+      } catch(_){}
     });
   }
   document.addEventListener('DOMContentLoaded', markDeletes);
-  try { new MutationObserver(markDeletes).observe(document.body, {subtree:true, childList:true}); } catch(_) {}
+  try { new MutationObserver(markDeletes).observe(document.body, {subtree:true, childList:true}); } catch(_){}
 })();
 </script>
 
