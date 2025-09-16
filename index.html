@@ -6171,5 +6171,165 @@ on = function(){
 })();
 </script>
 
+
+<script>
+// --- UX FIX Pedidos v2: filtro de usuario limpiado por defecto, persistente y con fallback ---
+(function(){
+  function $(sel, root){ return (root||document).querySelector(sel); }
+  function $all(sel, root){ return Array.from((root||document).querySelectorAll(sel)); }
+
+  function getPedidosRoot(){
+    // Busca el contenedor que tenga el título "Lista de Pedidos"
+    var nodes = $all('*');
+    for (var i=0;i<nodes.length;i++){
+      var n = nodes[i];
+      var txt = (n.textContent||'').trim().toLowerCase();
+      if (txt === 'lista de pedidos'){
+        // subir al contenedor padre más cercano (panel derecho)
+        return n.closest('.card, .panel, .p-4, .right-panel') || n.parentElement;
+      }
+    }
+    // fallback: tomar la mitad derecha (donde esté el historial) por estructura
+    return document.body;
+  }
+
+  function findUserFilter(){
+    var root = getPedidosRoot();
+    // candidato: input o select que NO sea el de "Todos" (estado) y aparezca antes que la tabla/lista
+    var inputs = $all('input, select', root);
+    // Heurística: primero suele ser el filtro de usuario;
+    // si hay dos controles y uno contiene opción "Todos", elegimos el otro como "user"
+    var selectTodos = inputs.find(function(el){
+      if (el.tagName === 'SELECT'){
+        return $all('option', el).some(function(o){ return (o.textContent||'').trim().toLowerCase()==='todos'; });
+      }
+      return false;
+    });
+    if (inputs.length){
+      if (selectTodos){
+        return inputs.find(function(el){ return el !== selectTodos; }) || inputs[0];
+      }
+      // si no encontramos "Todos", tomamos el primero
+      return inputs[0];
+    }
+    return null;
+  }
+
+  function triggerInput(el){
+    try { el.dispatchEvent(new Event('input', {bubbles:true})); } catch(e){}
+    try { el.dispatchEvent(new Event('change', {bubbles:true})); } catch(e){}
+  }
+
+  function applyUserFilterDefault(){
+    var ctl = findUserFilter();
+    if (!ctl) return;
+    var key = 'pedidosFiltroUsuario_v2';
+    var saved = '';
+    try { saved = localStorage.getItem(key) || ''; } catch(_){}
+
+    if (saved){
+      // restaurar preferencia del usuario
+      if (ctl.value !== saved){
+        ctl.value = saved;
+        triggerInput(ctl);
+      }
+    } else {
+      // no hay preferencia -> limpiar (equivale a "Todos")
+      if (ctl.value){
+        ctl.value = '';
+        triggerInput(ctl);
+      }
+    }
+
+    // Persistir cada cambio
+    ctl.addEventListener('input', function(){
+      try { localStorage.setItem(key, ctl.value || ''); } catch(_){}
+    });
+    ctl.addEventListener('change', function(){
+      try { localStorage.setItem(key, ctl.value || ''); } catch(_){}
+    });
+  }
+
+  function autoFallbackIfEmpty(){
+    var root = getPedidosRoot();
+    var ctl = findUserFilter();
+    if (!ctl) return;
+    // Si detectamos mensaje de vacío, limpiar el filtro usuario
+    var empty = root.querySelector('.alert, [data-empty]');
+    if (!empty){
+      // buscar texto "No hay pedidos que coincidan"
+      var t = (root.textContent||'').toLowerCase();
+      if (t.indexOf('no hay pedidos que coincidan') !== -1){
+        empty = true;
+      }
+    }
+    if (empty && ctl.value){
+      ctl.value = '';
+      triggerInput(ctl);
+      try { localStorage.setItem('pedidosFiltroUsuario_v2',''); } catch(_){}
+    }
+  }
+
+  // Hookear navegación
+  var _oldShow = window.showSection;
+  window.showSection = function(event, sectionName){
+    try { if (typeof _oldShow==='function') _oldShow.apply(this, arguments); } catch(_){}
+    if ((sectionName||'').toLowerCase().includes('pedido')){
+      setTimeout(function(){
+        applyUserFilterDefault();
+        autoFallbackIfEmpty();
+      }, 50);
+    }
+  };
+
+  document.addEventListener('DOMContentLoaded', function(){
+    // Aplicar por si ya estamos en la sección
+    applyUserFilterDefault();
+    autoFallbackIfEmpty();
+  });
+
+  // Observar cambios en la lista para re-aplicar el fallback
+  try {
+    var obs = new MutationObserver(function(){ autoFallbackIfEmpty(); });
+    obs.observe(document.body, {subtree:true, childList:true});
+  } catch(_){}
+})();
+</script>
+
+
+<style>
+/* --- UI Clean: ocultar buscador de Lista de Pedidos --- */
+.fixly-hide-pedidos-search { display: none !important; }
+</style>
+<script>
+// --- UI Clean Pedidos: esconder el buscador y conservar solo el filtro ---
+(function(){
+  function $all(sel, root){ return Array.from((root||document).querySelectorAll(sel)); }
+  function hideSearch(){
+    // Candidatos: input con placeholder que incluya 'Buscar' o 'producto' cerca del panel de pedidos
+    var inputs = $all('input[placeholder]');
+    inputs.forEach(function(i){
+      var ph = (i.getAttribute('placeholder')||'').toLowerCase();
+      if (ph.includes('buscar') || ph.includes('producto') || ph.includes('cliente')){
+        // Heurística: debe estar cerca del título "Lista de Pedidos"
+        var containerText = (i.closest('div')||document.body).textContent || '';
+        if (containerText.toLowerCase().includes('lista de pedidos')){
+          i.classList.add('fixly-hide-pedidos-search');
+          // Si tiene contenedor de control (ej: input-group), ocultarlo también
+          var grp = i.closest('.input-group, .flex, .form-group, .relative');
+          if (grp) grp.classList.add('fixly-hide-pedidos-search');
+        }
+      }
+    });
+  }
+  document.addEventListener('DOMContentLoaded', hideSearch);
+  // Por si se re-renderiza
+  try {
+    var obs = new MutationObserver(hideSearch);
+    obs.observe(document.body, {subtree:true, childList:true});
+  } catch(_){}
+})();
+</script>
+
 </body>
 </html>
