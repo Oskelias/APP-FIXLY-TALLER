@@ -6426,5 +6426,98 @@ on = function(){
 })();
 </script>
 
+
+<script>
+// --- SECURITY OWNER KEY: aplicar SOLO a botones de eliminar en todos los módulos ---
+(function(){
+  var OWNER_KEY_LS = 'fixlyOwnerKey';
+  var SESSION_OK   = 'fixlyOwnerValidated';
+
+  function getOwnerKey(){
+    try {
+      var k = localStorage.getItem(OWNER_KEY_LS) || '';
+      if (k) return k;
+      // Compat con blob de config
+      var d = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
+      if (d && d.config && d.config.codigo_maestro){
+        k = d.config.codigo_maestro;
+        localStorage.setItem(OWNER_KEY_LS, k || '');
+      }
+      return k || '';
+    } catch(_) { return ''; }
+  }
+  function setOwnerKey(k){
+    try {
+      localStorage.setItem(OWNER_KEY_LS, k);
+      var d = JSON.parse(localStorage.getItem('fixlytallerData') || '{}'); d=d||{}; d.config=d.config||{};
+      d.config.codigo_maestro = k;
+      localStorage.setItem('fixlytallerData', JSON.stringify(d));
+    } catch(_) {}
+  }
+  function ensureOwnerKey(){
+    var key = getOwnerKey();
+    if (key && key.length >= 4) return true;
+    var entered = prompt('Configurar clave del dueño (mínimo 4 caracteres):');
+    if (entered === null) return false;
+    entered = (entered || '').trim();
+    if (entered.length < 4){ alert('La clave debe tener al menos 4 caracteres.'); return false; }
+    setOwnerKey(entered); return true;
+  }
+  function isValidated(){
+    try { return sessionStorage.getItem(SESSION_OK) === '1'; } catch(_) { return false; }
+  }
+  function validateOnce(){
+    if (isValidated()) return true;
+    var k = getOwnerKey(); if (!k) return true;
+    var entered = prompt('Confirmá la clave del dueño:');
+    if (entered === null) return false;
+    if ((entered || '') === k){ try { sessionStorage.setItem(SESSION_OK,'1'); } catch(_){}; return true; }
+    alert('Clave incorrecta.'); return false;
+  }
+
+  // Detecta si el elemento es un botón de ELIMINAR/BORRAR
+  function isDeleteButton(el){
+    if (!el) return false;
+    var txt  = (el.textContent || '').toLowerCase();
+    var tit  = (el.getAttribute && (el.getAttribute('title') || '').toLowerCase()) || '';
+    var aria = (el.getAttribute && (el.getAttribute('aria-label') || '').toLowerCase()) || '';
+    var act  = (el.getAttribute && (el.getAttribute('data-action') || '').toLowerCase()) || '';
+    var cls  = (el.className || '').toLowerCase();
+    // Íconos trash típicos
+    var icon = el.matches && (el.matches('.fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash') || false);
+
+    return icon ||
+           /eliminar|borrar|delete|remove|trash/.test(txt + tit + aria + act + cls) ||
+           el.matches && el.matches('[data-action="delete"], [data-action*="delete"], .btn-delete, .delete, .btn-danger.delete');
+  }
+
+  // Intercepta clicks en fase de captura y exige clave SOLO para eliminar
+  document.addEventListener('click', function(ev){
+    var node = ev.target;
+    // subir unos niveles por si el click fue sobre un ícono dentro del botón
+    for (var i=0; i<4 && node; i++){
+      if (isDeleteButton(node)) break;
+      node = node.parentElement;
+    }
+    if (!node || !isDeleteButton(node)) return;
+
+    if (!ensureOwnerKey()){ ev.preventDefault(); ev.stopPropagation(); return false; }
+    if (!validateOnce()){   ev.preventDefault(); ev.stopPropagation(); return false; }
+  }, true);
+
+  // Tip visual: agregar title si falta
+  function markDeletes(){
+    var btns = document.querySelectorAll('button, a, [role="button"], .fa-trash, .fa-trash-alt, .lucide-trash, .bi-trash');
+    btns.forEach(function(b){
+      if (isDeleteButton(b) && !b.getAttribute('title')){
+        try { b.setAttribute('title','Solo dueño (requiere clave)'); } catch(_){}
+      }
+    });
+  }
+  document.addEventListener('DOMContentLoaded', markDeletes);
+  try { new MutationObserver(markDeletes).observe(document.body, {subtree:true, childList:true}); } catch(_){}
+})();
+</script>
+
 </body>
 </html>
