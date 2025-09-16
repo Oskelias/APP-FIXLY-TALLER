@@ -1,17 +1,12 @@
 
 <!DOCTYPE html>
 
-<!-- saved from url=(0053)file:///C:/Users/Osk/Downloads/megusta_adjusted.html# -->
 <html lang="es">
 <head>
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Fixly Taller - Sistema de Gestión Completo
   </title>
-<link href="./Fixly Taller - Sistema de Gestión Completo_files/tailwind.min.css" rel="stylesheet"/>
-<link href="./Fixly Taller - Sistema de Gestión Completo_files/all.min.css" rel="stylesheet"/>
-<script src="./Fixly Taller - Sistema de Gestión Completo_files/chart.js.descargar">
-</script>
 <style>
    body, html { height: 100%; overflow: auto; }
         
@@ -401,7 +396,7 @@
 </script>
 <style>
   /* Mostrar solo las 5 filas más recientes del historial de WhatsApp (oculta el resto visualmente) */
-  table #historial-mensajes tr:nth-child(n+6) { display: none; }
+  table 
 </style>
 <style>
 /* Badges/pills compactos */
@@ -562,37 +557,37 @@
 </div>
 </div>
 <nav class="mt-6">
-<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="file:///C:/Users/Osk/Downloads/megusta_adjusted.html#" onclick="showSection(event,'dashboard')">
+<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="#" onclick="showSection(event,'dashboard')">
 <i class="fas fa-tachometer-alt mr-3">
 </i>
        Dashboard
       </a>
-<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100 active" href="file:///C:/Users/Osk/Downloads/megusta_adjusted.html#" onclick="showSection(event,'reparaciones')">
+<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100 active" href="#" onclick="showSection(event,'reparaciones')">
 <i class="fas fa-tools mr-3">
 </i>
        Reparaciones
       </a>
-<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="file:///C:/Users/Osk/Downloads/megusta_adjusted.html#" onclick="showSection(event,'historial')">
+<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="#" onclick="showSection(event,'historial')">
 <i class="fas fa-history mr-3">
 </i>
        Historial
       </a>
-<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="file:///C:/Users/Osk/Downloads/megusta_adjusted.html#" onclick="showSection(event,'clientes')">
+<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="#" onclick="showSection(event,'clientes')">
 <i class="fas fa-users mr-3">
 </i>
        Clientes
       </a>
-<a class="py-3 items-center text-gray-700 flex sidebar-item px-6 btn-whatsapp hover:bg-gray-100" href="#" onclick="enviarWhatsAppDesdeBoton(this)">
+<a class="py-3 items-center text-gray-700 flex sidebar-item px-6 btn-whatsapp hover:bg-gray-100" href="#" onclick="showSection(event,'whatsapp')">
 <i class="fab fa-whatsapp mr-3">
 </i>
        WhatsApp
       </a>
-<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="file:///C:/Users/Osk/Downloads/megusta_adjusted.html#" onclick="showSection(event,'pedidos')">
+<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="#" onclick="showSection(event,'pedidos')">
 <i class="fas fa-shopping-cart mr-3">
 </i>
        Formulario de Pedidos
       </a>
-<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="file:///C:/Users/Osk/Downloads/megusta_adjusted.html#" onclick="showSection(event,'configuracion')">
+<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="#" onclick="showSection(event,'configuracion')">
 <i class="fas fa-cog mr-3">
 </i>
        Configuración
@@ -4914,54 +4909,7 @@ function enviarWhatsAppDesdeBoton(btn) {
       telefono = solicitarTelefono(cliente, telefono);
       if (!telefono) return;
       const predef = btn.getAttribute('data-msg');
-      const mensaje = predef && predef.trim() ? predef : armarMensaje({orden, cliente, equipo, estado, tecnico, fecha});
-      tr.setAttribute('data-phone', telefono);
-      btn.setAttribute('data-phone', telefono);
-      enviarWhatsApp(telefono, mensaje);
-      return;
-    }
-    // 2) Caso B: botón en la sección WhatsApp (formulario)
-    const formSection = document.getElementById('whatsapp') || document;
-    const inputCliente = formSection.querySelector('#notif-cliente');
-    const inputTel = formSection.querySelector('#notif-telefono');
-    const textareaMsg = formSection.querySelector('#mensaje-preview');
-    const selectRep = formSection.querySelector('#select-reparacion');
-    const cliente = inputCliente ? inputCliente.value.trim() : '';
-    let telefono = inputTel ? normalizarTelefono(inputTel.value) : '';
-    if (!esTelefonoValido(telefono)) {
-      telefono = solicitarTelefono(cliente, telefono);
-      if (!telefono) return;
-    }
-    const mensaje = (textareaMsg && textareaMsg.value.trim()) || '';
-    if (!mensaje) {
-      alert('No hay mensaje para enviar. Escribí o seleccioná una plantilla.');
-      return;
-    }
-    if (cliente) guardarTelefonoDeCliente(cliente, telefono);
-    enviarWhatsApp(telefono, mensaje);
-  } catch (e) {
-    console.error('Error desde botón WhatsApp:', e);
-  }
-}
-);
-    tr.setAttribute('data-phone', telefono);
-    btn.setAttribute('data-phone', telefono);
-    enviarWhatsApp(telefono, mensaje);
-  } catch (e) {
-    console.error('Error desde botón WhatsApp:', e);
-  }
-});
-    tr.setAttribute('data-phone', telefono);
-    btn.setAttribute('data-phone', telefono);
-    enviarWhatsApp(telefono, mensaje);
-  } catch (e) {
-    console.error('Error desde botón WhatsApp:', e);
-  }
-}
-  
-
-// --- Fallback robusto para garantizar un teléfono válido ---
-function solicitarTelefono(cliente, valorInicial){
+      const mensaje = predef && predef.trim() ? predef : armarMensaje({orden, cliente, equipo, estado, tecnico, fechafunction solicitarTelefono(cliente, valorInicial){
   let tel = normalizarTelefono(valorInicial || '');
   // Si ya es válido, devolvemos directo
   if (esTelefonoValido(tel)) return tel;
@@ -5851,7 +5799,7 @@ on = function(){
   // Inject CSS to hide beyond 5 rows by default
   (function injectCSS(){
     const css = document.createElement('style');
-    css.textContent = `#historial-mensajes tr:nth-child(n+6){ display:none; }`;
+    css.textContent = ``;
     document.head.appendChild(css);
   })();
 
