@@ -5143,17 +5143,6 @@ function solicitarTelefono(cliente, valorInicial){
       if (!confirm("¿Seguro que querés borrar TODO el historial de WhatsApp?")) return;
       // limpiar localStorage
       saveHistorial([]);
-      // limpiar legacy dentro de fixlytallerData (si existiera)
-      try {
-        const raw = localStorage.getItem('fixlytallerData');
-        if (raw) {
-          const data = JSON.parse(raw);
-          if (data && Array.isArray(data.historialMensajes)) {
-            data.historialMensajes = [];
-            localStorage.setItem('fixlytallerData', JSON.stringify(data));
-          }
-        }
-      } catch(_){}
       // limpiar tabla del panel WhatsApp
       const tbw = document.querySelector("#historial-mensajes");
       if (tbw) tbw.innerHTML = "";
@@ -5163,7 +5152,23 @@ function solicitarTelefono(cliente, valorInicial){
         Array.from(tbh.querySelectorAll("tr")).forEach(tr=>{
           const first = tr.querySelector("td");
           if (first && /^#?MSG-/i.test(first.textContent.trim())) tr.remove();
-        });
+        
+      try{
+        // limpiar historialMensajesME (panel derecho moderno)
+        localStorage.removeItem('historialMensajesME');
+        // limpiar historialWsp (widget antiguo)
+        localStorage.removeItem('historialWsp');
+        // limpiar legacy dentro de fixlytallerData
+        const raw = localStorage.getItem('fixlytallerData');
+        if (raw) {
+          const data = JSON.parse(raw);
+          if (data && Array.isArray(data.historialMensajes)) {
+            data.historialMensajes = [];
+            localStorage.setItem('fixlytallerData', JSON.stringify(data));
+          }
+        }
+      }catch(_){}
+    });
       }
       alert("Historial borrado.");
     };
@@ -5839,6 +5844,18 @@ on = function(){
         }
         if (!confirm('¿Seguro que querés borrar todo el historial de envíos?')) return;
         setHistorial([]);
+        try{
+          localStorage.removeItem('historialWsp');
+          localStorage.removeItem('historialMensajesME');
+          const raw = localStorage.getItem('fixlytallerData');
+          if (raw) {
+            const data = JSON.parse(raw);
+            if (data && Array.isArray(data.historialMensajes)) {
+              data.historialMensajes = [];
+              localStorage.setItem('fixlytallerData', JSON.stringify(data));
+            }
+          }
+        }catch(_){}
         renderHistorialMensajes(false);
       });
     }
