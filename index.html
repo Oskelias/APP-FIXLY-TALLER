@@ -5154,15 +5154,14 @@ function solicitarTelefono(cliente, valorInicial){
           if (first && /^#?MSG-/i.test(first.textContent.trim())) tr.remove();
         
       try{
-        // limpiar historialMensajesME (panel derecho moderno)
+        // Marcar borrado y limpiar TODOS los storages
+        localStorage.setItem('__wspCleared','1');
         localStorage.removeItem('historialMensajesME');
-        // limpiar historialWsp (widget antiguo)
         localStorage.removeItem('historialWsp');
-        // limpiar legacy dentro de fixlytallerData
         const raw = localStorage.getItem('fixlytallerData');
-        if (raw) {
+        if (raw){
           const data = JSON.parse(raw);
-          if (data && Array.isArray(data.historialMensajes)) {
+          if (data && Array.isArray(data.historialMensajes)){
             data.historialMensajes = [];
             localStorage.setItem('fixlytallerData', JSON.stringify(data));
           }
@@ -5276,7 +5275,7 @@ on = function(){
   function showFullHistory(){
     // Merge storages, prefer modern entries
     const a = loadHist();
-    const b = loadLegacy();
+    const b = (localStorage.getItem('__wspCleared')==='1') ? [] : loadLegacy();
     // Simple merge by stringified content to avoid duplicates
     const seen = new Set();
     const all = [];
@@ -5844,18 +5843,6 @@ on = function(){
         }
         if (!confirm('¿Seguro que querés borrar todo el historial de envíos?')) return;
         setHistorial([]);
-        try{
-          localStorage.removeItem('historialWsp');
-          localStorage.removeItem('historialMensajesME');
-          const raw = localStorage.getItem('fixlytallerData');
-          if (raw) {
-            const data = JSON.parse(raw);
-            if (data && Array.isArray(data.historialMensajes)) {
-              data.historialMensajes = [];
-              localStorage.setItem('fixlytallerData', JSON.stringify(data));
-            }
-          }
-        }catch(_){}
         renderHistorialMensajes(false);
       });
     }
