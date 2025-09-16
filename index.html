@@ -684,6 +684,176 @@
 </div>
 </div>
 <!-- Gráficos -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8"><div class="card bg-white p-4 rounded-xl lg:col-start-2">
+<h3 class="text-xl font-semibold mb-6 flex items-center">
+<i class="fas fa-shield-alt text-orange-600 mr-2">
+</i>
+         Sistema y Seguridad
+        </h3>
+<div class="space-y-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">
+           Cambiar Contraseña
+          </label>
+<input class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500" id="nueva-password" placeholder="Nueva contraseña" type="password"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">
+           Confirmar Contraseña
+          </label>
+<input class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500" id="confirmar-password" placeholder="Confirmar nueva contraseña" type="password"/>
+</div>
+<button class="w-full bg-orange-600 text-white py-3 px-4 rounded-lg hover:bg-orange-700 transition duration-200 flex items-center justify-center" onclick="cambiarPassword()">
+<i class="fas fa-key mr-2">
+</i>
+          Cambiar Contraseña
+         </button>
+</div>
+</div>
+<!-- Aplicación Principal -->
+<div class="" id="mainApp">
+<div class="flex h-screen bg-gray-100">
+<!-- Sidebar -->
+<div class="w-64 bg-white shadow-lg">
+<div class="p-6 border-b">
+<div class="flex items-center">
+<div class="bg-blue-100 w-10 h-10 rounded-full flex items-center justify-center mr-3">
+<i class="fas fa-mobile-alt text-blue-600">
+</i>
+</div>
+<div>
+<h1 class="text-lg font-bold text-gray-800">
+         Fixly
+        </h1>
+<h1 class="text-lg font-bold text-blue-600">
+         Taller
+        </h1>
+</div>
+</div>
+</div>
+<nav class="mt-6">
+<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="file:///C:/Users/Osk/Downloads/megusta_adjusted.html#" onclick="showSection(event,'dashboard')">
+<i class="fas fa-tachometer-alt mr-3">
+</i>
+       Dashboard
+      </a>
+<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100 active" href="file:///C:/Users/Osk/Downloads/megusta_adjusted.html#" onclick="showSection(event,'reparaciones')">
+<i class="fas fa-tools mr-3">
+</i>
+       Reparaciones
+      </a>
+<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="file:///C:/Users/Osk/Downloads/megusta_adjusted.html#" onclick="showSection(event,'historial')">
+<i class="fas fa-history mr-3">
+</i>
+       Historial
+      </a>
+<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="file:///C:/Users/Osk/Downloads/megusta_adjusted.html#" onclick="showSection(event,'clientes')">
+<i class="fas fa-users mr-3">
+</i>
+       Clientes
+      </a>
+<a class="py-3 items-center text-gray-700 flex sidebar-item px-6 btn-whatsapp hover:bg-gray-100" href="#" onclick="enviarWhatsAppDesdeBoton(this)">
+<i class="fab fa-whatsapp mr-3">
+</i>
+       WhatsApp
+      </a>
+<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="file:///C:/Users/Osk/Downloads/megusta_adjusted.html#" onclick="showSection(event,'pedidos')">
+<i class="fas fa-shopping-cart mr-3">
+</i>
+       Formulario de Pedidos
+      </a>
+<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="file:///C:/Users/Osk/Downloads/megusta_adjusted.html#" onclick="showSection(event,'configuracion')">
+<i class="fas fa-cog mr-3">
+</i>
+       Configuración
+      </a>
+</nav>
+</div>
+<!-- Contenido Principal -->
+<div class="flex-1 main-content">
+<!-- Dashboard -->
+<div class="section p-8" id="dashboard">
+<div class="dashboard-container">
+<div class="flex justify-between items-center mb-8">
+<h1 class="text-3xl font-bold text-gray-800">
+         Dashboard
+        </h1>
+<div class="text-sm text-gray-600">
+<i class="fas fa-calendar mr-2">
+</i>
+<span id="fecha-actual">
+          martes, 19 de agosto de 2025
+         </span>
+</div>
+</div>
+<!-- KPIs -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+<div class="card bg-white p-6 rounded-xl">
+<div class="flex items-center justify-between">
+<div>
+<p class="text-sm font-medium text-gray-600">
+            Reparaciones Hoy
+           </p>
+<p class="text-2xl font-bold text-gray-900" id="kpi-hoy">
+            0
+           </p>
+</div>
+<div class="bg-blue-100 p-3 rounded-full">
+<i class="fas fa-calendar-day text-blue-600">
+</i>
+</div>
+</div>
+</div>
+<div class="card bg-white p-6 rounded-xl">
+<div class="flex items-center justify-between">
+<div>
+<p class="text-sm font-medium text-gray-600">
+            En Proceso
+           </p>
+<p class="text-2xl font-bold text-gray-900" id="kpi-proceso">
+            1
+           </p>
+</div>
+<div class="bg-yellow-100 p-3 rounded-full">
+<i class="fas fa-cog text-yellow-600">
+</i>
+</div>
+</div>
+</div>
+<div class="card bg-white p-6 rounded-xl">
+<div class="flex items-center justify-between">
+<div>
+<p class="text-sm font-medium text-gray-600">
+            Listos
+           </p>
+<p class="text-2xl font-bold text-gray-900" id="kpi-listos">
+            1
+           </p>
+</div>
+<div class="bg-green-100 p-3 rounded-full">
+<i class="fas fa-check text-green-600">
+</i>
+</div>
+</div>
+</div>
+<div class="card bg-white p-6 rounded-xl">
+<div class="flex items-center justify-between">
+<div>
+<p class="text-sm font-medium text-gray-600">
+            Clientes
+           </p>
+<p class="text-2xl font-bold text-gray-900" id="kpi-clientes">
+            3
+           </p>
+</div>
+<div class="bg-purple-100 p-3 rounded-full">
+<i class="fas fa-users text-purple-600">
+</i>
+</div>
+</div>
+</div>
+</div>
+<!-- Gráficos -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 <div class="card bg-white p-6 rounded-xl">
 <h3 class="text-lg font-semibold mb-4">
@@ -1285,12 +1455,7 @@
 </select>
 </div>
 </div>
-<div class="space-y-3" id="lista-pedidos"></div><div>
-<label class="block text-sm font-medium text-gray-700 mb-2">
-           Confirmar Contraseña
-          </label>
-<input class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500" id="confirmar-password" placeholder="Confirmar nueva contraseña" type="password"/>
-</div>
+<div class="space-y-3" id="lista-pedidos"></div>
 </div>
 </div>
 </div>
@@ -1432,7 +1597,12 @@
           </label>
 <input class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500" id="nueva-password" placeholder="Nueva contraseña" type="password"/>
 </div>
-
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">
+           Confirmar Contraseña
+          </label>
+<input class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500" id="confirmar-password" placeholder="Confirmar nueva contraseña" type="password"/>
+</div>
 <button class="w-full bg-orange-600 text-white py-3 px-4 rounded-lg hover:bg-orange-700 transition duration-200 flex items-center justify-center" onclick="cambiarPassword()">
 <i class="fas fa-key mr-2">
 </i>
