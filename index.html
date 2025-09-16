@@ -1,3 +1,8 @@
+
+
+
+
+
 <!DOCTYPE html>
 
 <!-- saved from url=(0053)file:///C:/Users/Osk/Downloads/megusta_adjusted.html# -->
@@ -1331,6 +1336,15 @@
           </label>
 <input class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" name="email" required="" type="email" value="info@fixlytaller.com"/>
 </div>
+
+<div>
+  <label class="block text-sm font-medium text-gray-700 mb-2">Condiciones de garantía (plantilla)</label>
+  <textarea name="garantia_texto" id="garantia_texto" rows="5" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Texto que aparecerá en el pie del comprobante.">Las reparaciones tienen una garantía de 60 días únicamente por la misma falla reparada.
+Los repuestos están garantizados solo por defectos de fábrica.
+La garantía no cubre daños ocasionados por golpes, roturas, líquidos o uso indebido.
+Los trabajos de software y configuraciones no tienen garantía.</textarea>
+  <p class="text-xs text-gray-500 mt-1">Podés editarlo por local. Se imprimirá debajo de los datos del taller.</p>
+</div>
 <button class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center" type="submit">
 <i class="fas fa-save mr-2">
 </i>
@@ -2641,6 +2655,7 @@
 
             // Cargar datos del taller para personalizar el comprobante
             let nombre_taller = 'Fixly Taller', direccion = '', telefono = '', email = '';
+            let garantia_texto = '';
             try {
                 const raw = localStorage.getItem('fixlytallerData');
                 if (raw) {
@@ -2653,12 +2668,19 @@
                             direccion = cfg.direccion || direccion;
                             telefono = cfg.telefono || telefono;
                             email = cfg.email || email;
+                            garantia_texto = (cfg.garantia_texto || cfg.garantiaTexto || '').trim();
                         }
                     }
                 }
             } catch (e) { /* ignore errors, use defaults */ }
 
-            const ventanaImpresion = window.open('', '_blank');
+            const defaultGarantia = `Las reparaciones tienen una garantía de 60 días únicamente por la misma falla reparada.
+Los repuestos están garantizados solo por defectos de fábrica.
+La garantía no cubre daños ocasionados por golpes, roturas, líquidos o uso indebido.
+Los trabajos de software y configuraciones no tienen garantía.`;
+            const garantiaTexto = garantia_texto ? garantia_texto : defaultGarantia;
+
+            const ventanaImpresion = window.open('', '_blank'); = window.open('', '_blank');
             // Construir una línea con la información del taller para encabezado y pie de página.
             const infoTaller = [nombre_taller, direccion, telefono, email].filter(Boolean).join(' • ');
 
@@ -2790,7 +2812,7 @@
                         <div class="print-title">${nombre_taller}</div>
                         <div class="print-subtitle">COPIA CLIENTE</div>
                         <div class="print-order">ORDEN #${reparacion.id}</div>
-                        
+                        ${infoTaller ? `<div class="print-contact" style="font-size:10pt; font-weight:bold;">${infoTaller}</div>` : ''}
                     </div>
                     
                     <div class="print-section">
@@ -2847,10 +2869,7 @@
                     
   <div class="print-footer" style="text-align: center;">
                         ${infoTaller ? `<strong>${infoTaller}</strong>` : nombre_taller}<br>
-                        Las reparaciones tienen una garantía de 60 días únicamente por la misma falla reparada.<br>
-                        Los repuestos están garantizados solo por defectos de fábrica.<br>
-                        La garantía no cubre daños ocasionados por golpes, roturas, líquidos o uso indebido.<br>
-                        Los trabajos de software y configuraciones no tienen garantía.
+                        ${garantiaTexto.split('\n').map(s=>s.trim()).filter(Boolean).join('<br>')}
                     </div>
                 </body>
                 </html>
@@ -3568,6 +3587,8 @@ function imprimirComprobantePedido(pedidoId){
                         direccion: formData.get('direccion'),
                         telefono: formData.get('telefono'),
                         email: formData.get('email')
+                    ,
+                        garantia_texto: formData.get('garantia_texto')
                     };
                     
                     guardarConfiguracion();
