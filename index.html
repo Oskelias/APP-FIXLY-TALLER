@@ -6094,5 +6094,82 @@ on = function(){
 })();
 </script>
 
+
+<script>
+// --- UX FIX Pedidos: filtro de usuario por defecto "Todos" + persistencia y auto-fallback ---
+(function(){
+  function findUserFilterSelect(){
+    // Busca un <select> que tenga una opción "Todos" en la sección de pedidos
+    var candidates = Array.from(document.querySelectorAll('select'));
+    for (var i=0;i<candidates.length;i++){
+      var s = candidates[i];
+      var hasTodos = Array.from(s.options).some(function(o){ return (o.textContent||'').trim().toLowerCase() === 'todos'; });
+      // Evitar confundir con otros selects (WhatsApp, etc.) tratando de ubicarlo cerca del área de "Lista de Pedidos"
+      var nearList = s.closest('.lista-pedidos') || s.closest('#lista-pedidos') || s.closest('.orders-list') || s.closest('.right-panel') || s.parentElement;
+      if (hasTodos) return s;
+    }
+    return null;
+  }
+
+  function applyDefaultFilter(){
+    var select = findUserFilterSelect();
+    if (!select) return;
+    // Valor previamente guardado
+    var saved = '';
+    try { saved = localStorage.getItem('pedidosFiltroUsuario') || ''; } catch(_){}
+    // Detectar opción "Todos" y su value real
+    var todosOpt = Array.from(select.options).find(function(o){ return (o.textContent||'').trim().toLowerCase() === 'todos'; });
+    var todosVal = todosOpt ? (todosOpt.value || '') : '';
+    // Si no hay saved => usar "Todos"
+    var desired = saved || todosVal;
+    if (desired && select.value !== desired){
+      select.value = desired;
+      // disparar change
+      try { select.dispatchEvent(new Event('change', {bubbles:true})); } catch(_){}
+    }
+    // Guardar persistencia al cambiar
+    select.addEventListener('change', function(){
+      try { localStorage.setItem('pedidosFiltroUsuario', select.value || ''); } catch(_){}
+    });
+  }
+
+  // Detectar cuando se navega a la sección de pedidos
+  function hookShowSection(){
+    var _old = window.showSection;
+    window.showSection = function(event, sectionName){
+      try { if (typeof _old === 'function') _old.apply(this, arguments); } catch(_){}
+      if ((sectionName||'').toLowerCase().includes('pedido')){
+        setTimeout(applyDefaultFilter, 50);
+      }
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    // Aplicar al cargar si ya está visible
+    applyDefaultFilter();
+    hookShowSection();
+  });
+
+  // Fallback: si después de render no hay items y el filtro != "Todos", forzar "Todos"
+  var observer = new MutationObserver(function(){
+    try {
+      var list = document.querySelector('.lista-pedidos') || document.querySelector('#lista-pedidos') || document.querySelector('.orders-list');
+      if (!list) return;
+      var empty = list.querySelector('[data-empty]') || list.querySelector('.alert') || list.textContent.trim().match(/no hay pedidos/i);
+      var select = findUserFilterSelect();
+      if (empty && select){
+        var todosOpt = Array.from(select.options).find(function(o){ return (o.textContent||'').trim().toLowerCase() === 'todos'; });
+        var todosVal = todosOpt ? (todosOpt.value || '') : '';
+        if (select.value !== todosVal){
+          select.value = todosVal;
+          try { select.dispatchEvent(new Event('change', {bubbles:true})); } catch(_){}
+        }
+      }
+    } catch(_){}
+  });
+  try { observer.observe(document.body, {subtree:true, childList:true}); } catch(_){}
+})();
+</script>
+
 </body>
 </html>
