@@ -5143,6 +5143,17 @@ function solicitarTelefono(cliente, valorInicial){
       if (!confirm("¿Seguro que querés borrar TODO el historial de WhatsApp?")) return;
       // limpiar localStorage
       saveHistorial([]);
+      // limpiar legacy dentro de fixlytallerData (si existiera)
+      try {
+        const raw = localStorage.getItem('fixlytallerData');
+        if (raw) {
+          const data = JSON.parse(raw);
+          if (data && Array.isArray(data.historialMensajes)) {
+            data.historialMensajes = [];
+            localStorage.setItem('fixlytallerData', JSON.stringify(data));
+          }
+        }
+      } catch(_){}
       // limpiar tabla del panel WhatsApp
       const tbw = document.querySelector("#historial-mensajes");
       if (tbw) tbw.innerHTML = "";
