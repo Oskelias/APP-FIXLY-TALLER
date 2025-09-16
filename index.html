@@ -2860,7 +2860,63 @@
                         La garantía no cubre daños ocasionados por golpes, roturas, líquidos o uso indebido.<br>
                         Los trabajos de software y configuraciones no tienen garantía.
                     </div>
-                </body>
+                
+<script>
+// --- WhatsApp panel: dedupe + render único (fuente = historialWsp) ---
+(function(){
+  function readHist(){ try{ return JSON.parse(localStorage.getItem('historialWsp')||'[]'); }catch(_){ return []; } }
+  function fmt(d){ try{ return new Date(d||Date.now()).toLocaleString(); }catch(_){ return new Date().toLocaleString(); } }
+  const MAX = 5;
+
+  function renderPanel(){
+    const tb = document.getElementById('historial-mensajes');
+    if (!tb) return;
+    tb.innerHTML = '';
+    // dedupe por (cliente|tipo|mensaje|fecha redondeada al minuto)
+    const rows = readHist();
+    const seen = new Set();
+    const deduped = [];
+    for (const r of rows){
+      const f = new Date(r.fecha||Date.now()); f.setSeconds(0,0);
+      const key = [r.cliente||'', r.tipo||r.tipoMensaje||'', (r.mensaje||'').trim(), f.getTime()].join('|');
+      if (seen.has(key)) continue;
+      seen.add(key); deduped.push(r);
+    }
+    deduped.slice(-MAX).forEach(r => {
+      const tr = document.createElement('tr');
+      tr.className = "border-b";
+      tr.innerHTML = `<td class="py-2">${r.cliente||''}</td>
+                      <td class="py-2">${r.tipo||r.tipoMensaje||''}</td>
+                      <td class="py-2">${r.estado||'Enviado'}</td>
+                      <td class="py-2">${fmt(r.fecha)}</td>`;
+      tb.appendChild(tr);
+    });
+  }
+
+  // Forzar nuestras funciones públicas a este render
+  window.renderHistorial = renderPanel;
+  window.cargarHistorialMensajes = renderPanel;
+
+  // Asegurar que el botón de envío loguea una sola vez
+  window.pushHistorialEnvio = function(cliente, mensaje, estado){
+    try{
+      const tipoSel = document.getElementById('tipo-mensaje');
+      const tipo = tipoSel ? (tipoSel.options[tipoSel.selectedIndex]?.text || tipoSel.value || "") : "";
+      const rows = readHist();
+      rows.push({ cliente, mensaje, tipo, estado: estado||"ENVIADO", fecha: new Date().toISOString() });
+      localStorage.setItem('historialWsp', JSON.stringify(rows));
+      renderPanel();
+    }catch(_){}
+  };
+
+  // Re-render al cargar y después de pequeñas demoras para ganarle a otros listeners
+  document.addEventListener('DOMContentLoaded', function(){
+    renderPanel(); setTimeout(renderPanel, 60); setTimeout(renderPanel, 200);
+  });
+})();
+</script>
+
+</body>
                 </html>
             `);
             
