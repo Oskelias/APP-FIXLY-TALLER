@@ -1101,81 +1101,7 @@
 </div>
 </div>
 <!-- Plantillas de Mensajes -->
-<div class="card bg-white p-6 rounded-xl">
-<h3 class="text-xl font-semibold mb-6">
-         Plantillas de Mensajes
-        </h3>
-<div class="space-y-4">
-<div class="border-l-4 border-blue-500 pl-4">
-<h4 class="font-semibold text-green-600">
-           Equipo Recibido
-          </h4>
-<p class="text-sm text-gray-600">
-           Hola [Nombre], hemos recibido su [Equipo]. Le mantendremos informado del progreso. Ticket: [Ticket]
-          </p>
-</div>
-<div class="border-l-4 border-yellow-500 pl-4">
-<h4 class="font-semibold text-green-600">
-           Diagnóstico Listo
-          </h4>
-<p class="text-sm text-gray-600">
-           Hola [Nombre], hemos diagnosticado su [Equipo]. [Problema]. Costo estimado: $[Costo]. ¿Autoriza la reparación?
-          </p>
-</div>
-<div class="border-l-4 border-green-500 pl-4">
-<h4 class="font-semibold text-green-600">
-           Equipo Listo
-          </h4>
-<p class="text-sm text-gray-600">
-           ¡Buenas noticias! Su [Equipo] está listo para retirar. Costo total: $[Costo]. Horario: Lun-Vie 9-18hs, Sáb 9-13hs
-          </p>
-</div>
-<div class="border-l-4 border-red-500 pl-4">
-<h4 class="font-semibold text-green-600">
-           Recordatorio - Equipo Listo
-          </h4>
-<p class="text-sm text-gray-600">
-           Hola [Nombre], su [Equipo] está listo para retirar desde hace varios días. Por favor coordine su retiro. Gracias.
-          </p>
-</div>
-        <div class="border-l-4 border-gray-500 pl-4">
-<h4 class="font-semibold text-green-600">
-           No Reparable
-          </h4>
-<p class="text-sm text-gray-600">
-           Hola [Nombre], lamentablemente su [Equipo] no se puede reparar debido a [Problema]. Puede pasar a retirarlo sin cargo. Gracias.
-          </p>
-        </div>
-</div>
-<div class="mt-8">
-<h4 class="font-semibold mb-4">
-          Historial de Envíos
-         </h4>
-<div class="overflow-x-auto">
-<table class="w-full text-sm">
-<thead>
-<tr class="border-b">
-<th class="text-left py-2">
-              Cliente
-             </th>
-<th class="text-left py-2">
-              Mensaje
-             </th>
-<th class="text-left py-2">
-              Estado
-             </th>
-<th class="text-left py-2">
-              Fecha
-             </th>
-</tr>
-</thead>
-<tbody id="historial-mensajes">
-<!-- Se llena dinámicamente -->
-</tbody>
-</table>
-</div>
-</div>
-</div>
+
 </div>
 </div>
 <!-- Formulario de Pedidos -->
@@ -2860,7 +2786,26 @@
                         La garantía no cubre daños ocasionados por golpes, roturas, líquidos o uso indebido.<br>
                         Los trabajos de software y configuraciones no tienen garantía.
                     </div>
-                </body>
+                
+<script>
+// Guardas por si alguna función de historial corre sin el panel presente
+window.renderHistorial = (function(orig){
+  return function(){ try{
+    var tb = document.getElementById('historial-mensajes');
+    if (!tb) return;
+    if (orig) return orig.apply(this, arguments);
+  }catch(_){} };
+})(window.renderHistorial);
+window.cargarHistorialMensajes = (function(orig){
+  return function(){ try{
+    var tb = document.getElementById('historial-mensajes');
+    if (!tb) return;
+    if (orig) return orig.apply(this, arguments);
+  }catch(_){} };
+})(window.cargarHistorialMensajes);
+</script>
+
+</body>
                 </html>
             `);
             
@@ -5152,7 +5097,22 @@ function solicitarTelefono(cliente, valorInicial){
         Array.from(tbh.querySelectorAll("tr")).forEach(tr=>{
           const first = tr.querySelector("td");
           if (first && /^#?MSG-/i.test(first.textContent.trim())) tr.remove();
-        });
+        
+      try{
+        // Marcar borrado y limpiar TODOS los storages
+        localStorage.setItem('__wspCleared','1');
+        localStorage.removeItem('historialMensajesME');
+        localStorage.removeItem('historialWsp');
+        const raw = localStorage.getItem('fixlytallerData');
+        if (raw){
+          const data = JSON.parse(raw);
+          if (data && Array.isArray(data.historialMensajes)){
+            data.historialMensajes = [];
+            localStorage.setItem('fixlytallerData', JSON.stringify(data));
+          }
+        }
+      }catch(_){}
+    });
       }
       alert("Historial borrado.");
     };
@@ -5260,7 +5220,7 @@ on = function(){
   function showFullHistory(){
     // Merge storages, prefer modern entries
     const a = loadHist();
-    const b = loadLegacy();
+    const b = (localStorage.getItem('__wspCleared')==='1') ? [] : loadLegacy();
     // Simple merge by stringified content to avoid duplicates
     const seen = new Set();
     const all = [];
