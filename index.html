@@ -6782,79 +6782,97 @@ on = function(){
 })();
 </script>
 <script>
-// === FIXLY ADD-ON v6.1 — Redirigir a "Estado del Equipo" si abriste el modal equivocado ===
+// === FIXLY PATCH v6.2 — con guardias (no se ejecuta en login) ===
 (function(){
-  const $  = (q,c)=> (c||document).querySelector(q);
-  const $$ = (q,c)=> Array.from((c||document).querySelectorAll(q));
-  const norm=s=>(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const $  = (q,ctx)=> (ctx||document).querySelector(q);
+  const $$ = (q,ctx)=> Array.from((ctx||document).querySelectorAll(q));
+  const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 
-  function isVisible(el){
+  // —— Guardias: NO ejecutar en pantallas de login
+  const isLogin = !!(
+    $('form[action*="login"]') ||
+    $('#login-form') ||
+    $('.login-card,.auth-box') ||
+    $$('button, a').some(b => /iniciar sesi[oó]n/i.test(b.textContent)) ||
+    /iniciar sesi[oó]n/.test(document.body.innerText)
+  );
+  if (isLogin) return;
+
+  // Utils
+  const isVisible = el=>{
     if(!el) return false;
-    const s = getComputedStyle(el);
+    const s=getComputedStyle(el);
     return s.display!=='none' && s.visibility!=='hidden' && s.opacity!=='0';
-  }
-  function modalHasResultado(root){
-    if (!root) return false;
-    if ($('#resultado',root) || $('select[name="resultado"]',root) || $('#estado-equipo-resultado',root)) return true;
-    return $$('label',root).some(l=> norm(l.textContent).includes('resultado'));
-  }
-  function findEstadoEquipoModal(){
-    const cand = $$('.modal,[role="dialog"],.dialog,.popup');
-    return cand.find(m=>{
-      if (isVisible(m)) return false; // buscamos otro modal oculto
-      const txt = norm(m.textContent||'');
-      return modalHasResultado(m) || txt.includes('estado del equipo');
-    }) || null;
-  }
-  function closeModal(m){
-    try{
-      if (window.bootstrap && bootstrap.Modal){
-        (bootstrap.Modal.getInstance(m) || new bootstrap.Modal(m)).hide();
-        return;
-      }
-    }catch(e){}
-    m.classList.remove('show'); m.style.display='none'; m.setAttribute('aria-hidden','true');
-  }
-  function openModal(m){
-    try{
-      if (window.bootstrap && bootstrap.Modal){
-        (bootstrap.Modal.getInstance(m) || new bootstrap.Modal(m)).show();
-        return;
-      }
-    }catch(e){}
-    m.style.display='block'; m.classList.add('show'); m.removeAttribute('aria-hidden');
-    document.body.classList.add('modal-open');
-  }
+  };
 
-  function redirectIfNeeded(){
-    // Detectá si abriste "Editar Estado de Reparación"
-    const headers = document.querySelectorAll('h1,h2,h3,h4,h5,h6');
-    const currentHeader = Array.from(headers).find(h=>{
-      const t=norm(h.textContent);
-      return t.includes('editar estado de reparacion') || t.includes('editar estado de reparación');
+  // Mapeo Resultado -> Estado
+  const MAPEO = [
+    {k:['no reparado','no acepto','no aceptó','presupuesto'], to:'Para devolver'},
+    {k:['irreparable'],                                       to:'Para devolver'},
+    {k:['sin repuesto','no hay repuesto'],                    to:'Para devolver'},
+    {k:['diagnostico','diagnóstico','en diagnostico'],        to:'En diagnóstico'},
+    {k:['presupuestado','espera ok','a la espera'],           to:'Presupuestado'},
+    {k:['reparado','listo'],                                  to:'Listo'},
+    {k:['entregado'],                                         to:'Entregado'},
+  ];
+  const infer = txt=>{
+    const v = norm(txt||'');
+    for (const r of MAPEO) if (r.k.some(w=>v.includes(w))) return r.to;
+    return 'En curso';
+  };
+  const setSelect = (sel, target)=>{
+    if (!sel) return;
+    const t = norm(target);
+    const opt = Array.from(sel.options||[]).find(o=>{
+      const vv = norm(o.value||''), tt = norm(o.text||'');
+      return vv===t || tt===t;
     });
-    if (!currentHeader) return;
+    sel.value = opt ? opt.value : target;
+    sel.dispatchEvent(new Event('change'));
+  };
 
-    // Contenedor del modal actual
-    const modal = currentHeader.closest('.modal,[role="dialog"],.dialog,.popup') || currentHeader.parentElement;
-    if (!modal) return;
-
-    // Si este modal NO tiene "Resultado", saltamos al que sí lo tiene
-    if (!modalHasResultado(modal)){
-      const destino = findEstadoEquipoModal();
-      if (destino){
-        closeModal(modal);
-        openModal(destino);
-      }
-    }
+  // Solo tocar modales visibles dentro de la app
+  function pickVisibleModals(){
+    // típicos contenedores de app (sidebar/menu) para asegurar que estamos dentro
+    const inApp = $('.sidebar, nav.sidebar, [data-app], #app, .layout');
+    if (!inApp) return [];
+    return $$('.modal.show,[role="dialog"].show,.dialog.show,.popup.show')
+           .filter(isVisible);
   }
 
-  const obs = new MutationObserver(()=>redirectIfNeeded());
-  obs.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style']});
-  document.addEventListener('DOMContentLoaded', redirectIfNeeded);
-})();
-</script>
+  function getByLabelContains(root, text){
+    const lab = $$('label', root).find(l=> norm(l.textContent).includes(text));
+    if (!lab) return null;
+    const row = lab.closest('.form-group, .mb-3, .row, .field, .col, .form-row, div') || lab.parentElement;
+    return {label: lab, row};
+  }
+  function pickSelect(root, keys){
+    for (const k of keys){
+      const byId = $('#'+k, root); if (byId && byId.tagName==='SELECT') return byId;
+      const byNm = root.querySelector(`select[name="${k}"]`); if (byNm) return byNm;
+    }
+    return null;
+  }
 
+  function patchModal(root){
+    if (!root || root.__ft_patched) return;
+    // Validar que sea el modal correcto por título
+    const header = $('h1,h2,h3,h4,h5,h6', root);
+    const ht = norm(header?.textContent||'');
+    if (!(/estado.*reparaci/.test(ht) || /estado.*equipo/.test(ht))) return;
+
+    // 1) Renombrar
+    if (header) header.textContent = 'Estado del Equipo';
+
+    // 2) Ocultar Técnico Asignado (solo ocultar, no borrar)
+    const tec = getByLabelContains(root,'tecnico asignado');
+    if (tec && tec.row) tec.row.style.display='none';
+
+    // 3) Mapear Resultado -> Estado si existen
+    const selR = pickSelect(root, ['resultado','estado-equipo-resultado']);
+    const selE = pickSelect(root, ['estado','estado-reparacion-select']);
+    const sync = ()=> {
+     
 
 </body>
 </html>
