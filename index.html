@@ -6675,6 +6675,159 @@ on = function(){
   document.addEventListener('DOMContentLoaded', function(){ try{ renderDashboard(); }catch(e){} });
 })();
 </script>
+<script>
+// === FIXLY PATCH v2: Resultado -> Estado + redirección de modal ===
+(function () {
+  // Utils cortas
+  const $ = (q, c) => (c || document).querySelector(q);
+  const $$ = (q, c) => Array.from((c || document).querySelectorAll(q));
+
+  // 1) Normalizar IDs/Selects (intenta varios por si cambian)
+  function getResultadoSelect(ctx) {
+    return $('#resultado, select[name="resultado"], #estado-equipo-resultado', ctx);
+  }
+  function getEstadoSelect(ctx) {
+    return $('#estado, select[name="estado"], #estado-reparacion-select', ctx);
+  }
+  function getCostoInput(ctx) {
+    return $('#costo-final, input[name="costo_final"], #costoFinal', ctx);
+  }
+  function getTecnicoRow(ctx) {
+    // fila contenedora del select técnico (para ocultar)
+    const sel = $('#tecnico-asignado, select[name="tecnico"], #tecnicoAsignado', ctx);
+    return sel ? sel.closest('.form-group, .mb-3, .row, .field') : null;
+  }
+
+  // 2) Mapeo de Resultado -> Estado (editá los textos a tu gusto si hace falta)
+  //  - Matchea por "includes" en minúsculas para ser tolerante a variantes
+  const MAPEO = [
+    { match: ['no reparado', 'no aceptó', 'no acepto', 'presupuesto'], estado: 'Para devolver' },
+    { match: ['irreparable'],                                            estado: 'Para devolver' },
+    { match: ['sin repuesto', 'no hay repuesto'],                        estado: 'Para devolver' },
+    { match: ['en diagnóstico', 'diagnostico', 'diagnóstico'],           estado: 'En diagnóstico' },
+    { match: ['presupuestado', 'a la espera de ok', 'espera ok'],        estado: 'Presupuestado' },
+    { match: ['reparado'],                                               estado: 'Listo para entregar' },
+    { match: ['entregado'],                                              estado: 'Entregado' },
+  ];
+
+  function inferirEstadoDesdeResultado(valorResultado) {
+    const v = (valorResultado || '').toLowerCase().trim();
+    for (const regla of MAPEO) {
+      if (regla.match.some(m => v.includes(m))) return regla.estado;
+    }
+    // fallback razonable
+    return 'En curso';
+  }
+
+  // 3) En el modal "Estado del Equipo": setear Estado automáticamente
+  function cablearModalEstadoEquipo(modal) {
+    if (!modal || modal.__cableado) return;
+    modal.__cableado = true;
+
+    // Ocultar "Técnico Asignado" si existiera
+    const tecnicoRow = getTecnicoRow(modal);
+    if (tecnicoRow) tecnicoRow.style.display = 'none';
+
+    // Título del modal
+    const title = $('h5, h4, .modal-title', modal);
+    if (title) title.textContent = 'Estado del Equipo';
+
+    const selResultado = getResultadoSelect(modal);
+    const selEstado    = getEstadoSelect(modal);
+
+    const actualizarEstado = () => {
+      if (!selResultado || !selEstado) return;
+      const target = inferirEstadoDesdeResultado(selResultado.value || selResultado.options?.[selResultado.selectedIndex]?.text);
+      // Si existe la opción, la seleccionamos; si no, seteamos value directo
+      const opt = Array.from(selEstado.options || []).find(o => (o.text || o.value).toLowerCase().trim() === target.toLowerCase());
+      if (opt) selEstado.value = opt.value; else selEstado.value = target;
+      selEstado.dispatchEvent(new Event('change'));
+    };
+
+    if (selResultado) {
+      selResultado.addEventListener('change', actualizarEstado);
+      // Ejecutamos una vez al abrir
+      setTimeout(actualizarEstado, 0);
+    }
+
+    // 4) Guardado: si el estado queda "Entregado", marcamos para archivar (si el backend lo soporta)
+    const form = $('form', modal) || modal;
+    form.addEventListener('submit', (ev) => {
+      try {
+        const estadoActual = selEstado ? (selEstado.value || selEstado.options?.[selEstado.selectedIndex]?.text) : '';
+        // Si tu submit es vía fetch manual, podés inyectar un flag:
+        // window.__archivar = (estadoActual && estadoActual.toLowerCase().includes('entregado'));
+        // En formularios nativos, añadimos un input hidden:
+        let hidden = $('input[name="archivar"]', form);
+        if (!hidden) {
+          hidden = document.createElement('input');
+          hidden.type = 'hidden';
+          hidden.name = 'archivar';
+          form.appendChild(hidden);
+        }
+        hidden.value = (estadoActual || '').toLowerCase().includes('entregado') ? '1' : '0';
+      } catch (e) { /* noop */ }
+    });
+  }
+
+  // 5) Redirigir “Editar Estado de Reparación” -> abrir “Estado del Equipo”
+  //    (si tu botón/acción abre otro modal, lo interceptamos y abrimos el correcto)
+  document.addEventListener('click', function (e) {
+    const btn = e.target.closest('button, a');
+    if (!btn) return;
+
+    // Heurísticas: botones con lápiz/azul o con data-target al modal de estado de reparación
+    const dataTarget = btn.getAttribute('data-target') || btn.getAttribute('href') || '';
+    const titleAttr  = (btn.getAttribute('title') || '').toLowerCase();
+
+    const esEditarEstadoReparacion =
+      titleAttr.includes('estado de la reparación') ||
+      titleAttr.includes('editar') ||
+      dataTarget.includes('#modal-estado-reparacion');
+
+    if (esEditarEstadoReparacion) {
+      // Prevenimos la apertura del modal "viejo"
+      if (dataTarget) e.preventDefault();
+
+      // Abrimos (o forzamos) el modal correcto de "Estado del Equipo"
+      const modalEquipo =
+        $('#modal-estado-equipo') ||
+        $('.modal').find(m => /estado.+equipo/i.test(m.textContent || ''));
+
+      if (modalEquipo && typeof $(modalEquipo).modal === 'function') {
+        // Bootstrap jQuery (si está)
+        $(modalEquipo).modal('show');
+        cablearModalEstadoEquipo(modalEquipo);
+      } else if (modalEquipo) {
+        // Sin jQuery: toggles básicos
+        modalEquipo.style.display = 'block';
+        modalEquipo.classList.add('show');
+        cablearModalEstadoEquipo(modalEquipo);
+      }
+    }
+  }, true);
+
+  // 6) Auto-cablear cuando el modal de "Estado del Equipo" exista en DOM
+  const obs = new MutationObserver(() => {
+    $$('.modal').forEach(m => {
+      const isEquipo = /estado\s+del?\s+equipo/i.test((m.querySelector('.modal-title')?.textContent || m.textContent || ''));
+      if (isEquipo) cablearModalEstadoEquipo(m);
+    });
+  });
+  obs.observe(document.documentElement, { childList: true, subtree: true });
+
+  // 7) (Opcional) Costo Final: si querés prellenarlo con suma de items/anticipo
+  //    Dejá este hook listo para que llames a tu API y setees el valor.
+  async function prellenarCosto(modal, ordenId) {
+    try {
+      // Ejemplo: const r = await fetch(`/api/ordenes/${ordenId}/totales`);
+      // const { total } = await r.json();
+      // const costo = getCostoInput(modal);
+      // if (costo && total != null) costo.value = total;
+    } catch (e) { /* noop */ }
+  }
+})();
+</script>
 
 
 </body>
