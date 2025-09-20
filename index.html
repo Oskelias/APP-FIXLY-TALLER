@@ -6781,6 +6781,79 @@ on = function(){
   });
 })();
 </script>
+<script>
+// === FIXLY ADD-ON v6.1 — Redirigir a "Estado del Equipo" si abriste el modal equivocado ===
+(function(){
+  const $  = (q,c)=> (c||document).querySelector(q);
+  const $$ = (q,c)=> Array.from((c||document).querySelectorAll(q));
+  const norm=s=>(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+
+  function isVisible(el){
+    if(!el) return false;
+    const s = getComputedStyle(el);
+    return s.display!=='none' && s.visibility!=='hidden' && s.opacity!=='0';
+  }
+  function modalHasResultado(root){
+    if (!root) return false;
+    if ($('#resultado',root) || $('select[name="resultado"]',root) || $('#estado-equipo-resultado',root)) return true;
+    return $$('label',root).some(l=> norm(l.textContent).includes('resultado'));
+  }
+  function findEstadoEquipoModal(){
+    const cand = $$('.modal,[role="dialog"],.dialog,.popup');
+    return cand.find(m=>{
+      if (isVisible(m)) return false; // buscamos otro modal oculto
+      const txt = norm(m.textContent||'');
+      return modalHasResultado(m) || txt.includes('estado del equipo');
+    }) || null;
+  }
+  function closeModal(m){
+    try{
+      if (window.bootstrap && bootstrap.Modal){
+        (bootstrap.Modal.getInstance(m) || new bootstrap.Modal(m)).hide();
+        return;
+      }
+    }catch(e){}
+    m.classList.remove('show'); m.style.display='none'; m.setAttribute('aria-hidden','true');
+  }
+  function openModal(m){
+    try{
+      if (window.bootstrap && bootstrap.Modal){
+        (bootstrap.Modal.getInstance(m) || new bootstrap.Modal(m)).show();
+        return;
+      }
+    }catch(e){}
+    m.style.display='block'; m.classList.add('show'); m.removeAttribute('aria-hidden');
+    document.body.classList.add('modal-open');
+  }
+
+  function redirectIfNeeded(){
+    // Detectá si abriste "Editar Estado de Reparación"
+    const headers = document.querySelectorAll('h1,h2,h3,h4,h5,h6');
+    const currentHeader = Array.from(headers).find(h=>{
+      const t=norm(h.textContent);
+      return t.includes('editar estado de reparacion') || t.includes('editar estado de reparación');
+    });
+    if (!currentHeader) return;
+
+    // Contenedor del modal actual
+    const modal = currentHeader.closest('.modal,[role="dialog"],.dialog,.popup') || currentHeader.parentElement;
+    if (!modal) return;
+
+    // Si este modal NO tiene "Resultado", saltamos al que sí lo tiene
+    if (!modalHasResultado(modal)){
+      const destino = findEstadoEquipoModal();
+      if (destino){
+        closeModal(modal);
+        openModal(destino);
+      }
+    }
+  }
+
+  const obs = new MutationObserver(()=>redirectIfNeeded());
+  obs.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style']});
+  document.addEventListener('DOMContentLoaded', redirectIfNeeded);
+})();
+</script>
 
 
 </body>
