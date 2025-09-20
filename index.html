@@ -6488,10 +6488,19 @@ on = function(){
 })();
 </script>
 <script>
-// === PARCHE FIXLY (Dashboard + Resultado + Tooltip) ===
+// === PARCHE FIXLY (Tooltip + Resultado + Dashboard sin gráficos) ===
 (function(){
+  // Helpers
   function $(q,ctx){return (ctx||document).querySelector(q)}
   function $all(q,ctx){return Array.from((ctx||document).querySelectorAll(q))}
+  function fxData(){ try{ return JSON.parse(localStorage.getItem('fixlytallerData')||'{}'); }catch{return {}} }
+  function normEstado(s=''){ s=String(s).toLowerCase(); if(s.includes('diagn'))return 'diagnostico'; if(s.includes('repar')&&!s.includes('listo'))return 'en-reparacion'; if(s.includes('listo'))return 'listo'; if(s.includes('entreg'))return 'entregado'; return 'otro'; }
+  function esFechaValida(x){ const d=new Date(x); return !isNaN(d.valueOf()); }
+  function hoyAR(){ return new Date().toLocaleDateString('es-AR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}); }
+  function esHoy(f){ if(!esFechaValida(f))return false; const H=new Date(), D=new Date(f); return D.getFullYear()===H.getFullYear()&&D.getMonth()===H.getMonth()&&D.getDate()===H.getDate(); }
+  function diasEntre(a,b){ if(!esFechaValida(a)||!esFechaValida(b))return null; const A=new Date(a), B=new Date(b); return Math.max(0,Math.round((B-A)/86400000)); }
+  function ARS(n){ try{ return n.toLocaleString('es-AR',{style:'currency',currency:'ARS'});}catch{ return '$'+(n||0);} }
+
   // 1) Tooltip "Editar" -> "Estado de la reparación"
   document.addEventListener('DOMContentLoaded', function(){
     $all('button[title="Editar"]').forEach(b=>b.setAttribute('title','Estado de la reparación'));
@@ -6518,34 +6527,54 @@ on = function(){
     }
   });
 
-  // 3) Inyectar SOLO el módulo Dashboard
+  // 3) Inyectar SOLO el módulo Dashboard (sin gráficos, con íconos + tiempo promedio + filtros Mes/Año)
   const newDash = `
-  <div class="max-w-7xl mx-auto px-6 py-8">
+  <section id="dashboard-wrap" class="max-w-7xl mx-auto px-6 py-8">
     <div class="flex items-end justify-between mb-6">
       <div>
         <h1 class="text-3xl font-bold tracking-tight">Dashboard</h1>
         <p id="dashboard-fecha" class="text-sm text-slate-500">Resumen del taller</p>
       </div>
-      <span class="text-sm text-slate-400" id="dashboard-fecha-hoy"></span>
+      <div class="flex items-center gap-2 text-sm">
+        <i class="far fa-calendar"></i>
+        <span id="dashboard-fecha-hoy"></span>
+      </div>
     </div>
+
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
       <div class="bg-white rounded-2xl p-5 shadow-sm ring-1 ring-slate-200">
-        <span class="text-sm text-slate-500">Reparaciones hoy</span>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm text-slate-500">Reparaciones hoy</span>
+          <span class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-slate-100"><i class="far fa-calendar"></i></span>
+        </div>
         <div id="kpi-hoy" class="text-3xl font-semibold">0</div>
       </div>
+
       <div class="bg-white rounded-2xl p-5 shadow-sm ring-1 ring-slate-200">
-        <span class="text-sm text-slate-500">En proceso</span>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm text-slate-500">En proceso</span>
+          <span class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-slate-100"><i class="fas fa-cog"></i></span>
+        </div>
         <div id="kpi-proceso" class="text-3xl font-semibold">0</div>
       </div>
+
       <div class="bg-white rounded-2xl p-5 shadow-sm ring-1 ring-slate-200">
-        <span class="text-sm text-slate-500">Listos</span>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm text-slate-500">Pendientes de retiro</span>
+          <span class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-slate-100"><i class="far fa-check-circle"></i></span>
+        </div>
         <div id="kpi-listos" class="text-3xl font-semibold">0</div>
       </div>
+
       <div class="bg-white rounded-2xl p-5 shadow-sm ring-1 ring-slate-200">
-        <span class="text-sm text-slate-500">Ingresos del mes</span>
-        <div id="kpi-ingresos" class="text-3xl font-semibold">$0</div>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm text-slate-500">Tiempo promedio (días)</span>
+          <span class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-slate-100"><i class="far fa-clock"></i></span>
+        </div>
+        <div id="kpi-tiempo" class="text-3xl font-semibold">0</div>
       </div>
     </div>
+
     <div class="bg-white rounded-2xl p-6 shadow-sm ring-1 ring-slate-200 mb-6">
       <h2 class="font-semibold mb-4">Estados de Reparaciones</h2>
       <ul class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
@@ -6555,63 +6584,98 @@ on = function(){
         <li><div class="text-2xl font-bold text-slate-400" id="estado-entregado">0</div><p class="text-sm text-slate-500">Entregados</p></li>
       </ul>
     </div>
+
+    <div class="bg-white rounded-2xl p-6 shadow-sm ring-1 ring-slate-200 mb-6">
+      <div class="flex items-center justify-between mb-4 gap-3">
+        <h2 class="font-semibold">Ingresos del período</h2>
+        <div class="flex items-center gap-2 text-sm">
+          <select id="dash-mes" class="px-2 py-1 rounded-lg ring-1 ring-slate-200 bg-white"></select>
+          <select id="dash-anio" class="px-2 py-1 rounded-lg ring-1 ring-slate-200 bg-white"></select>
+          <button id="dash-aplicar" class="px-2.5 py-1.5 rounded-lg bg-indigo-600 text-white">Aplicar</button>
+        </div>
+      </div>
+      <div class="text-2xl font-semibold" id="kpi-ingresos">$0</div>
+      <p class="text-xs text-slate-500 mt-1">Calculado con órdenes entregadas en el mes/año elegido.</p>
+    </div>
+
     <div class="bg-white rounded-2xl p-6 shadow-sm ring-1 ring-slate-200">
       <h2 class="font-semibold mb-4">Alertas</h2>
       <ul id="lista-alertas" class="space-y-3 text-sm text-slate-700">
         <li class="text-slate-400">No hay alertas</li>
       </ul>
     </div>
-  </div>`.trim();
+  </section>
+  `.trim();
 
   document.addEventListener('DOMContentLoaded', function(){
     const dash = document.querySelector('#dashboard');
-    if(dash){
-      // Reemplaza SOLO el contenido interno
-      dash.innerHTML = newDash;
-    }
+    if(dash){ dash.innerHTML = newDash; }
   });
 
-  // Lógica del dashboard (lee localStorage.fixlytallerData)
-  function fxData(){ try{return JSON.parse(localStorage.getItem('fixlytallerData')||'{}')}catch{return {}}}
-  function normalizarEstado(s=''){ s=String(s).toLowerCase(); if(s.includes('diagn'))return 'diagnostico'; if(s.includes('repar')&&!s.includes('listo'))return 'en-reparacion'; if(s.includes('listo'))return 'listo'; if(s.includes('entreg'))return 'entregado'; return s||'otro'; }
-  function esHoy(f){ if(!f) return false; const h=new Date(), d=new Date(f); return d.getFullYear()===h.getFullYear()&&d.getMonth()===h.getMonth()&&d.getDate()===h.getDate(); }
-  function formatoARS(n){ try{return n.toLocaleString('es-AR',{style:'currency',currency:'ARS'})}catch{return '$'+(n||0)} }
+  // ===== Lógica del Dashboard (sin gráficos) =====
+  function cargarSelectMesAnio(){
+    const $m=$('#dash-mes'); const $y=$('#dash-anio');
+    if(!$m||!$y) return;
+    const meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const h=new Date(), anio=h.getFullYear();
+    $m.innerHTML = meses.map((m,i)=>`<option value="${i}" ${i===h.getMonth()?'selected':''}>${m}</option>`).join('');
+    $y.innerHTML = [anio-1,anio,anio+1].map(a=>`<option ${a===anio?'selected':''}>${a}</option>`).join('');
+  }
 
   function renderDashboard(){
     const d = fxData();
-    const reparaciones = Array.isArray(d.reparaciones)?d.reparaciones:[];
-    const historial    = Array.isArray(d.historialEntregados)?d.historialEntregados:[];
-    const fopts = { weekday:'long', day:'2-digit', month:'long', year:'numeric' };
-    const hoy = new Date();
-    const $=id=>document.getElementById(id);
-    if($('dashboard-fecha')) $('dashboard-fecha').textContent='Resumen del taller';
-    if($('dashboard-fecha-hoy')) $('dashboard-fecha-hoy').textContent=hoy.toLocaleDateString('es-AR',fopts);
+    const reps = Array.isArray(d.reparaciones)?d.reparaciones:[];
+    const hist = Array.isArray(d.historialEntregados)?d.historialEntregados:[];
+    const $id = (id)=>document.getElementById(id);
 
-    if($('kpi-hoy')) $('kpi-hoy').textContent = reparaciones.filter(r=>esHoy(r.fechaIngreso||r.fecha)).length;
-    const enProceso = reparaciones.filter(r=>['diagnostico','en-reparacion'].includes(normalizarEstado(r.estado))).length;
-    if($('kpi-proceso')) $('kpi-proceso').textContent=enProceso;
-    if($('kpi-listos')) $('kpi-listos').textContent=reparaciones.filter(r=>normalizarEstado(r.estado)==='listo').length;
+    if($id('dashboard-fecha')) $id('dashboard-fecha').textContent='Resumen del taller';
+    if($id('dashboard-fecha-hoy')) $id('dashboard-fecha-hoy').textContent=hoyAR();
 
-    const mes=hoy.getMonth(), anio=hoy.getFullYear();
-    const entregadosMes = historial.filter(r=>{const f=new Date(r.fechaEntrega||r.fecha||r.fechaIngreso); return f.getMonth()===mes && f.getFullYear()===anio;});
-    const ingresosMes = entregadosMes.reduce((a,r)=>a+(Number(r.total||r.precio||0)||0),0);
-    if($('kpi-ingresos')) $('kpi-ingresos').textContent=formatoARS(ingresosMes);
+    if($id('kpi-hoy')) $id('kpi-hoy').textContent = reps.filter(r=>esHoy(r.fechaIngreso||r.fecha)).length;
+    if($id('kpi-proceso')) $id('kpi-proceso').textContent = reps.filter(r=>['diagnostico','en-reparacion'].includes(normEstado(r.estado))).length;
+    if($id('kpi-listos')) $id('kpi-listos').textContent = reps.filter(r=>normEstado(r.estado)==='listo').length;
 
-    if($('estado-diagnostico')) $('estado-diagnostico').textContent=reparaciones.filter(r=>normalizarEstado(r.estado)==='diagnostico').length;
-    if($('estado-reparacion'))  $('estado-reparacion').textContent=reparaciones.filter(r=>normalizarEstado(r.estado)==='en-reparacion').length;
-    if($('estado-listo'))       $('estado-listo').textContent=reparaciones.filter(r=>normalizarEstado(r.estado)==='listo').length;
-    if($('estado-entregado'))   $('estado-entregado').textContent=historial.length;
+    if($id('estado-diagnostico')) $id('estado-diagnostico').textContent = reps.filter(r=>normEstado(r.estado)==='diagnostico').length;
+    if($id('estado-reparacion')) $id('estado-reparacion').textContent   = reps.filter(r=>normEstado(r.estado)==='en-reparacion').length;
+    if($id('estado-listo')) $id('estado-listo').textContent             = reps.filter(r=>normEstado(r.estado)==='listo').length;
+    if($id('estado-entregado')) $id('estado-entregado').textContent     = hist.length;
 
-    const alertas=[]; const listos=reparaciones.filter(r=>normalizarEstado(r.estado)==='listo');
-    if(listos.length>0) alertas.push(`${listos.length} equipos listos para retirar`);
-    const noRep=reparaciones.filter(r=>(r.resultado_final||'').toLowerCase().includes('no reparado'));
-    if(noRep.length>0) alertas.push(`${noRep.length} reparaciones marcadas como no reparadas`);
-    const ul=$('lista-alertas');
-    if(ul){ ul.innerHTML=''; if(alertas.length===0) ul.innerHTML='<li class="text-slate-400">No hay alertas</li>'; else alertas.forEach(a=>ul.innerHTML+=`<li>⚠️ ${a}</li>`); }
+    cargarSelectMesAnio();
+    const aplicar = ()=>{
+      const m = Number($id('dash-mes')?.value ?? new Date().getMonth());
+      const y = Number($id('dash-anio')?.value ?? new Date().getFullYear());
+      const entregados = hist.filter(r=>{
+        const f=new Date(r.fechaEntrega||r.fecha||r.fechaIngreso);
+        return esFechaValida(f) && f.getMonth()===m && f.getFullYear()===y;
+      });
+      const ingresos = entregados.reduce((acc,r)=>acc+(Number(r.total||r.precio||0)||0),0);
+      if($id('kpi-ingresos')) $id('kpi-ingresos').textContent = ARS(ingresos);
+      const tiempos = entregados.map(r=>diasEntre(r.fechaIngreso||r.fecha, r.fechaEntrega||r.fecha)).filter(x=>x!==null);
+      const prom = tiempos.length ? Math.round(tiempos.reduce((a,b)=>a+b,0)/tiempos.length) : 0;
+      if($id('kpi-tiempo')) $id('kpi-tiempo').textContent = prom;
+    };
+    const btn = $id('dash-aplicar');
+    if(btn) btn.onclick = aplicar;
+    aplicar();
+
+    // Alertas
+    const alertas=[];
+    const listos = reps.filter(r=>normEstado(r.estado)==='listo').length;
+    if(listos>0) alertas.push(`${listos} equipos listos para retirar`);
+    const sinRep = reps.filter(r => (r.resultado_final||'').toLowerCase().includes('sin repuesto')).length;
+    if(sinRep>0) alertas.push(`${sinRep} reparaciones esperando repuesto`);
+    const ul = $id('lista-alertas');
+    if(ul){
+      ul.innerHTML='';
+      if(alertas.length===0) ul.innerHTML='<li class="text-slate-400">No hay alertas</li>';
+      else alertas.forEach(a=> ul.innerHTML += `<li>⚠️ ${a}</li>`);
+    }
   }
-  document.addEventListener('DOMContentLoaded', function(){ try{renderDashboard()}catch(e){} });
+
+  document.addEventListener('DOMContentLoaded', function(){ try{ renderDashboard(); }catch(e){} });
 })();
 </script>
+
 
 </body>
 </html>
