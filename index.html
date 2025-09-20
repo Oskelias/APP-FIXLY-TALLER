@@ -804,7 +804,7 @@
 <i class="fas fa-print">
 </i>
 </button>
-<button class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" onclick="editarReparacion('1001')" title="Editar">
+<button class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" onclick="editarReparacion('1001')" title="Estado de la reparación">
 <i class="fas fa-edit">
 </i>
 </button>
@@ -846,7 +846,7 @@
 <i class="fas fa-print">
 </i>
 </button>
-<button class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" onclick="editarReparacion('1002')" title="Editar">
+<button class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" onclick="editarReparacion('1002')" title="Estado de la reparación">
 <i class="fas fa-edit">
 </i>
 </button>
@@ -1619,21 +1619,11 @@
        Resultado
       </label>
 <select class="w-full px-4 py-2 border rounded-lg" id="estado-equipo-resultado" required="">
-<option value="">
-        Seleccionar…
-       </option>
-<option value="reparado">
-        Reparado
-       </option>
-<option value="no-reparado">
-        No reparado
-       </option>
-<option value="no-repuesto">
-        No hay repuesto
-       </option>
-<option value="devolver">
-        Devolver
-       </option>
+<option value="">Seleccionar...</option>
+<option value="Reparado">Reparado</option>
+<option value="No reparado (Sin repuesto)">No reparado (Sin repuesto)</option>
+<option value="No reparado (Daño irreparable)">No reparado (Daño irreparable)</option>
+<option value="No reparado (Cliente no aceptó presupuesto)">No reparado (Cliente no aceptó presupuesto)</option>
 </select>
 </div>
 <div class="flex gap-4 mt-6">
@@ -2188,7 +2178,7 @@
             <button onclick="editarEstadoEquipo('${reparacion.id}')" class="bg-purple-600 text-white p-2 rounded hover:bg-purple-700" title="Estado Equipo">
                 <i class="fas fa-tools"></i>
             </button>
-                            <button onclick="editarReparacion('${reparacion.id}')" class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" title="Editar">
+                            <button onclick="editarReparacion('${reparacion.id}')" class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" title="Estado de la reparación">
                                 <i class="fas fa-edit"></i>
                             </button>
                             <button onclick="enviarWhatsApp('${reparacion.id}')" class="bg-green-600 text-white p-2 rounded hover:bg-green-700" title="WhatsApp">
