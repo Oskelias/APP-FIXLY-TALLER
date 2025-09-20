@@ -6487,6 +6487,131 @@ on = function(){
   try { new MutationObserver(markDeletes).observe(document.body, {subtree:true, childList:true}); } catch(_){}
 })();
 </script>
+<script>
+// === PARCHE FIXLY (Dashboard + Resultado + Tooltip) ===
+(function(){
+  function $(q,ctx){return (ctx||document).querySelector(q)}
+  function $all(q,ctx){return Array.from((ctx||document).querySelectorAll(q))}
+  // 1) Tooltip "Editar" -> "Estado de la reparación"
+  document.addEventListener('DOMContentLoaded', function(){
+    $all('button[title="Editar"]').forEach(b=>b.setAttribute('title','Estado de la reparación'));
+  });
+
+  // 2) Normalizar opciones de "Resultado"
+  document.addEventListener('DOMContentLoaded', function(){
+    const sel = document.getElementById('estado-equipo-resultado') ||
+      $all('label').find(l=>l.textContent.trim().toLowerCase()==='resultado')?.nextElementSibling;
+    if(sel && sel.tagName==='SELECT'){
+      const desired = [
+        ['', 'Seleccionar...'],
+        ['Reparado','Reparado'],
+        ['No reparado (Sin repuesto)','No reparado (Sin repuesto)'],
+        ['No reparado (Daño irreparable)','No reparado (Daño irreparable)'],
+        ['No reparado (Cliente no aceptó presupuesto)','No reparado (Cliente no aceptó presupuesto)'],
+      ];
+      const now = Array.from(sel.options).map(o=>o.textContent.trim()).join('|');
+      const want = desired.map(d=>d[1]).join('|');
+      if(now!==want){
+        sel.innerHTML='';
+        desired.forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;sel.appendChild(o);});
+      }
+    }
+  });
+
+  // 3) Inyectar SOLO el módulo Dashboard
+  const newDash = `
+  <div class="max-w-7xl mx-auto px-6 py-8">
+    <div class="flex items-end justify-between mb-6">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <p id="dashboard-fecha" class="text-sm text-slate-500">Resumen del taller</p>
+      </div>
+      <span class="text-sm text-slate-400" id="dashboard-fecha-hoy"></span>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div class="bg-white rounded-2xl p-5 shadow-sm ring-1 ring-slate-200">
+        <span class="text-sm text-slate-500">Reparaciones hoy</span>
+        <div id="kpi-hoy" class="text-3xl font-semibold">0</div>
+      </div>
+      <div class="bg-white rounded-2xl p-5 shadow-sm ring-1 ring-slate-200">
+        <span class="text-sm text-slate-500">En proceso</span>
+        <div id="kpi-proceso" class="text-3xl font-semibold">0</div>
+      </div>
+      <div class="bg-white rounded-2xl p-5 shadow-sm ring-1 ring-slate-200">
+        <span class="text-sm text-slate-500">Listos</span>
+        <div id="kpi-listos" class="text-3xl font-semibold">0</div>
+      </div>
+      <div class="bg-white rounded-2xl p-5 shadow-sm ring-1 ring-slate-200">
+        <span class="text-sm text-slate-500">Ingresos del mes</span>
+        <div id="kpi-ingresos" class="text-3xl font-semibold">$0</div>
+      </div>
+    </div>
+    <div class="bg-white rounded-2xl p-6 shadow-sm ring-1 ring-slate-200 mb-6">
+      <h2 class="font-semibold mb-4">Estados de Reparaciones</h2>
+      <ul class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+        <li><div class="text-2xl font-bold text-blue-500" id="estado-diagnostico">0</div><p class="text-sm text-slate-500">En diagnóstico</p></li>
+        <li><div class="text-2xl font-bold text-amber-500" id="estado-reparacion">0</div><p class="text-sm text-slate-500">En reparación</p></li>
+        <li><div class="text-2xl font-bold text-green-500" id="estado-listo">0</div><p class="text-sm text-slate-500">Listos</p></li>
+        <li><div class="text-2xl font-bold text-slate-400" id="estado-entregado">0</div><p class="text-sm text-slate-500">Entregados</p></li>
+      </ul>
+    </div>
+    <div class="bg-white rounded-2xl p-6 shadow-sm ring-1 ring-slate-200">
+      <h2 class="font-semibold mb-4">Alertas</h2>
+      <ul id="lista-alertas" class="space-y-3 text-sm text-slate-700">
+        <li class="text-slate-400">No hay alertas</li>
+      </ul>
+    </div>
+  </div>`.trim();
+
+  document.addEventListener('DOMContentLoaded', function(){
+    const dash = document.querySelector('#dashboard');
+    if(dash){
+      // Reemplaza SOLO el contenido interno
+      dash.innerHTML = newDash;
+    }
+  });
+
+  // Lógica del dashboard (lee localStorage.fixlytallerData)
+  function fxData(){ try{return JSON.parse(localStorage.getItem('fixlytallerData')||'{}')}catch{return {}}}
+  function normalizarEstado(s=''){ s=String(s).toLowerCase(); if(s.includes('diagn'))return 'diagnostico'; if(s.includes('repar')&&!s.includes('listo'))return 'en-reparacion'; if(s.includes('listo'))return 'listo'; if(s.includes('entreg'))return 'entregado'; return s||'otro'; }
+  function esHoy(f){ if(!f) return false; const h=new Date(), d=new Date(f); return d.getFullYear()===h.getFullYear()&&d.getMonth()===h.getMonth()&&d.getDate()===h.getDate(); }
+  function formatoARS(n){ try{return n.toLocaleString('es-AR',{style:'currency',currency:'ARS'})}catch{return '$'+(n||0)} }
+
+  function renderDashboard(){
+    const d = fxData();
+    const reparaciones = Array.isArray(d.reparaciones)?d.reparaciones:[];
+    const historial    = Array.isArray(d.historialEntregados)?d.historialEntregados:[];
+    const fopts = { weekday:'long', day:'2-digit', month:'long', year:'numeric' };
+    const hoy = new Date();
+    const $=id=>document.getElementById(id);
+    if($('dashboard-fecha')) $('dashboard-fecha').textContent='Resumen del taller';
+    if($('dashboard-fecha-hoy')) $('dashboard-fecha-hoy').textContent=hoy.toLocaleDateString('es-AR',fopts);
+
+    if($('kpi-hoy')) $('kpi-hoy').textContent = reparaciones.filter(r=>esHoy(r.fechaIngreso||r.fecha)).length;
+    const enProceso = reparaciones.filter(r=>['diagnostico','en-reparacion'].includes(normalizarEstado(r.estado))).length;
+    if($('kpi-proceso')) $('kpi-proceso').textContent=enProceso;
+    if($('kpi-listos')) $('kpi-listos').textContent=reparaciones.filter(r=>normalizarEstado(r.estado)==='listo').length;
+
+    const mes=hoy.getMonth(), anio=hoy.getFullYear();
+    const entregadosMes = historial.filter(r=>{const f=new Date(r.fechaEntrega||r.fecha||r.fechaIngreso); return f.getMonth()===mes && f.getFullYear()===anio;});
+    const ingresosMes = entregadosMes.reduce((a,r)=>a+(Number(r.total||r.precio||0)||0),0);
+    if($('kpi-ingresos')) $('kpi-ingresos').textContent=formatoARS(ingresosMes);
+
+    if($('estado-diagnostico')) $('estado-diagnostico').textContent=reparaciones.filter(r=>normalizarEstado(r.estado)==='diagnostico').length;
+    if($('estado-reparacion'))  $('estado-reparacion').textContent=reparaciones.filter(r=>normalizarEstado(r.estado)==='en-reparacion').length;
+    if($('estado-listo'))       $('estado-listo').textContent=reparaciones.filter(r=>normalizarEstado(r.estado)==='listo').length;
+    if($('estado-entregado'))   $('estado-entregado').textContent=historial.length;
+
+    const alertas=[]; const listos=reparaciones.filter(r=>normalizarEstado(r.estado)==='listo');
+    if(listos.length>0) alertas.push(`${listos.length} equipos listos para retirar`);
+    const noRep=reparaciones.filter(r=>(r.resultado_final||'').toLowerCase().includes('no reparado'));
+    if(noRep.length>0) alertas.push(`${noRep.length} reparaciones marcadas como no reparadas`);
+    const ul=$('lista-alertas');
+    if(ul){ ul.innerHTML=''; if(alertas.length===0) ul.innerHTML='<li class="text-slate-400">No hay alertas</li>'; else alertas.forEach(a=>ul.innerHTML+=`<li>⚠️ ${a}</li>`); }
+  }
+  document.addEventListener('DOMContentLoaded', function(){ try{renderDashboard()}catch(e){} });
+})();
+</script>
 
 </body>
 </html>
