@@ -6676,127 +6676,108 @@ on = function(){
 })();
 </script>
 <script>
-<script>
-// === FIXLY PATCH v4 — sin jQuery, robusto ===
+// === FIXLY PATCH v5 — a prueba de cache/bundlers (polling + observer) ===
 (function(){
   const $  = (q,ctx)=> (ctx||document).querySelector(q);
   const $$ = (q,ctx)=> Array.from((ctx||document).querySelectorAll(q));
+  const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 
-  // ------- Helpers -------
-  function getLabelRowByText(txt, ctx){
-    const lab = $$('.modal label, label', ctx).find(l=> (l.textContent||'').trim().toLowerCase().includes(txt));
-    return lab ? lab.closest('.form-group, .mb-3, .row, .field, .col, div') : null;
-  }
-  function getSelect(namesOrIds, ctx){
-    for (const sel of namesOrIds){
-      const byId  = $('#'+sel, ctx);
-      if (byId && byId.tagName==='SELECT') return byId;
-      const byName = $(`select[name="${sel}"]`, ctx);
-      if (byName) return byName;
-    }
-    return null;
-  }
-  // Mapeo tolerante Resultado -> Estado
+  // Mapeo Resultado -> Estado (ajusté 'Listo' por si tus opciones no dicen "Listo para entregar")
   const MAPEO = [
-    { inc: ['no reparado','no acepto','no aceptó','presupuesto'], to:'Para devolver' },
-    { inc: ['irreparable'],                                   to:'Para devolver' },
-    { inc: ['sin repuesto','no hay repuesto'],                to:'Para devolver' },
-    { inc: ['diagnostico','diagnóstico','en diagnóstico'],    to:'En diagnóstico' },
-    { inc: ['presupuestado','espera ok','a la espera'],       to:'Presupuestado' },
-    { inc: ['reparado'],                                      to:'Listo para entregar' },
-    { inc: ['entregado'],                                     to:'Entregado' },
+    { inc:['no reparado','no acepto','no aceptó','presupuesto'], to:'Para devolver' },
+    { inc:['irreparable'],                                      to:'Para devolver' },
+    { inc:['sin repuesto','no hay repuesto'],                   to:'Para devolver' },
+    { inc:['diagnostico','diagnóstico','en diagnostico'],       to:'En diagnóstico' },
+    { inc:['presupuestado','espera ok','a la espera'],          to:'Presupuestado' },
+    { inc:['reparado'],                                         to:'Listo' },
+    { inc:['entregado'],                                        to:'Entregado' },
   ];
-  function inferEstado(textoResultado){
-    const v = (textoResultado||'').toLowerCase();
-    for (const r of MAPEO){ if (r.inc.some(k=>v.includes(k))) return r.to; }
+  const inferEstado = txt=>{
+    const v = norm(txt);
+    for (const r of MAPEO) if (r.inc.some(k=>v.includes(k))) return r.to;
     return 'En curso';
-  }
-  function setSelectByTextOrValue(select, target){
-    if (!select) return;
-    const t = (target||'').toLowerCase();
-    const opt = Array.from(select.options).find(o=>{
-      const tv = (o.value||'').toLowerCase().trim();
-      const tt = (o.text||'').toLowerCase().trim();
-      return tv===t || tt===t;
+  };
+  const setSelect = (sel, target)=>{
+    if (!sel) return;
+    const t = norm(target);
+    const opt = Array.from(sel.options||[]).find(o=>{
+      const vv = norm(o.value||''); const tt = norm(o.text||'');
+      return vv===t || tt===t;
     });
-    if (opt) select.value = opt.value; else select.value = target;
-    select.dispatchEvent(new Event('change'));
-  }
+    sel.value = opt ? opt.value : target; // si no existe, seteo libre
+    sel.dispatchEvent(new Event('change'));
+  };
 
-  // ------- Parche a cada modal que aparece -------
-  function patchModal(modal){
-    if (!modal || modal.__ft_patched) return;
+  function hideTecnicoRenameAndSync(modal){
+    if (!modal || modal.__ft_done) return;
     const titleEl = $('.modal-title, h5, h4', modal);
-    const titleTx = (titleEl?.textContent||'').trim().toLowerCase();
+    const t = norm(titleEl?.textContent||modal.textContent||'');
+    if (!/estado.*reparaci/.test(t) && !/estado.*equipo/.test(t)) return;
 
-    // Solo tocamos si es el modal de Estado/Edición
-    const looksLikeEstado = /editar\s+estado\s+de\s+reparaci/.test(titleTx) || /estado\s+del?\s+equipo/.test(titleTx);
-    if (!looksLikeEstado) return;
-
-    modal.__ft_patched = true;
-
-    // 1) Renombrar título
+    // Renombrar título
     if (titleEl) titleEl.textContent = 'Estado del Equipo';
 
-    // 2) Ocultar "Técnico Asignado" si existe
-    const tecRow = getLabelRowByText('técnico asignado', modal) || getLabelRowByText('tecnico asignado', modal);
-    if (tecRow) tecRow.style.display = 'none';
+    // Ocultar "Técnico Asignado" por label (tolerante a acentos)
+    const labelTec = $$('.modal label, label', modal).find(l => norm(l.textContent).includes('tecnico asignado'));
+    const row = labelTec ? (labelTec.closest('.form-group, .mb-3, .row, .field, .col, div')) : null;
+    if (row) row.style.display = 'none';
 
-    // 3) Wire Resultado -> Estado (solo si hay ambos selects)
-    const selResultado = getSelect(['resultado','estado-equipo-resultado'], modal);
-    const selEstado    = getSelect(['estado','estado-reparacion-select'], modal);
-    const updateEstado = ()=> {
+    // Sincronizar Resultado -> Estado si existen ambos selects
+    const selResultado = $('#resultado', modal) || $('select[name="resultado"]', modal) || $('#estado-equipo-resultado', modal);
+    const selEstado    = $('#estado', modal)    || $('select[name="estado"]', modal)    || $('#estado-reparacion-select', modal);
+    const sync = ()=>{
       if (!selResultado || !selEstado) return;
-      const val = selResultado.value || selResultado.options?.[selResultado.selectedIndex]?.text;
-      setSelectByTextOrValue(selEstado, inferEstado(val));
+      const val = selResultado.value || selResultado.options?.[selResultado.selectedIndex]?.text || '';
+      setSelect(selEstado, inferEstado(val));
     };
     if (selResultado && selEstado){
-      selResultado.addEventListener('change', updateEstado);
-      // correr una vez al abrir
-      setTimeout(updateEstado, 0);
+      selResultado.addEventListener('change', sync);
+      setTimeout(sync, 0);
     }
 
-    // 4) Al guardar, si estado = Entregado, mandar flag archivar=1
+    // Flag archivar si queda Entregado
     const form = $('form', modal) || modal;
     form.addEventListener('submit', ()=>{
       if (!selEstado) return;
-      const current = selEstado.value || selEstado.options?.[selEstado.selectedIndex]?.text || '';
-      let hidden = $('input[name="archivar"]', form);
-      if (!hidden){
-        hidden = document.createElement('input');
-        hidden.type = 'hidden';
-        hidden.name = 'archivar';
-        form.appendChild(hidden);
-      }
-      hidden.value = current.toLowerCase().includes('entregado') ? '1' : '0';
+      const cur = (selEstado.value || selEstado.options?.[selEstado.selectedIndex]?.text || '');
+      let h = $('input[name="archivar"]', form);
+      if (!h){ h = document.createElement('input'); h.type='hidden'; h.name='archivar'; form.appendChild(h); }
+      h.value = norm(cur).includes('entregado') ? '1' : '0';
     });
+
+    modal.__ft_done = true;
   }
 
-  // ------- Detectar modales abiertos (Bootstrap o sin) -------
-  // Con Bootstrap 5:
-  document.addEventListener('shown.bs.modal', (ev)=> patchModal(ev.target), true);
+  // Polling cada 200ms por 10s cuando hay cambios
+  function startPolling(){
+    let ticks = 0;
+    const id = setInterval(()=>{
+      $$('.modal').forEach(hideTecnicoRenameAndSync);
+      if (++ticks > 50) clearInterval(id);
+    }, 200);
+  }
 
-  // Fallback sin Bootstrap: observar cambios de DOM/clases
+  // Observer global (detecta apertura/cambios de modales)
   const obs = new MutationObserver((muts)=>{
     muts.forEach(m=>{
-      m.addedNodes && m.addedNodes.forEach(n=>{
+      if (m.addedNodes) m.addedNodes.forEach(n=>{
         if (n.nodeType===1){
-          if (n.classList?.contains('modal')) patchModal(n);
-          // También si se agrega contenido dentro de un modal ya existente
-          const mods = $$('.modal', n);
-          mods.forEach(patchModal);
+          if (n.classList?.contains('modal')) hideTecnicoRenameAndSync(n);
+          $$('.modal', n).forEach(hideTecnicoRenameAndSync);
         }
       });
-      if (m.target && m.target.nodeType===1 && m.target.classList?.contains('modal')) {
-        patchModal(m.target);
+      if (m.target && m.target.nodeType===1 && m.target.classList?.contains('modal')){
+        hideTecnicoRenameAndSync(m.target);
       }
     });
+    startPolling();
   });
   obs.observe(document.documentElement, { childList:true, subtree:true, attributes:true, attributeFilter:['class','style'] });
 
-  // Por si el modal ya estaba en DOM
+  // Primer barrido al cargar
   window.addEventListener('DOMContentLoaded', ()=>{
-    $$('.modal').forEach(patchModal);
+    $$('.modal').forEach(hideTecnicoRenameAndSync);
+    startPolling();
   });
 })();
 </script>
