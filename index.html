@@ -6892,6 +6892,85 @@ on = function(){
     const selE = pickSelect(root, ['estado','estado-reparacion-select']);
     const sync = ()=> {
      
+<script>
+// === FIX: Borrar en Historial con PIN de dueño (match por title/btn-danger) ===
+(function(){
+  const $  = (q,c)=> (c||document).querySelector(q);
+  const $$ = (q,c)=> Array.from((c||document).querySelectorAll(q));
+
+  async function sha256Hex(s){
+    const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+    return [...new Uint8Array(d)].map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+
+  function getOrdenId(btn){
+    // 1) data-id directo
+    let id = Number(btn.dataset?.id || btn.getAttribute('data-id'));
+    if (id) return id;
+    // 2) fila con data-orden-row
+    const tr = btn.closest('tr');
+    if (tr){
+      id = Number(tr.dataset?.ordenRow || tr.getAttribute('data-orden-row'));
+      if (id) return id;
+      // 3) parsear primera celda tipo "#1001"
+      const firstTd = tr.querySelector('td');
+      if (firstTd){
+        const m = (firstTd.textContent||'').match(/\#?(\d+)/);
+        if (m) return Number(m[1]);
+      }
+    }
+    return NaN;
+  }
+
+  async function handleDelete(btn){
+    const ordenId = getOrdenId(btn);
+    if (!ordenId){ alert('No pude detectar el ID de la orden.'); return; }
+
+    const pin = prompt('Clave de dueño para borrar definitivamente:');
+    if (pin === null) return; // canceló
+    const owner_pin_hash = await sha256Hex(pin.trim());
+
+    const r = await fetch(`/api/historial/${ordenId}`, {
+      method:'DELETE',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ owner_pin_hash })
+    });
+
+    const data = await r.json().catch(()=> ({}));
+    if (!r.ok || !data.ok){
+      const msg = data.error === 'not_archived' ? 'Solo se pueden borrar equipos ARCHIVADOS.'
+               : data.error === 'unauthorized'  ? 'Clave incorrecta.'
+               : data.error === 'not_found'     ? 'Orden no encontrada.'
+               : 'No se pudo borrar.';
+      alert(msg);
+      return;
+    }
+    // quitar fila
+    const row = btn.closest('tr');
+    if (row) row.remove();
+    alert('Borrado definitivo realizado.');
+  }
+
+  // Delegación: capturamos clic en el contenedor de Historial
+  document.addEventListener('click', (e)=>{
+    const btn = e.target.closest(
+      // cualquiera de estos debe matchear el botón rojo del historial
+      '[data-action="delete"],' +                 // si alguna vez lo agregás
+      'button.btn-danger[data-id],' +             // con data-id
+      'a.btn-danger[data-id],' +
+      '[title*="Solo dueño"]'                     // lo que hoy sí tenés según el tooltip
+    );
+    if (!btn) return;
+
+    // limitar a la vista Historial
+    const isHistorial = !!(document.querySelector('h1,h2')?.textContent || '').toLowerCase().includes('historial');
+    if (!isHistorial) return;
+
+    e.preventDefault();
+    handleDelete(btn);
+  }, true);
+})();
+</script>
 
 </body>
 </html>
