@@ -1804,6 +1804,24 @@
         let historialMensajes = [];
         let equipoDetalleActual = null;
 
+// === Helper: clase CSS para badge según texto de estado ===
+function badgeClassFromText(txt){
+  try{
+    const t = String(txt||'').toLowerCase();
+    if (t.includes('entregado')) return 'status-entregado';
+    if (t.includes('listo')) return 'status-listo';
+    if (t.includes('reparado')) return 'status-reparado';
+    if (t.includes('no reparado') || t.includes('irreparable')) return 'status-no-reparado';
+    if (t.includes('no repuesto') || t.includes('sin repuesto')) return 'status-no-repuesto';
+    if (t.includes('devolver')) return 'status-devolver';
+    if (t.includes('diagn')) return 'status-diagnosticando';
+    if (t.includes('recib')) return 'status-recibido';
+    return 'status-entregado';
+  }catch(_){ return 'status-entregado'; }
+}
+
+
+
         // Datos iniciales
         const datosIniciales = {
             reparaciones: [
@@ -2422,7 +2440,8 @@
                         <p><strong>Técnico:</strong> ${equipo.tecnico}</p>
                         <p><strong>Fecha Ingreso:</strong> ${equipo.fecha}</p>
                         <p><strong>Fecha Entrega:</strong> ${equipo.fechaEntrega}</p>
-                        <p><strong>Estado:</strong> <span class="status-badge status-entregado">Entregado</span></p>
+                        <p><strong>Estado del equipo:</strong> <span class=\"status-badge ${badgeClassFromText(equipo.estadoEquipo || equipo.resultado)}\">${equipo.estadoEquipo || equipo.resultado || '—'}</span></p>
+<p><strong>Estado de la orden:</strong> <span class=\"status-badge ${badgeClassFromText(equipo.estado || 'entregado')}\">${equipo.estado || 'entregado'}</span></p>
                     </div>
                     <div>
                         <h4 class="font-semibold text-gray-700">Información Económica</h4>
@@ -2611,7 +2630,7 @@
                 reparacionEditando.fechaEntrega = obtenerFechaActual();
                 
                 // Mover al historial
-                historialEntregados.push({...reparacionEditando});
+                historialEntregados.push({ ...reparacionEditando });;
                 
                 // Remover de reparaciones activas
                 const index = reparaciones.findIndex(r => r.id === reparacionEditando.id);
