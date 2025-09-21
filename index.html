@@ -6971,6 +6971,90 @@ on = function(){
   }, true);
 })();
 </script>
+<script>
+// === Guardar borrado en Historial con PIN del dueño (bloquea el confirm viejo) ===
+(function(){
+  const $  = (q,c)=> (c||document).querySelector(q);
+  const $$ = (q,c)=> Array.from((c||document).querySelectorAll(q));
+  const isHistorialView = ()=> /historial/i.test(($('h1,h2')?.textContent||''));
+
+  async function sha256Hex(s){
+    const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+    return [...new Uint8Array(d)].map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+
+  function getOrdenId(btn){
+    // 1) data-id
+    let id = Number(btn.dataset?.id || btn.getAttribute('data-id'));
+    if (id) return id;
+    // 2) fila con data-orden-row
+    const tr = btn.closest('tr');
+    if (tr){
+      id = Number(tr.dataset?.ordenRow || tr.getAttribute('data-orden-row'));
+      if (id) return id;
+      // 3) parsear 1ª celda "#1022"
+      const m = (tr.querySelector('td')?.textContent||'').match(/\#?(\d+)/);
+      if (m) return Number(m[1]);
+    }
+    return NaN;
+  }
+
+  async function askAndDelete(btn){
+    const ordenId = getOrdenId(btn);
+    if (!ordenId){ alert('No pude detectar el ID de la orden.'); return; }
+
+    // Pedir PIN
+    const pin = prompt('Clave de dueño para borrar definitivamente:');
+    if (pin === null) return; // canceló
+    const owner_pin_hash = await sha256Hex(pin.trim());
+
+    // Llamar endpoint protegido
+    const r = await fetch(`/api/historial/${ordenId}`, {
+      method:'DELETE',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ owner_pin_hash })
+    }).catch(()=>null);
+
+    if (!r){ alert('No se pudo contactar al servidor.'); return; }
+    const data = await r.json().catch(()=> ({}));
+
+    if (!r.ok || !data.ok){
+      alert(
+        data?.error === 'unauthorized'  ? 'Clave incorrecta.'
+      : data?.error === 'not_archived' ? 'Solo se pueden borrar equipos ARCHIVADOS.'
+      : data?.error === 'not_found'    ? 'Orden no encontrada.'
+      : 'No se pudo borrar.'
+      );
+      return;
+    }
+
+    // Quitar la fila
+    const row = btn.closest('tr');
+    if (row) row.remove();
+    alert('Borrado definitivo realizado.');
+  }
+
+  // Captura el click ANTES de que corra cualquier onclick/confirm viejo
+  document.addEventListener('click', (e)=>{
+    const btn = e.target.closest(
+      // variantes probables del tacho rojo en Historial:
+      '[data-action="delete"],' +
+      'button.btn-danger,' +
+      'a.btn-danger,' +
+      '[title*="Eliminar"],[aria-label*="Eliminar"]'
+    );
+    if (!btn || !isHistorialView()) return;
+
+    // FRENAR todo lo anterior (confirm() incluido)
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    e.stopPropagation();
+
+    // Ir por nuestro flujo con PIN
+    askAndDelete(btn);
+  }, true); // <-- CAPTURA = true (clave para bloquear el handler viejo)
+})();
+</script>
 
 </body>
 </html>
