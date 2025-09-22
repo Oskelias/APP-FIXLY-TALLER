@@ -6807,6 +6807,671 @@ on = function(){
     startPolling();
   });
 })();
+
+<script>
+
+// ============================================================================
+// SISTEMA HÃBRIDO DE SINCRONIZACIÃ“N DE DATOS
+// Implementa sincronizaciÃ³n automÃ¡tica entre localStorage y backend
+// ============================================================================
+
+class HybridSyncManager {
+    constructor() {
+        this.syncEndpoint = '/api/sync'; // Configurable segÃºn backend
+        this.syncInterval = 30000; // 30 segundos
+        this.isOnline = navigator.onLine;
+        this.syncInProgress = false;
+        this.pendingOperations = [];
+        this.retryAttempts = 3;
+        this.retryDelay = 2000;
+        this.lastSyncTimestamp = 0;
+
+        // Inicializar sistema
+        this.initializeSync();
+        this.setupEventListeners();
+
+        console.log('ðŸ”„ Sistema HÃ­brido de SincronizaciÃ³n inicializado');
+    }
+
+    // ========================================================================
+    // INICIALIZACIÃ“N DEL SISTEMA
+    // ========================================================================
+
+    initializeSync() {
+        // Verificar timestamp de Ãºltima sincronizaciÃ³n
+        this.lastSyncTimestamp = parseInt(localStorage.getItem('lastSyncTimestamp') || '0');
+
+        // Cargar operaciones pendientes
+        const pending = localStorage.getItem('pendingOperations');
+        if (pending) {
+            try {
+                this.pendingOperations = JSON.parse(pending);
+                console.log(`ðŸ“‹ ${this.pendingOperations.length} operaciones pendientes cargadas`);
+            } catch (e) {
+                console.warn('Error cargando operaciones pendientes:', e);
+                this.pendingOperations = [];
+            }
+        }
+
+        // Iniciar sincronizaciÃ³n automÃ¡tica
+        this.startAutoSync();
+
+        // SincronizaciÃ³n inicial si hay conexiÃ³n
+        if (this.isOnline && this.shouldSync()) {
+            setTimeout(() => this.fullSync(), 1000);
+        }
+    }
+
+    setupEventListeners() {
+        // Detectar cambios de conectividad
+        window.addEventListener('online', () => {
+            this.isOnline = true;
+            console.log('ðŸŸ¢ ConexiÃ³n restaurada - iniciando sincronizaciÃ³n');
+            this.fullSync();
+        });
+
+        window.addEventListener('offline', () => {
+            this.isOnline = false;
+            console.log('ðŸ”´ ConexiÃ³n perdida - modo offline');
+        });
+
+        // Sincronizar antes de cerrar ventana
+        window.addEventListener('beforeunload', () => {
+            if (this.isOnline && this.pendingOperations.length > 0) {
+                navigator.sendBeacon(this.syncEndpoint + '/quick', 
+                    JSON.stringify(this.pendingOperations));
+            }
+        });
+    }
+
+    // ========================================================================
+    // FUNCIONES PRINCIPALES DE SINCRONIZACIÃ“N
+    // ========================================================================
+
+    async syncToBackend() {
+        if (!this.isOnline || this.syncInProgress) {
+            console.log('â¸ï¸ SincronizaciÃ³n saltada (offline o en progreso)');
+            return false;
+        }
+
+        console.log('â¬†ï¸ Iniciando sincronizaciÃ³n hacia backend...');
+        this.syncInProgress = true;
+
+        try {
+            const localData = this.getAllLocalData();
+            const response = await this.withRetry(async () => {
+                return await fetch(this.syncEndpoint + '/upload', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': localStorage.getItem('authToken') || ''
+                    },
+                    body: JSON.stringify({
+                        data: localData,
+                        timestamp: Date.now(),
+                        operations: this.pendingOperations
+                    })
+                });
+            });
+
+            if (response.ok) {
+                // Marcar operaciones como sincronizadas
+                this.clearPendingOperations();
+                this.lastSyncTimestamp = Date.now();
+                localStorage.setItem('lastSyncTimestamp', this.lastSyncTimestamp.toString());
+                console.log('âœ… SincronizaciÃ³n hacia backend completada');
+                return true;
+            } else {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+        } catch (error) {
+            console.error('âŒ Error en syncToBackend:', error);
+            return false;
+        } finally {
+            this.syncInProgress = false;
+        }
+    }
+
+    async syncFromBackend() {
+        if (!this.isOnline || this.syncInProgress) {
+            return false;
+        }
+
+        console.log('â¬‡ï¸ Iniciando sincronizaciÃ³n desde backend...');
+        this.syncInProgress = true;
+
+        try {
+            const response = await this.withRetry(async () => {
+                return await fetch(this.syncEndpoint + '/download', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': localStorage.getItem('authToken') || '',
+                        'If-Modified-Since': new Date(this.lastSyncTimestamp).toUTCString()
+                    }
+                });
+            });
+
+            if (response.ok) {
+                const serverData = await response.json();
+
+                if (response.status === 304) {
+                    console.log('âœ… Datos locales actualizados');
+                    return true;
+                }
+
+                // Combinar datos locales con datos del servidor
+                const merged = await this.mergeData(this.getAllLocalData(), serverData.data);
+                this.saveAllLocalData(merged);
+
+                this.lastSyncTimestamp = Date.now();
+                localStorage.setItem('lastSyncTimestamp', this.lastSyncTimestamp.toString());
+                console.log('âœ… SincronizaciÃ³n desde backend completada');
+                return true;
+
+            } else {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+        } catch (error) {
+            console.error('âŒ Error en syncFromBackend:', error);
+            return false;
+        } finally {
+            this.syncInProgress = false;
+        }
+    }
+
+    async mergeData(localData, serverData) {
+        console.log('ðŸ”€ Iniciando merge de datos...');
+
+        const merged = { ...localData };
+
+        // Estrategia de merge por tipo de datos
+        for (const [key, serverValue] of Object.entries(serverData)) {
+            const localValue = localData[key];
+
+            if (!localValue) {
+                // Dato nuevo del servidor
+                merged[key] = serverValue;
+                console.log(`âœ¨ Nuevo: ${key}`);
+                continue;
+            }
+
+            // Resolver conflictos basÃ¡ndose en timestamps
+            if (this.isArray(serverValue) && this.isArray(localValue)) {
+                merged[key] = this.mergeArrays(localValue, serverValue);
+            } else if (this.isObject(serverValue) && this.isObject(localValue)) {
+                merged[key] = this.mergeObjects(localValue, serverValue);
+            } else {
+                // Para valores primitivos, usar el mÃ¡s reciente
+                const serverTimestamp = serverValue.lastModified || 0;
+                const localTimestamp = localValue.lastModified || 0;
+
+                merged[key] = serverTimestamp > localTimestamp ? serverValue : localValue;
+                if (serverTimestamp > localTimestamp) {
+                    console.log(`ðŸ“„ Actualizado desde servidor: ${key}`);
+                }
+            }
+        }
+
+        console.log('âœ… Merge completado');
+        return merged;
+    }
+
+    // ========================================================================
+    // FUNCIONES DE UTILIDAD PARA MERGE
+    // ========================================================================
+
+    mergeArrays(localArray, serverArray) {
+        const merged = [...localArray];
+        const localIds = new Set(localArray.map(item => item.id).filter(id => id));
+
+        for (const serverItem of serverArray) {
+            if (serverItem.id && localIds.has(serverItem.id)) {
+                // Actualizar item existente si el servidor es mÃ¡s reciente
+                const localIndex = merged.findIndex(item => item.id === serverItem.id);
+                if (localIndex !== -1) {
+                    const localItem = merged[localIndex];
+                    const serverTimestamp = serverItem.lastModified || serverItem.fechaCreacion || 0;
+                    const localTimestamp = localItem.lastModified || localItem.fechaCreacion || 0;
+
+                    if (serverTimestamp > localTimestamp) {
+                        merged[localIndex] = serverItem;
+                    }
+                }
+            } else {
+                // Nuevo item del servidor
+                merged.push(serverItem);
+            }
+        }
+
+        return merged;
+    }
+
+    mergeObjects(localObj, serverObj) {
+        const merged = { ...localObj };
+
+        for (const [key, serverValue] of Object.entries(serverObj)) {
+            if (key === 'lastModified' || key === 'fechaCreacion') {
+                merged[key] = Math.max(merged[key] || 0, serverValue || 0);
+            } else if (this.isObject(serverValue) && this.isObject(merged[key])) {
+                merged[key] = this.mergeObjects(merged[key], serverValue);
+            } else {
+                merged[key] = serverValue;
+            }
+        }
+
+        return merged;
+    }
+
+    isArray(value) {
+        return Array.isArray(value);
+    }
+
+    isObject(value) {
+        return value !== null && typeof value === 'object' && !Array.isArray(value);
+    }
+
+    // ========================================================================
+    // GESTIÃ“N DE OPERACIONES PENDIENTES
+    // ========================================================================
+
+    addPendingOperation(operation) {
+        const pendingOp = {
+            id: Date.now() + Math.random(),
+            timestamp: Date.now(),
+            ...operation
+        };
+
+        this.pendingOperations.push(pendingOp);
+        this.savePendingOperations();
+
+        console.log(`ðŸ“ OperaciÃ³n pendiente aÃ±adida: ${operation.type}`);
+
+        // Intentar sincronizar si estamos online
+        if (this.isOnline) {
+            setTimeout(() => this.syncToBackend(), 100);
+        }
+    }
+
+    clearPendingOperations() {
+        this.pendingOperations = [];
+        localStorage.removeItem('pendingOperations');
+    }
+
+    savePendingOperations() {
+        localStorage.setItem('pendingOperations', JSON.stringify(this.pendingOperations));
+    }
+
+    // ========================================================================
+    // GESTIÃ“N DE DATOS LOCALES
+    // ========================================================================
+
+    getAllLocalData() {
+        const data = {};
+        const keys = ['fixlytallerData', 'fixlytallerPedidos', 'userData', 'phonesByClient'];
+
+        for (const key of keys) {
+            const value = localStorage.getItem(key);
+            if (value) {
+                try {
+                    data[key] = JSON.parse(value);
+                } catch (e) {
+                    data[key] = value;
+                }
+            }
+        }
+
+        return data;
+    }
+
+    saveAllLocalData(data) {
+        for (const [key, value] of Object.entries(data)) {
+            const serialized = typeof value === 'string' ? value : JSON.stringify(value);
+            localStorage.setItem(key, serialized);
+        }
+
+        // Actualizar UI si es necesario
+        if (typeof cargarDatos === 'function') {
+            cargarDatos();
+        }
+        if (typeof cargarTablaReparaciones === 'function') {
+            cargarTablaReparaciones();
+        }
+    }
+
+    // ========================================================================
+    // FUNCIONES DE RETRY Y MANEJO DE ERRORES
+    // ========================================================================
+
+    async withRetry(operation, attempts = this.retryAttempts) {
+        for (let i = 0; i < attempts; i++) {
+            try {
+                return await operation();
+            } catch (error) {
+                console.warn(`âš ï¸ Intento ${i + 1}/${attempts} fallÃ³:`, error.message);
+
+                if (i === attempts - 1) {
+                    throw error;
+                }
+
+                await this.delay(this.retryDelay * Math.pow(2, i)); // Backoff exponencial
+            }
+        }
+    }
+
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // ========================================================================
+    // AUTO-SINCRONIZACIÃ“N
+    // ========================================================================
+
+    startAutoSync() {
+        setInterval(() => {
+            if (this.shouldSync()) {
+                this.fullSync();
+            }
+        }, this.syncInterval);
+    }
+
+    shouldSync() {
+        const timeSinceLastSync = Date.now() - this.lastSyncTimestamp;
+        return timeSinceLastSync > this.syncInterval || this.pendingOperations.length > 0;
+    }
+
+    async fullSync() {
+        if (!this.isOnline) {
+            console.log('ðŸ”´ SincronizaciÃ³n completa saltada: Sin conexiÃ³n');
+            return;
+        }
+
+        console.log('ðŸ”„ Iniciando sincronizaciÃ³n completa...');
+
+        try {
+            // Primero descargar cambios del servidor
+            await this.syncFromBackend();
+
+            // Luego subir cambios locales
+            await this.syncToBackend();
+
+            console.log('âœ… SincronizaciÃ³n completa exitosa');
+
+        } catch (error) {
+            console.error('âŒ Error en sincronizaciÃ³n completa:', error);
+        }
+    }
+
+    // ========================================================================
+    // API PÃšBLICA PARA INTEGRACIÃ“N
+    // ========================================================================
+
+    // Forzar sincronizaciÃ³n manual
+    async forcSync() {
+        return await this.fullSync();
+    }
+
+    // Obtener estado de sincronizaciÃ³n
+    getStatus() {
+        return {
+            isOnline: this.isOnline,
+            syncInProgress: this.syncInProgress,
+            pendingOperations: this.pendingOperations.length,
+            lastSync: new Date(this.lastSyncTimestamp).toLocaleString()
+        };
+    }
+
+    // Configurar endpoint del backend
+    setBackendEndpoint(endpoint) {
+        this.syncEndpoint = endpoint;
+    }
+}
+
+// Instancia global del gestor de sincronizaciÃ³n
+window.syncManager = new HybridSyncManager();
+
+
+
+// ============================================================================
+// FUNCIONES DE INTEGRACIÃ“N HÃBRIDA
+// Wrappers para las funciones existentes que integran sincronizaciÃ³n automÃ¡tica
+// ============================================================================
+
+// FunciÃ³n helper para operaciones con sincronizaciÃ³n automÃ¡tica
+function hybridOperation(operationType, dataKey, operation) {
+    try {
+        // Ejecutar operaciÃ³n local primero (offline-first)
+        const result = operation();
+
+        // Registrar operaciÃ³n para sincronizaciÃ³n
+        if (window.syncManager) {
+            window.syncManager.addPendingOperation({
+                type: operationType,
+                dataKey: dataKey,
+                timestamp: Date.now(),
+                data: result
+            });
+        }
+
+        return result;
+    } catch (error) {
+        console.error(`Error en operaciÃ³n hÃ­brida ${operationType}:`, error);
+        throw error;
+    }
+}
+
+// Wrapper para localStorage.setItem con sincronizaciÃ³n
+function hybridSetItem(key, value, operationType = 'update') {
+    localStorage.setItem(key, value);
+
+    if (window.syncManager) {
+        window.syncManager.addPendingOperation({
+            type: operationType,
+            dataKey: key,
+            timestamp: Date.now(),
+            value: value
+        });
+    }
+}
+
+// Wrapper para localStorage.removeItem con sincronizaciÃ³n  
+function hybridRemoveItem(key, operationType = 'delete') {
+    localStorage.removeItem(key);
+
+    if (window.syncManager) {
+        window.syncManager.addPendingOperation({
+            type: operationType,
+            dataKey: key,
+            timestamp: Date.now()
+        });
+    }
+}
+
+// ============================================================================
+// FUNCIONES MEJORADAS CON SISTEMA HÃBRIDO
+// ============================================================================
+
+// FunciÃ³n mejorada para guardar datos (reemplaza guardarDatos original)
+function guardarDatos() {
+    return hybridOperation('save_data', 'fixlytallerData', () => {
+        const datos = {
+            reparaciones: reparaciones || [],
+            tecnicos: tecnicos || [],
+            clientes: clientes || [],
+            lastModified: Date.now()
+        };
+
+        localStorage.setItem('fixlytallerData', JSON.stringify(datos));
+        console.log('ðŸ’¾ Datos guardados localmente');
+        return datos;
+    });
+}
+
+// FunciÃ³n mejorada para guardar pedidos
+function guardarPedidos() {
+    return hybridOperation('save_orders', 'fixlytallerPedidos', () => {
+        const pedidosData = {
+            pedidos: pedidos || [],
+            lastModified: Date.now()
+        };
+
+        localStorage.setItem('fixlytallerPedidos', JSON.stringify(pedidosData));
+        console.log('ðŸ“¦ Pedidos guardados localmente');
+        return pedidosData;
+    });
+}
+
+// Nueva funciÃ³n hÃ­brida para guardar reparaciÃ³n (que no existÃ­a)
+function guardarReparacion(reparacion) {
+    return hybridOperation('save_repair', 'fixlytallerData', () => {
+        if (!reparacion) {
+            throw new Error('Datos de reparaciÃ³n requeridos');
+        }
+
+        // Asegurar que existe el array de reparaciones
+        if (!reparaciones) {
+            reparaciones = [];
+        }
+
+        // Asignar ID si no existe
+        if (!reparacion.id) {
+            reparacion.id = Date.now() + Math.random();
+        }
+
+        // Agregar timestamp
+        reparacion.lastModified = Date.now();
+        if (!reparacion.fechaCreacion) {
+            reparacion.fechaCreacion = Date.now();
+        }
+
+        // Buscar si ya existe para actualizar, o agregar nuevo
+        const existingIndex = reparaciones.findIndex(r => r.id === reparacion.id);
+        if (existingIndex !== -1) {
+            reparaciones[existingIndex] = reparacion;
+            console.log(`ðŸ”§ ReparaciÃ³n actualizada: ${reparacion.id}`);
+        } else {
+            reparaciones.push(reparacion);
+            console.log(`âœ¨ Nueva reparaciÃ³n creada: ${reparacion.id}`);
+        }
+
+        // Guardar todo el conjunto de datos
+        guardarDatos();
+
+        return reparacion;
+    });
+}
+
+// FunciÃ³n mejorada para eliminar reparaciÃ³n
+function eliminarReparacion(id) {
+    return hybridOperation('delete_repair', 'fixlytallerData', () => {
+        if (!id) {
+            throw new Error('ID de reparaciÃ³n requerido');
+        }
+
+        if (!reparaciones) {
+            console.warn('No hay reparaciones para eliminar');
+            return false;
+        }
+
+        const initialLength = reparaciones.length;
+        reparaciones = reparaciones.filter(r => r.id !== id);
+
+        if (reparaciones.length < initialLength) {
+            guardarDatos();
+            console.log(`ðŸ—‘ï¸ ReparaciÃ³n eliminada: ${id}`);
+            return true;
+        } else {
+            console.warn(`ReparaciÃ³n no encontrada: ${id}`);
+            return false;
+        }
+    });
+}
+
+// ============================================================================
+// FUNCIONES DE MONITOREO Y ESTADO
+// ============================================================================
+
+// FunciÃ³n para mostrar el estado de sincronizaciÃ³n en la UI
+function mostrarEstadoSync() {
+    if (!window.syncManager) {
+        return 'Sistema de sincronizaciÃ³n no disponible';
+    }
+
+    const status = window.syncManager.getStatus();
+    return `
+        Estado: ${status.isOnline ? 'ðŸŸ¢ Online' : 'ðŸ”´ Offline'} | 
+        Sync: ${status.syncInProgress ? 'ðŸ”„ En progreso' : 'âœ… Listo'} | 
+        Pendientes: ${status.pendingOperations} | 
+        Ãšltima sync: ${status.lastSync}
+    `;
+}
+
+// FunciÃ³n para forzar sincronizaciÃ³n manual desde la UI
+async function forzarSincronizacion() {
+    if (!window.syncManager) {
+        console.warn('Sistema de sincronizaciÃ³n no disponible');
+        return false;
+    }
+
+    try {
+        console.log('ðŸ”„ Forzando sincronizaciÃ³n manual...');
+        await window.syncManager.forcSync();
+        console.log('âœ… SincronizaciÃ³n manual completada');
+        return true;
+    } catch (error) {
+        console.error('âŒ Error en sincronizaciÃ³n manual:', error);
+        return false;
+    }
+}
+
+// ============================================================================
+// AUTO-INICIALIZACIÃ“N AL CARGAR LA PÃGINA
+// ============================================================================
+
+// Mejorar la funciÃ³n de carga de datos para integrar sincronizaciÃ³n
+const cargarDatos_original = window.cargarDatos;
+window.cargarDatos = function() {
+    // Ejecutar la funciÃ³n original
+    if (cargarDatos_original && typeof cargarDatos_original === 'function') {
+        cargarDatos_original();
+    } else {
+        // Fallback si no existe la funciÃ³n original
+        const datosGuardados = localStorage.getItem('fixlytallerData');
+        if (datosGuardados) {
+            try {
+                const datos = JSON.parse(datosGuardados);
+                reparaciones = datos.reparaciones || [];
+                tecnicos = datos.tecnicos || [];
+                clientes = datos.clientes || [];
+            } catch (e) {
+                console.warn('Error cargando datos:', e);
+            }
+        }
+    }
+
+    // Intentar sincronizaciÃ³n si estamos online
+    if (window.syncManager && window.syncManager.isOnline) {
+        setTimeout(() => {
+            window.syncManager.syncFromBackend().then(() => {
+                console.log('ðŸ”„ Datos sincronizados al cargar');
+                // Recargar datos despuÃ©s de la sincronizaciÃ³n
+                if (typeof cargarTablaReparaciones === 'function') {
+                    cargarTablaReparaciones();
+                }
+                if (typeof actualizarKPIs === 'function') {
+                    actualizarKPIs();
+                }
+            }).catch(error => {
+                console.warn('âš ï¸ SincronizaciÃ³n inicial fallÃ³:', error);
+            });
+        }, 500);
+    }
+};
+
+console.log('ðŸ”— Sistema de integraciÃ³n hÃ­brida cargado');
+
+</script>
 </script>
 <script>
 // === FIXLY PATCH v6.2 â€” con guardias (no se ejecuta en login) ===
