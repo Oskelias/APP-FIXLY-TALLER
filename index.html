@@ -521,15 +521,12 @@
       Iniciar Sesión
      </button>
 </form>
-    <!-- En lugar de mostrar las credenciales predeterminadas, se muestra un botón
-         para registrar nuevos usuarios que redirige a la landing del sistema. -->
-    <div class="mt-4 text-center">
-      <button type="button"
-              onclick="window.location.href='https://fixlytaller.com/'"
-              class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition duration-200">
-        Registrarse
-      </button>
-    </div>
+<div class="mt-4 text-center">
+  <!-- Botón de registro que abre la página de inicio en una nueva pestaña -->
+  <button type="button" onclick="window.open('https://fixlytaller.com/', '_blank')" class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition duration-200">
+    Registrarse
+  </button>
+</div>
 </div>
 </div>
 <!-- Aplicación Principal -->
@@ -5556,34 +5553,25 @@ on = function(){
   }
 
   async function ensureOwnerKey(){
+    /*
+     * Se elimina la solicitud de clave del dueño.  Si no existe un valor
+     * almacenado para OWNER_HASH_KEY, se almacena el hash de una cadena vacía.
+     * Esto evita que se solicite al usuario una clave en cualquier caso.
+     */
     let stored = localStorage.getItem(OWNER_HASH_KEY);
-    if (stored) return true;
-    const k1 = prompt("Configurar clave del dueño (mínimo 4 caracteres):");
-    if (k1 === null) return false;
-    if ((k1 || "").length < 4){ alert("La clave debe tener al menos 4 caracteres."); return false; }
-    const k2 = prompt("Confirmá la clave del dueño:");
-    if (k2 === null) return false;
-    if (k1 !== k2){ alert("Las claves no coinciden."); return false; }
-    const h = await sha256Hex(k1);
-    localStorage.setItem(OWNER_HASH_KEY, h);
-    alert("Clave del dueño configurada.");
+    if (!stored) {
+      const h = await sha256Hex('');
+      localStorage.setItem(OWNER_HASH_KEY, h);
+    }
     return true;
   }
 
   async function requireOwnerKey(){
-    const stored = localStorage.getItem(OWNER_HASH_KEY);
-    if (!stored){
-      // primera vez: configurar
-      const ok = await ensureOwnerKey();
-      return ok;
-    }
-    const input = prompt("Ingresá la clave del dueño para borrar el historial:");
-    if (input === null) return false;
-    const h = await sha256Hex(input);
-    if (h !== stored){
-      alert("Clave incorrecta.");
-      return false;
-    }
+    /*
+     * Siempre permite el borrado del historial sin solicitar PIN del dueño.
+     * Se asegura que exista un valor para OWNER_HASH_KEY llamando a ensureOwnerKey().
+     */
+    await ensureOwnerKey();
     return true;
   }
 
@@ -6439,24 +6427,15 @@ on = function(){
     } catch(_) {}
   }
   function ensureOwnerKey(){
-    var key = getOwnerKey();
-    if (key && key.length >= 4) return true;
-    var entered = prompt('Configurar clave del dueño (mínimo 4 caracteres):');
-    if (entered === null) return false;
-    entered = (entered || '').trim();
-    if (entered.length < 4){ alert('La clave debe tener al menos 4 caracteres.'); return false; }
-    setOwnerKey(entered); return true;
+    // No solicitar clave de dueño, siempre retornar true
+    return true;
   }
   function isValidated(){
     try { return sessionStorage.getItem(SESSION_OK) === '1'; } catch(_) { return false; }
   }
   function validateOnce(){
-    if (isValidated()) return true;
-    var k = getOwnerKey(); if (!k) return true;
-    var entered = prompt('Confirmá la clave del dueño:');
-    if (entered === null) return false;
-    if ((entered || '') === k){ try { sessionStorage.setItem(SESSION_OK,'1'); } catch(_){}; return true; }
-    alert('Clave incorrecta.'); return false;
+    // Siempre permitir sin validar clave de dueño
+    return true;
   }
 
   // Detecta si el elemento es un botón de ELIMINAR/BORRAR
@@ -6922,9 +6901,8 @@ on = function(){
     const ordenId = getOrdenId(btn);
     if (!ordenId){ alert('No pude detectar el ID de la orden.'); return; }
 
-    const pin = prompt('Clave de dueño para borrar definitivamente:');
-    if (pin === null) return; // canceló
-    const owner_pin_hash = await sha256Hex(pin.trim());
+    // Se elimina la solicitud de PIN de dueño; usar hash de cadena vacía
+    const owner_pin_hash = await sha256Hex('');
 
     const r = await fetch(`/api/historial/${ordenId}`, {
       method:'DELETE',
