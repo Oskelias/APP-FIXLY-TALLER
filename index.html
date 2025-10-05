@@ -393,6 +393,171 @@
   </style>
 <script src="https://cdn.tailwindcss.com">
 </script>
+
+<!-- === MULTIUSUARIO Y SESIONES (LOGIN VIA API) === -->
+<script>
+(() => {
+  const API_BASE = window.FIXLY_API_BASE || '';
+  // Maneja el envío de login contra el backend multiusuario
+  async function loginMultiUser(event) {
+    try {
+      if (event) event.preventDefault();
+      const emailField = document.getElementById('username');
+      const passwordField = document.getElementById('password');
+      const email = (emailField?.value || '').trim();
+      const password = passwordField?.value || '';
+      if (!email || !password) {
+        alert('Ingresá email y contraseña');
+        return false;
+      }
+      const resp = await fetch(API_BASE + '/auth/public/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      if (!resp.ok) {
+        alert('Credenciales incorrectas');
+        return false;
+      }
+      const data = await resp.json().catch(() => ({}));
+      const token = data.token || data.jwt || data.accessToken;
+      if (!token) {
+        alert('No se obtuvo token');
+        return false;
+      }
+      localStorage.setItem('fixlyAuthToken', token);
+      await postLogin(token);
+    } catch (e) {
+      console.error(e);
+      alert('Error al iniciar sesión');
+    }
+    return false;
+  }
+  // Después del login: selecciona tenant/location, enrola dispositivo y crea sesión
+  async function postLogin(token) {
+    // Obtener info de usuario y tenants
+    const meResp = await fetch(API_BASE + '/auth/me', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!meResp.ok) {
+      alert('Error al obtener información del usuario');
+      return;
+    }
+    const meData = await meResp.json().catch(() => ({}));
+    const tenants = meData.tenants || [];
+    let tenantId;
+    let locationId;
+    // Selección básica vía prompt (puedes reemplazar por modal bonito)
+    if (tenants.length === 1 && tenants[0].locations && tenants[0].locations.length === 1) {
+      tenantId = tenants[0].id;
+      locationId = tenants[0].locations[0].id;
+    } else {
+      const options = [];
+      tenants.forEach(t => {
+        (t.locations || []).forEach(loc => {
+          options.push(`${t.id}:${loc.id}:${t.name} - ${loc.name}`);
+        });
+      });
+      const sel = prompt('Seleccioná tu taller y sucursal (tenantId:locationId):\n' + options.join('\n'));
+      if (!sel) {
+        alert('Debes seleccionar un taller/sucursal');
+        return;
+      }
+      const parts = sel.split(':');
+      if (parts.length < 2) {
+        alert('Selección inválida');
+        return;
+      }
+      tenantId = parts[0];
+      locationId = parts[1];
+    }
+    localStorage.setItem('fixlyTenantId', tenantId);
+    localStorage.setItem('fixlyLocationId', locationId);
+    // Enrolamiento de dispositivo
+    let deviceId;
+    try {
+      const enrollResp = await fetch(API_BASE + '/control/public/devices/enroll', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label: navigator.userAgent || 'Equipo', locationId })
+      });
+      const enrollData = await enrollResp.json().catch(() => ({}));
+      deviceId = enrollData.id;
+      localStorage.setItem('fixlyDeviceId', deviceId);
+    } catch (e) {
+      console.error(e);
+      alert('Error al enrolar el dispositivo');
+      return;
+    }
+    // Crear sesión
+    let jti;
+    try {
+      const sessionResp = await fetch(API_BASE + '/control/public/sessions/create', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deviceId })
+      });
+      const sessionData = await sessionResp.json().catch(() => ({}));
+      jti = sessionData.jti;
+      localStorage.setItem('fixlySessionJti', jti);
+    } catch (e) {
+      console.error(e);
+      alert('Error al crear la sesión');
+      return;
+    }
+    // Iniciar heartbeat cada 60s
+    if (window._fixlyHeartbeat) clearInterval(window._fixlyHeartbeat);
+    window._fixlyHeartbeat = setInterval(async () => {
+      try {
+        const hb = await fetch(API_BASE + '/control/sessions/heartbeat', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+        });
+        if (hb.status === 401 || hb.status === 403) {
+          clearInterval(window._fixlyHeartbeat);
+          alert('Sesión expirada o límite alcanzado');
+          cerrarSesion();
+        }
+      } catch (_) {}
+    }, 60000);
+    // Mostrar la app y ocultar la pantalla de login
+    const loginDiv = document.getElementById('loginScreen');
+    const appDiv = document.getElementById('mainApp');
+    if (loginDiv) loginDiv.classList.add('hidden');
+    if (appDiv) appDiv.classList.remove('hidden');
+  }
+  function cerrarSesion() {
+    try {
+      localStorage.removeItem('fixlyAuthToken');
+      localStorage.removeItem('fixlyTenantId');
+      localStorage.removeItem('fixlyLocationId');
+      localStorage.removeItem('fixlyDeviceId');
+      localStorage.removeItem('fixlySessionJti');
+    } catch (_) {}
+    if (window._fixlyHeartbeat) clearInterval(window._fixlyHeartbeat);
+    const loginDiv = document.getElementById('loginScreen');
+    const appDiv = document.getElementById('mainApp');
+    if (appDiv) appDiv.classList.add('hidden');
+    if (loginDiv) loginDiv.classList.remove('hidden');
+  }
+  // Interceptar el submit y sustituir el login por el multiusuario
+  document.addEventListener('DOMContentLoaded', () => {
+    // Sobrescribir el login existente
+    window.__loginOverride = (ev) => {
+      loginMultiUser(ev);
+      return false;
+    };
+  });
+  // authFetch: agrega Authorization automáticamente
+  window.authFetch = function(path, options = {}) {
+    const token = localStorage.getItem('fixlyAuthToken');
+    const cfg = options || {};
+    cfg.headers = cfg.headers || {};
+    if (token) cfg.headers['Authorization'] = 'Bearer ' + token;
+    return fetch(API_BASE + path, cfg);
+  };
+})();
+</script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js">
 </script>
@@ -505,7 +670,7 @@
 <form id="loginForm" onsubmit="return window.__loginOverride(event)">
 <div class="mb-4">
 <label class="block text-gray-700 text-sm font-bold mb-2">
-       Usuario
+       Email
       </label>
 <input class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500" id="username" required="" type="text"/>
 </div>
@@ -521,11 +686,19 @@
       Iniciar Sesión
      </button>
 </form>
-<div class="mt-4 text-center">
-  <!-- Botón de registro que abre la página de inicio en una nueva pestaña -->
-  <button type="button" onclick="window.open('https://fixlytaller.com/', '_blank')" class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition duration-200">
-    Registrarse
-  </button>
+<div class="mt-4 text-center text-sm text-gray-600">
+<p>
+      Usuario por defecto:
+      <strong>
+       admin
+      </strong>
+</p>
+<p>
+      Contraseña:
+      <strong>
+       admin123
+      </strong>
+</p>
 </div>
 </div>
 </div>
@@ -5553,25 +5726,34 @@ on = function(){
   }
 
   async function ensureOwnerKey(){
-    /*
-     * Se elimina la solicitud de clave del dueño.  Si no existe un valor
-     * almacenado para OWNER_HASH_KEY, se almacena el hash de una cadena vacía.
-     * Esto evita que se solicite al usuario una clave en cualquier caso.
-     */
     let stored = localStorage.getItem(OWNER_HASH_KEY);
-    if (!stored) {
-      const h = await sha256Hex('');
-      localStorage.setItem(OWNER_HASH_KEY, h);
-    }
+    if (stored) return true;
+    const k1 = prompt("Configurar clave del dueño (mínimo 4 caracteres):");
+    if (k1 === null) return false;
+    if ((k1 || "").length < 4){ alert("La clave debe tener al menos 4 caracteres."); return false; }
+    const k2 = prompt("Confirmá la clave del dueño:");
+    if (k2 === null) return false;
+    if (k1 !== k2){ alert("Las claves no coinciden."); return false; }
+    const h = await sha256Hex(k1);
+    localStorage.setItem(OWNER_HASH_KEY, h);
+    alert("Clave del dueño configurada.");
     return true;
   }
 
   async function requireOwnerKey(){
-    /*
-     * Siempre permite el borrado del historial sin solicitar PIN del dueño.
-     * Se asegura que exista un valor para OWNER_HASH_KEY llamando a ensureOwnerKey().
-     */
-    await ensureOwnerKey();
+    const stored = localStorage.getItem(OWNER_HASH_KEY);
+    if (!stored){
+      // primera vez: configurar
+      const ok = await ensureOwnerKey();
+      return ok;
+    }
+    const input = prompt("Ingresá la clave del dueño para borrar el historial:");
+    if (input === null) return false;
+    const h = await sha256Hex(input);
+    if (h !== stored){
+      alert("Clave incorrecta.");
+      return false;
+    }
     return true;
   }
 
@@ -6427,15 +6609,24 @@ on = function(){
     } catch(_) {}
   }
   function ensureOwnerKey(){
-    // No solicitar clave de dueño, siempre retornar true
-    return true;
+    var key = getOwnerKey();
+    if (key && key.length >= 4) return true;
+    var entered = prompt('Configurar clave del dueño (mínimo 4 caracteres):');
+    if (entered === null) return false;
+    entered = (entered || '').trim();
+    if (entered.length < 4){ alert('La clave debe tener al menos 4 caracteres.'); return false; }
+    setOwnerKey(entered); return true;
   }
   function isValidated(){
     try { return sessionStorage.getItem(SESSION_OK) === '1'; } catch(_) { return false; }
   }
   function validateOnce(){
-    // Siempre permitir sin validar clave de dueño
-    return true;
+    if (isValidated()) return true;
+    var k = getOwnerKey(); if (!k) return true;
+    var entered = prompt('Confirmá la clave del dueño:');
+    if (entered === null) return false;
+    if ((entered || '') === k){ try { sessionStorage.setItem(SESSION_OK,'1'); } catch(_){}; return true; }
+    alert('Clave incorrecta.'); return false;
   }
 
   // Detecta si el elemento es un botón de ELIMINAR/BORRAR
@@ -6901,8 +7092,9 @@ on = function(){
     const ordenId = getOrdenId(btn);
     if (!ordenId){ alert('No pude detectar el ID de la orden.'); return; }
 
-    // Se elimina la solicitud de PIN de dueño; usar hash de cadena vacía
-    const owner_pin_hash = await sha256Hex('');
+    const pin = prompt('Clave de dueño para borrar definitivamente:');
+    if (pin === null) return; // canceló
+    const owner_pin_hash = await sha256Hex(pin.trim());
 
     const r = await fetch(`/api/historial/${ordenId}`, {
       method:'DELETE',
