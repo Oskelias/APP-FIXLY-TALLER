@@ -686,20 +686,14 @@
       Iniciar Sesión
      </button>
 </form>
-<div class="mt-4 text-center text-sm text-gray-600">
-<p>
-      Usuario por defecto:
-      <strong>
-       admin
-      </strong>
-</p>
-<p>
-      Contraseña:
-      <strong>
-       admin123
-      </strong>
-</p>
-</div>
+    <div class="mt-4 text-center">
+      <!-- Botón de registro que abre la página de landing en una pestaña nueva -->
+      <button type="button"
+              onclick="window.open('https://fixlytaller.com/', '_blank')"
+              class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition duration-200">
+        Registrarse
+      </button>
+    </div>
 </div>
 </div>
 <!-- Aplicación Principal -->
@@ -5726,35 +5720,14 @@ on = function(){
   }
 
   async function ensureOwnerKey(){
-    let stored = localStorage.getItem(OWNER_HASH_KEY);
-    if (stored) return true;
-    const k1 = prompt("Configurar clave del dueño (mínimo 4 caracteres):");
-    if (k1 === null) return false;
-    if ((k1 || "").length < 4){ alert("La clave debe tener al menos 4 caracteres."); return false; }
-    const k2 = prompt("Confirmá la clave del dueño:");
-    if (k2 === null) return false;
-    if (k1 !== k2){ alert("Las claves no coinciden."); return false; }
-    const h = await sha256Hex(k1);
-    localStorage.setItem(OWNER_HASH_KEY, h);
-    alert("Clave del dueño configurada.");
-    return true;
+        // Para la versión multiusuario se desactiva la clave del dueño.
+        // Siempre devuelve true sin solicitar ni almacenar claves.
+        return true;
   }
 
   async function requireOwnerKey(){
-    const stored = localStorage.getItem(OWNER_HASH_KEY);
-    if (!stored){
-      // primera vez: configurar
-      const ok = await ensureOwnerKey();
-      return ok;
-    }
-    const input = prompt("Ingresá la clave del dueño para borrar el historial:");
-    if (input === null) return false;
-    const h = await sha256Hex(input);
-    if (h !== stored){
-      alert("Clave incorrecta.");
-      return false;
-    }
-    return true;
+        // Siempre permite la acción sin solicitar la clave del dueño.
+        return true;
   }
 
   // Lógica real de borrado (no tocar)
