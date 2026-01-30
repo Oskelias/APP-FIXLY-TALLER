@@ -126,10 +126,11 @@
   // ============================================
   
   document.addEventListener('DOMContentLoaded', function() {
-    // Si estamos en la página de login, no hacer nada
-    if (window.location.pathname.includes('login.html')) {
-      return;
-    }
+    // Si estamos en la página de login, no hacer nada (más robusto)
+const p = (window.location.pathname || "").toLowerCase();
+if (p.includes("login") || document.getElementById("loginForm")) {
+  return;
+}
     
     // Si no está autenticado, redirigir a login
     if (!window.FixlyAuth.isAuthenticated()) {
