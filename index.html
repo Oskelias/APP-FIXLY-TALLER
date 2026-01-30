@@ -8,8 +8,13 @@
  <script>window.FIXLY_API_BASE = "https://api.fixlytaller.com";</script>
 <script src="./auth.js"></script>
 <script>
-document.addEventListener("DOMContentLoaded", () => FixlyAuth.requireAuth());
+document.addEventListener("DOMContentLoaded", () => {
+  // NO ejecutar guard en la página de login
+  if (location.pathname.endsWith("/login.html")) return;
+  FixlyAuth.requireAuth();
+});
 </script>
+
 
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
