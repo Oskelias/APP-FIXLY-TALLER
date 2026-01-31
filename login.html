@@ -8,40 +8,45 @@
 </head>
 
 <body class="bg-gradient-to-br from-blue-500 to-purple-600 min-h-screen flex items-center justify-center">
-  
+
   <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
-    
+
     <div class="text-center mb-8">
       <h1 class="text-3xl font-bold text-gray-800">Fixly Taller</h1>
       <p class="text-gray-600 mt-2">Iniciar Sesión</p>
     </div>
-    
+
     <!-- Error -->
     <div id="errorMsg" class="hidden mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"></div>
-    
+
+    <!-- Loading -->
+    <div id="loadingMsg" class="hidden mb-4 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded text-center">
+      <i class="fas fa-spinner fa-spin mr-2"></i>Iniciando sesión...
+    </div>
+
     <!-- FORM -->
     <form id="loginForm">
 
       <!-- TENANT -->
       <div class="mb-4">
         <label class="block text-gray-700 text-sm font-bold mb-2">Código de taller</label>
-        <input 
+        <input
           id="tenant"
           type="text"
           class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-          placeholder="Ej: ac8cd892-7e36-48b9-a19f-b7da0c576bb6"
+          placeholder="Ej: mi-taller-123"
           required
         />
       </div>
 
       <!-- USER -->
       <div class="mb-4">
-        <label class="block text-gray-700 text-sm font-bold mb-2">Usuario</label>
-        <input 
+        <label class="block text-gray-700 text-sm font-bold mb-2">Usuario / Email</label>
+        <input
           id="email"
           type="text"
           class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-          placeholder="mundoelectronico"
+          placeholder="usuario@email.com"
           required
         />
       </div>
@@ -49,7 +54,7 @@
       <!-- PASS -->
       <div class="mb-6">
         <label class="block text-gray-700 text-sm font-bold mb-2">Contraseña</label>
-        <input 
+        <input
           id="password"
           type="password"
           class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
@@ -57,26 +62,185 @@
           required
         />
       </div>
-      
-      <button 
+
+      <button
         type="submit"
         id="loginBtn"
-        class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition"
+        class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Iniciar Sesión
       </button>
 
     </form>
   </div>
-  
-  <!-- API CONFIG -->
-  <script>
-    window.FIXLY_API_BASE = 'https://api.fixlytaller.com';
-  </script>
 
+  <!-- SCRIPTS -->
+  <!-- Config centralizada PRIMERO -->
+  <script src="./config.js"></script>
+  <!-- Auth (usa config) -->
   <script src="./auth.js"></script>
-  
+  <!-- Permissions -->
+  <script src="./permissions.js"></script>
+
   <!-- LOGIN SCRIPT -->
   <script>
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefau
+    (function() {
+      'use strict';
+
+      const form = document.getElementById('loginForm');
+      const errorMsg = document.getElementById('errorMsg');
+      const loadingMsg = document.getElementById('loadingMsg');
+      const loginBtn = document.getElementById('loginBtn');
+
+      // Si ya está autenticado, ir a la app
+      if (window.FixlyAuth && window.FixlyAuth.isAuthenticated()) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      function showError(msg) {
+        errorMsg.textContent = msg;
+        errorMsg.classList.remove('hidden');
+        loadingMsg.classList.add('hidden');
+      }
+
+      function hideError() {
+        errorMsg.classList.add('hidden');
+      }
+
+      function setLoading(loading) {
+        if (loading) {
+          loadingMsg.classList.remove('hidden');
+          loginBtn.disabled = true;
+          loginBtn.textContent = 'Iniciando...';
+        } else {
+          loadingMsg.classList.add('hidden');
+          loginBtn.disabled = false;
+          loginBtn.textContent = 'Iniciar Sesión';
+        }
+      }
+
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        hideError();
+
+        const tenant = document.getElementById('tenant').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+
+        if (!tenant || !email || !password) {
+          showError('Completá todos los campos');
+          return;
+        }
+
+        setLoading(true);
+
+        try {
+          // Login vía API
+          const API_BASE = window.FIXLY_CONFIG?.API_BASE || 'https://api.fixlytaller.com';
+
+          const response = await fetch(`${API_BASE}/auth/public/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password, tenantId: tenant })
+          });
+
+          if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.error || err.message || 'Credenciales incorrectas');
+          }
+
+          const data = await response.json();
+          const token = data.token || data.jwt || data.accessToken;
+
+          if (!token) {
+            throw new Error('No se recibió token del servidor');
+          }
+
+          // Guardar token y tenant
+          localStorage.setItem('fixlyAuthToken', token);
+          localStorage.setItem('fixlyTenantId', tenant);
+
+          // Guardar usuario si viene
+          if (data.user) {
+            localStorage.setItem('fixly_user', JSON.stringify(data.user));
+
+            // Configurar ACL
+            if (window.FixlyACL) {
+              const isAdmin = data.user.role === 'admin' || data.user.isAdmin === true;
+              window.FixlyACL.setUser(data.user.name || data.user.email || email, isAdmin);
+            }
+          }
+
+          // Post-login: obtener tenants/locations si es necesario
+          await postLoginSetup(token, API_BASE);
+
+          // Ir a la app
+          window.location.href = 'index.html';
+
+        } catch (err) {
+          console.error('Login error:', err);
+          showError(err.message || 'Error al iniciar sesión');
+          setLoading(false);
+        }
+      });
+
+      // Post-login: seleccionar tenant/location si hay múltiples
+      async function postLoginSetup(token, API_BASE) {
+        try {
+          const meResp = await fetch(`${API_BASE}/auth/me`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+
+          if (!meResp.ok) return;
+
+          const meData = await meResp.json().catch(() => ({}));
+          const tenants = meData.tenants || [];
+
+          // Si hay un solo tenant con una sola location, usar esa
+          if (tenants.length === 1 && tenants[0].locations?.length === 1) {
+            localStorage.setItem('fixlyTenantId', tenants[0].id);
+            localStorage.setItem('fixlyLocationId', tenants[0].locations[0].id);
+          } else if (tenants.length > 0) {
+            // Si hay múltiples, usar el primero (o mostrar selector en el futuro)
+            const firstTenant = tenants[0];
+            localStorage.setItem('fixlyTenantId', firstTenant.id);
+            if (firstTenant.locations?.length > 0) {
+              localStorage.setItem('fixlyLocationId', firstTenant.locations[0].id);
+            }
+          }
+
+          // Enrolar dispositivo si es necesario
+          const locationId = localStorage.getItem('fixlyLocationId');
+          if (locationId) {
+            try {
+              const enrollResp = await fetch(`${API_BASE}/control/public/devices/enroll`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  label: navigator.userAgent || 'Web Browser',
+                  locationId
+                })
+              });
+              const enrollData = await enrollResp.json().catch(() => ({}));
+              if (enrollData.id) {
+                localStorage.setItem('fixlyDeviceId', enrollData.id);
+              }
+            } catch (e) {
+              console.warn('No se pudo enrolar dispositivo:', e);
+            }
+          }
+
+        } catch (e) {
+          console.warn('Post-login setup error:', e);
+        }
+      }
+
+    })();
+  </script>
+
+</body>
+</html>

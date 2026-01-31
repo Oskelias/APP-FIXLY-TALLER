@@ -5,13 +5,24 @@
 
 <html lang="es">
 <head>
- <script>window.FIXLY_API_BASE = "https://api.fixlytaller.com";</script>
+ <!-- Config centralizada -->
+<script src="./config.js"></script>
+<!-- Auth con manejo de 401 -->
 <script src="./auth.js"></script>
+<!-- Sistema de permisos ACL -->
+<script src="./permissions.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   // NO ejecutar guard en la página de login
   if (location.pathname.endsWith("/login.html")) return;
-  FixlyAuth.requireAuth();
+  if (!window.FixlyAuth || !window.FixlyAuth.isAuthenticated()) {
+    window.location.href = 'login.html';
+    return;
+  }
+  // Aplicar visibilidad del menú según permisos
+  if (window.FixlyACL) {
+    window.FixlyACL.applyMenuVisibility();
+  }
 });
 </script>
 
@@ -408,121 +419,50 @@ document.addEventListener("DOMContentLoaded", () => {
 <!-- === MULTIUSUARIO Y SESIONES (LOGIN VIA API) === -->
 <script>
 (() => {
-  const API_BASE = window.FIXLY_API_BASE || '';
-  // Maneja el envío de login contra el backend multiusuario
-  async function loginMultiUser(event) {
-    try {
-      if (event) event.preventDefault();
-      const emailField = document.getElementById('username');
-      const passwordField = document.getElementById('password');
-      const email = (emailField?.value || '').trim();
-      const password = passwordField?.value || '';
-      if (!email || !password) {
-        alert('Ingresá email y contraseña');
-        return false;
-      }
-      const resp = await fetch(API_BASE + '/auth/public/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      if (!resp.ok) {
-        alert('Credenciales incorrectas');
-        return false;
-      }
-      const data = await resp.json().catch(() => ({}));
-      const token = data.token || data.jwt || data.accessToken;
-      if (!token) {
-        alert('No se obtuvo token');
-        return false;
-      }
-      localStorage.setItem('fixlyAuthToken', token);
-      await postLogin(token);
-    } catch (e) {
-      console.error(e);
-      alert('Error al iniciar sesión');
+  // Usar config centralizada
+  const getApiBase = () => (window.FIXLY_CONFIG?.API_BASE) || window.FIXLY_API_BASE || 'https://api.fixlytaller.com';
+
+  // Cerrar sesión - usa FixlyAuth si está disponible
+  function cerrarSesion() {
+    if (window.FixlyAuth && window.FixlyAuth.logout) {
+      window.FixlyAuth.logout();
+      return;
     }
-    return false;
+    // Fallback manual
+    try {
+      localStorage.removeItem('fixlyAuthToken');
+      localStorage.removeItem('fixlyTenantId');
+      localStorage.removeItem('fixlyLocationId');
+      localStorage.removeItem('fixlyDeviceId');
+      localStorage.removeItem('fixlySessionJti');
+      localStorage.removeItem('fixlyUserName');
+      localStorage.removeItem('fixlyIsAdmin');
+    } catch (_) {}
+    if (window._fixlyHeartbeat) clearInterval(window._fixlyHeartbeat);
+    window.location.href = 'login.html';
   }
-  // Después del login: selecciona tenant/location, enrola dispositivo y crea sesión
-  async function postLogin(token) {
-    // Obtener info de usuario y tenants
-    const meResp = await fetch(API_BASE + '/auth/me', {
-      headers: { 'Authorization': 'Bearer ' + token }
-    });
-    if (!meResp.ok) {
-      alert('Error al obtener información del usuario');
-      return;
-    }
-    const meData = await meResp.json().catch(() => ({}));
-    const tenants = meData.tenants || [];
-    let tenantId;
-    let locationId;
-    // Selección básica vía prompt (puedes reemplazar por modal bonito)
-    if (tenants.length === 1 && tenants[0].locations && tenants[0].locations.length === 1) {
-      tenantId = tenants[0].id;
-      locationId = tenants[0].locations[0].id;
-    } else {
-      const options = [];
-      tenants.forEach(t => {
-        (t.locations || []).forEach(loc => {
-          options.push(`${t.id}:${loc.id}:${t.name} - ${loc.name}`);
-        });
-      });
-      const sel = prompt('Seleccioná tu taller y sucursal (tenantId:locationId):\n' + options.join('\n'));
-      if (!sel) {
-        alert('Debes seleccionar un taller/sucursal');
-        return;
-      }
-      const parts = sel.split(':');
-      if (parts.length < 2) {
-        alert('Selección inválida');
-        return;
-      }
-      tenantId = parts[0];
-      locationId = parts[1];
-    }
-    localStorage.setItem('fixlyTenantId', tenantId);
-    localStorage.setItem('fixlyLocationId', locationId);
-    // Enrolamiento de dispositivo
-    let deviceId;
-    try {
-      const enrollResp = await fetch(API_BASE + '/control/public/devices/enroll', {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ label: navigator.userAgent || 'Equipo', locationId })
-      });
-      const enrollData = await enrollResp.json().catch(() => ({}));
-      deviceId = enrollData.id;
-      localStorage.setItem('fixlyDeviceId', deviceId);
-    } catch (e) {
-      console.error(e);
-      alert('Error al enrolar el dispositivo');
-      return;
-    }
-    // Crear sesión
-    let jti;
-    try {
-      const sessionResp = await fetch(API_BASE + '/control/public/sessions/create', {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ deviceId })
-      });
-      const sessionData = await sessionResp.json().catch(() => ({}));
-      jti = sessionData.jti;
-      localStorage.setItem('fixlySessionJti', jti);
-    } catch (e) {
-      console.error(e);
-      alert('Error al crear la sesión');
-      return;
-    }
+
+  // Exponer cerrarSesion globalmente
+  window.cerrarSesion = cerrarSesion;
+
+  // Iniciar heartbeat si hay sesión activa
+  document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('fixlyAuthToken');
+    if (!token) return;
+
     // Iniciar heartbeat cada 60s
     if (window._fixlyHeartbeat) clearInterval(window._fixlyHeartbeat);
     window._fixlyHeartbeat = setInterval(async () => {
       try {
+        const API_BASE = getApiBase();
         const hb = await fetch(API_BASE + '/control/sessions/heartbeat', {
           method: 'POST',
-          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json',
+            'X-Tenant-Id': localStorage.getItem('fixlyTenantId') || '',
+            'X-Location-Id': localStorage.getItem('fixlyLocationId') || ''
+          }
         });
         if (hb.status === 401 || hb.status === 403) {
           clearInterval(window._fixlyHeartbeat);
@@ -531,42 +471,18 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       } catch (_) {}
     }, 60000);
-    // Mostrar la app y ocultar la pantalla de login
+
+    // Si tenemos token, mostrar app y ocultar login
     const loginDiv = document.getElementById('loginScreen');
     const appDiv = document.getElementById('mainApp');
     if (loginDiv) loginDiv.classList.add('hidden');
     if (appDiv) appDiv.classList.remove('hidden');
-  }
-  function cerrarSesion() {
-    try {
-      localStorage.removeItem('fixlyAuthToken');
-      localStorage.removeItem('fixlyTenantId');
-      localStorage.removeItem('fixlyLocationId');
-      localStorage.removeItem('fixlyDeviceId');
-      localStorage.removeItem('fixlySessionJti');
-    } catch (_) {}
-    if (window._fixlyHeartbeat) clearInterval(window._fixlyHeartbeat);
-    const loginDiv = document.getElementById('loginScreen');
-    const appDiv = document.getElementById('mainApp');
-    if (appDiv) appDiv.classList.add('hidden');
-    if (loginDiv) loginDiv.classList.remove('hidden');
-  }
-  // Interceptar el submit y sustituir el login por el multiusuario
-  document.addEventListener('DOMContentLoaded', () => {
-    // Sobrescribir el login existente
-    window.__loginOverride = (ev) => {
-      loginMultiUser(ev);
-      return false;
-    };
+
+    // Aplicar visibilidad del menú
+    if (window.FixlyACL) {
+      setTimeout(() => window.FixlyACL.applyMenuVisibility(), 100);
+    }
   });
-  // authFetch: agrega Authorization automáticamente
-  window.authFetch = function(path, options = {}) {
-    const token = localStorage.getItem('fixlyAuthToken');
-    const cfg = options || {};
-    cfg.headers = cfg.headers || {};
-    if (token) cfg.headers['Authorization'] = 'Bearer ' + token;
-    return fetch(API_BASE + path, cfg);
-  };
 })();
 </script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" rel="stylesheet"/>
@@ -729,37 +645,37 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 </div>
 <nav class="mt-6">
-<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="#" onclick="showSection(event,'dashboard')">
+<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="#" data-section="dashboard" onclick="showSection(event,'dashboard')">
 <i class="fas fa-tachometer-alt mr-3">
 </i>
        Dashboard
       </a>
-<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100 active" href="#" onclick="showSection(event,'reparaciones')">
+<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100 active" href="#" data-section="reparaciones" onclick="showSection(event,'reparaciones')">
 <i class="fas fa-tools mr-3">
 </i>
        Reparaciones
       </a>
-<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="#" onclick="showSection(event,'historial')">
+<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="#" data-section="historial" onclick="showSection(event,'historial')">
 <i class="fas fa-history mr-3">
 </i>
        Historial
       </a>
-<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="#" onclick="showSection(event,'clientes')">
+<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="#" data-section="clientes" onclick="showSection(event,'clientes')">
 <i class="fas fa-users mr-3">
 </i>
        Clientes
       </a>
-<a class="py-3 items-center text-gray-700 flex sidebar-item px-6 btn-whatsapp hover:bg-gray-100" href="#" onclick="showSection(event,'whatsapp')">
+<a class="py-3 items-center text-gray-700 flex sidebar-item px-6 btn-whatsapp hover:bg-gray-100" href="#" data-section="whatsapp" onclick="showSection(event,'whatsapp')">
 <i class="fab fa-whatsapp mr-3">
 </i>
        WhatsApp
       </a>
-<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="#" onclick="showSection(event,'pedidos')">
+<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="#" data-section="pedidos" onclick="showSection(event,'pedidos')">
 <i class="fas fa-shopping-cart mr-3">
 </i>
        Formulario de Pedidos
       </a>
-<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="#" onclick="showSection(event,'configuracion')">
+<a class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100" href="#" data-section="configuracion" onclick="showSection(event,'configuracion')">
 <i class="fas fa-cog mr-3">
 </i>
        Configuración
@@ -2094,61 +2010,6 @@ function badgeClassFromText(txt){
             if (filtroEstadoPedidos){ filtroEstadoPedidos.addEventListener('change', renderListaPedidos); }
 
             try{ renderListaPedidos(); }catch(e){ console.warn('renderListaPedidos no disponible aún', e); }
-            
-            // Configurar formulario de login
-            
-// Login robusto con persistencia y credenciales fallback
-(function(){
-  const form = document.getElementById('loginForm');
-  const loginScreen = document.getElementById('loginScreen');
-  const mainApp = document.getElementById('mainApp');
-
-  function showMain(){
-    if (loginScreen) loginScreen.classList.add('hidden');
-    if (mainApp) mainApp.classList.remove('hidden');
-    try { localStorage.setItem('fixlytallerLoggedIn', '1'); } catch(e){}
-  }
-
-  // Autologin si ya inició sesión
-  try {
-    if (localStorage.getItem('fixlytallerLoggedIn') === '1') {
-      showMain();
-      return;
-    }
-  } catch(e){}
-
-  if (!form) return;
-  form.addEventListener('submit', function(e){
-    e.preventDefault();
-    const username = (document.getElementById('username')?.value || '').trim();
-    const password = (document.getElementById('password')?.value || '').trim();
-
-    // Credenciales desde config si existen
-    let cfgUser = 'admin', cfgPass = 'admin123';
-    try {
-      const raw = localStorage.getItem('fixlytallerData');
-      if (raw) {
-        const d = JSON.parse(raw);
-        if (d && d.config) {
-          cfgUser = d.config.usuario || cfgUser;
-          cfgPass = d.config.contrasena || cfgPass;
-        }
-      }
-    } catch(e){}
-
-    // Aceptamos también admin/admin por compatibilidad
-    const ok =
-      (username === cfgUser && password === cfgPass) ||
-      (username === 'admin' && password === 'admin') ||
-      (username === 'admin' && password === 'admin123');
-
-    if (ok) {
-      showMain();
-    } else {
-      alert('Usuario o contraseña incorrectos');
-    }
-  });
-})();
 
             // Configurar formulario de nueva reparación
             document.getElementById('formNuevaReparacion').addEventListener('submit', function(e) {
@@ -2170,19 +2031,29 @@ function badgeClassFromText(txt){
 
         // FUNCIONES DE NAVEGACIÓN Y SECCIONES
         function showSection(event, sectionName) {
+            // Guard de permisos ACL
+            if (window.FixlyACL && !window.FixlyACL.canOpenSection(sectionName)) {
+                alert('No tenés permiso para acceder a esta sección');
+                if (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                return;
+            }
+
             // Ocultar todas las secciones
             document.querySelectorAll('.section').forEach(section => {
                 section.classList.remove('active');
             });
-            
+
             // Mostrar la sección seleccionada
             document.getElementById(sectionName).classList.add('active');
-            
+
             // Actualizar sidebar
             document.querySelectorAll('.sidebar-item').forEach(item => {
                 item.classList.remove('active');
             });
-            
+
             (event && event.target ? event.target : document.querySelector(`[onclick*="'${sectionName}'"]`))?.classList?.add('active');
             currentSection = sectionName;
         }
@@ -2198,8 +2069,16 @@ function badgeClassFromText(txt){
         }
 
         // FUNCIONES DE DATOS
+        // Helper para key segregada por tenant
+        function getStorageKey(key) {
+            const tenantId = localStorage.getItem('fixlyTenantId') || 'default';
+            return `${tenantId}_${key}`;
+        }
+
         function cargarDatos() {
-            const datosGuardados = localStorage.getItem('fixlytallerData');
+            // Usar storage segregado por tenant
+            const storageKey = getStorageKey('fixlytallerData');
+            const datosGuardados = localStorage.getItem(storageKey);
             if (datosGuardados) {
                 const datos = JSON.parse(datosGuardados);
                 // Cargar pedidos en la variable global y en la local para mantener sincronía
@@ -2231,7 +2110,9 @@ function badgeClassFromText(txt){
                 historialMensajes: historialMensajes
             };
             datos.pedidos = pedidos;
-            localStorage.setItem('fixlytallerData', JSON.stringify(datos));
+            // Usar storage segregado por tenant
+            const storageKey = getStorageKey('fixlytallerData');
+            localStorage.setItem(storageKey, JSON.stringify(datos));
         }
 
         function obtenerFechaActual() {
@@ -4778,77 +4659,6 @@ window.imprimirPedido = function(id){
 };
   </script>
 <script>
-   // ======== LOGIN ESTRICTO (sin auto-ingreso) ========
-(function(){
-  // Contenedores (con fallbacks)
-  var form = document.getElementById('loginForm') || document.querySelector('form[data-login], form#formLogin, form.login-form');
-  var loginScreen = document.getElementById('loginScreen') || document.querySelector('#login, .login, .login-screen');
-  var mainApp = document.getElementById('mainApp') || document.querySelector('#app, .main-app, #main');
-
-  // Siempre forzar estado inicial: mostrar login, ocultar app
-  try { localStorage.removeItem('fixlytallerLoggedIn'); } catch(e){}
-  if (loginScreen) loginScreen.classList.remove('hidden');
-  if (mainApp) mainApp.classList.add('hidden');
-
-  // Handler de login que pisa cualquier otro
-  function __doLogin(e){
-    if (e) { e.preventDefault(); e.stopImmediatePropagation(); }
-    var uEl = document.getElementById('username') || document.querySelector('input[name=username], #user, [data-username]');
-    var pEl = document.getElementById('password') || document.querySelector('input[type=password], [data-password]');
-    var username = (uEl && uEl.value ? uEl.value : '').trim();
-    var password = (pEl && pEl.value ? pEl.value : '').trim();
-
-    // Credenciales por defecto + desde config si existe
-    var cfgUser = 'admin', cfgPass = 'admin123';
-    try {
-      var raw = localStorage.getItem('fixlytallerData');
-      if (raw) {
-        var d = JSON.parse(raw);
-        if (d && d.config) {
-          if (d.config.usuario) cfgUser = d.config.usuario;
-          if (d.config.contrasena) cfgPass = d.config.contrasena;
-        }
-      }
-    } catch(e){}
-
-    var ok = (username === cfgUser && password === cfgPass) ||
-             (username === 'admin' && password === 'admin') ||
-             (username === 'admin' && password === 'admin123');
-
-    if (!ok) {
-      alert('Usuario o contraseña incorrectos');
-      return false;
-    }
-
-    try { localStorage.setItem('fixlytallerLoggedIn', '1'); } catch(e){}
-    if (loginScreen) loginScreen.classList.add('hidden');
-    if (mainApp) mainApp.classList.remove('hidden');
-    return false;
-  }
-
-  // Si el form tenía onsubmit inline, lo redirigimos al nuestro
-  if (form) {
-    form.setAttribute('onsubmit', 'return window.__loginOverride(event)');
-  }
-
-  // Escucha en captura para anular otros handlers previos
-  document.addEventListener('submit', function(ev){
-    if (!form || !ev.target) return;
-    if (ev.target === form) { __doLogin(ev); }
-  }, true);
-
-  // Exponer para onsubmit
-  window.__loginOverride = __doLogin;
-
-  // Evitar cualquier auto-login previo que intente ejecutarse después
-  window.addEventListener('load', function(){
-    try { localStorage.removeItem('fixlytallerLoggedIn'); } catch(e){}
-    if (loginScreen) loginScreen.classList.remove('hidden');
-    if (mainApp) mainApp.classList.add('hidden');
-  });
-})();
-  </script>
-<script>
    // === FIX: Contador desde P001 y evitar duplicados al guardar ===
 (function(){
   const COUNTER_KEY = 'pedidoCounter_v3';
@@ -7042,99 +6852,43 @@ on = function(){
     const selE = pickSelect(root, ['estado','estado-reparacion-select']);
     const sync = ()=> {
      
+<!-- Handler de borrado de historial movido al final del archivo -->
 <script>
-// === FIX: Borrar en Historial con PIN de dueño (match por title/btn-danger) ===
+// === BORRADO SEGURO DE HISTORIAL CON X-MASTER-KEY ===
+// La clave se pide UNA SOLA VEZ y se guarda en memoria (window.__fixlyMasterKey)
+// Si recibe 403, borra la clave y vuelve a pedir
 (function(){
-  const $  = (q,c)=> (c||document).querySelector(q);
-  const $$ = (q,c)=> Array.from((c||document).querySelectorAll(q));
+  'use strict';
 
-  async function sha256Hex(s){
-    const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
-    return [...new Uint8Array(d)].map(b=>b.toString(16).padStart(2,'0')).join('');
+  const $  = (q,c)=> (c||document).querySelector(q);
+  const isHistorialView = ()=> /historial/i.test(($('h1,h2')?.textContent||''));
+
+  // Clave maestra en memoria (NO en localStorage por seguridad)
+  // window.__fixlyMasterKey se mantiene solo durante la sesión
+
+  /**
+   * Obtiene la clave maestra, pidiéndola al usuario si no existe en memoria
+   * @returns {string|null} La clave o null si el usuario cancela
+   */
+  function getMasterKeyOnce() {
+    if (window.__fixlyMasterKey) {
+      return window.__fixlyMasterKey;
+    }
+    const key = prompt('Ingresá la clave maestra para borrar del historial:');
+    if (key === null) return null; // Canceló
+    window.__fixlyMasterKey = key.trim();
+    return window.__fixlyMasterKey;
+  }
+
+  /**
+   * Limpia la clave maestra de memoria (por ejemplo, si fue incorrecta)
+   */
+  function clearMasterKey() {
+    delete window.__fixlyMasterKey;
   }
 
   function getOrdenId(btn){
     // 1) data-id directo
-    let id = Number(btn.dataset?.id || btn.getAttribute('data-id'));
-    if (id) return id;
-    // 2) fila con data-orden-row
-    const tr = btn.closest('tr');
-    if (tr){
-      id = Number(tr.dataset?.ordenRow || tr.getAttribute('data-orden-row'));
-      if (id) return id;
-      // 3) parsear primera celda tipo "#1001"
-      const firstTd = tr.querySelector('td');
-      if (firstTd){
-        const m = (firstTd.textContent||'').match(/\#?(\d+)/);
-        if (m) return Number(m[1]);
-      }
-    }
-    return NaN;
-  }
-
-  async function handleDelete(btn){
-    const ordenId = getOrdenId(btn);
-    if (!ordenId){ alert('No pude detectar el ID de la orden.'); return; }
-
-    const pin = prompt('Clave de dueño para borrar definitivamente:');
-    if (pin === null) return; // canceló
-    const owner_pin_hash = await sha256Hex(pin.trim());
-
-    const r = await fetch(`/api/historial/${ordenId}`, {
-      method:'DELETE',
-      headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({ owner_pin_hash })
-    });
-
-    const data = await r.json().catch(()=> ({}));
-    if (!r.ok || !data.ok){
-      const msg = data.error === 'not_archived' ? 'Solo se pueden borrar equipos ARCHIVADOS.'
-               : data.error === 'unauthorized'  ? 'Clave incorrecta.'
-               : data.error === 'not_found'     ? 'Orden no encontrada.'
-               : 'No se pudo borrar.';
-      alert(msg);
-      return;
-    }
-    // quitar fila
-    const row = btn.closest('tr');
-    if (row) row.remove();
-    alert('Borrado definitivo realizado.');
-  }
-
-  // Delegación: capturamos clic en el contenedor de Historial
-  document.addEventListener('click', (e)=>{
-    const btn = e.target.closest(
-      // cualquiera de estos debe matchear el botón rojo del historial
-      '[data-action="delete"],' +                 // si alguna vez lo agregás
-      'button.btn-danger[data-id],' +             // con data-id
-      'a.btn-danger[data-id],' +
-      '[title*="Solo dueño"]'                     // lo que hoy sí tenés según el tooltip
-    );
-    if (!btn) return;
-
-    // limitar a la vista Historial
-    const isHistorial = !!(document.querySelector('h1,h2')?.textContent || '').toLowerCase().includes('historial');
-    if (!isHistorial) return;
-
-    e.preventDefault();
-    handleDelete(btn);
-  }, true);
-})();
-</script>
-<script>
-// === Guardar borrado en Historial con PIN del dueño (bloquea el confirm viejo) ===
-(function(){
-  const $  = (q,c)=> (c||document).querySelector(q);
-  const $$ = (q,c)=> Array.from((c||document).querySelectorAll(q));
-  const isHistorialView = ()=> /historial/i.test(($('h1,h2')?.textContent||''));
-
-  async function sha256Hex(s){
-    const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
-    return [...new Uint8Array(d)].map(b=>b.toString(16).padStart(2,'0')).join('');
-  }
-
-  function getOrdenId(btn){
-    // 1) data-id
     let id = Number(btn.dataset?.id || btn.getAttribute('data-id'));
     if (id) return id;
     // 2) fila con data-orden-row
@@ -7149,60 +6903,107 @@ on = function(){
     return NaN;
   }
 
-  async function askAndDelete(btn){
+  /**
+   * Borra un registro del historial usando X-Master-Key
+   * @param {number} ordenId - ID de la orden a borrar
+   * @returns {Promise<{ok: boolean, error?: string}>}
+   */
+  async function deleteHistorial(ordenId) {
+    const masterKey = getMasterKeyOnce();
+    if (!masterKey) {
+      return { ok: false, error: 'cancelled' };
+    }
+
+    const API_BASE = (window.FIXLY_CONFIG?.API_BASE) || window.FIXLY_API_BASE || '';
+
+    try {
+      const response = await fetch(`${API_BASE}/api/historial/${ordenId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': masterKey,
+          'X-Tenant-Id': localStorage.getItem('fixlyTenantId') || '',
+          'X-Location-Id': localStorage.getItem('fixlyLocationId') || ''
+        }
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      // Si 403, la clave es incorrecta - limpiar y volver a pedir
+      if (response.status === 403) {
+        clearMasterKey();
+        return { ok: false, error: data.error || 'unauthorized' };
+      }
+
+      if (!response.ok || !data.ok) {
+        return { ok: false, error: data.error || 'unknown' };
+      }
+
+      return { ok: true };
+
+    } catch (e) {
+      console.error('Error en deleteHistorial:', e);
+      return { ok: false, error: 'network' };
+    }
+  }
+
+  async function handleDeleteClick(btn) {
     const ordenId = getOrdenId(btn);
-    if (!ordenId){ alert('No pude detectar el ID de la orden.'); return; }
-
-    // Pedir PIN
-    const pin = prompt('Clave de dueño para borrar definitivamente:');
-    if (pin === null) return; // canceló
-    const owner_pin_hash = await sha256Hex(pin.trim());
-
-    // Llamar endpoint protegido
-    const r = await fetch(`/api/historial/${ordenId}`, {
-      method:'DELETE',
-      headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({ owner_pin_hash })
-    }).catch(()=>null);
-
-    if (!r){ alert('No se pudo contactar al servidor.'); return; }
-    const data = await r.json().catch(()=> ({}));
-
-    if (!r.ok || !data.ok){
-      alert(
-        data?.error === 'unauthorized'  ? 'Clave incorrecta.'
-      : data?.error === 'not_archived' ? 'Solo se pueden borrar equipos ARCHIVADOS.'
-      : data?.error === 'not_found'    ? 'Orden no encontrada.'
-      : 'No se pudo borrar.'
-      );
+    if (!ordenId) {
+      alert('No pude detectar el ID de la orden.');
       return;
     }
 
-    // Quitar la fila
-    const row = btn.closest('tr');
-    if (row) row.remove();
-    alert('Borrado definitivo realizado.');
+    // Confirmar antes de borrar
+    if (!confirm('¿Seguro que querés borrar esta orden del historial? Esta acción no se puede deshacer.')) {
+      return;
+    }
+
+    const result = await deleteHistorial(ordenId);
+
+    if (result.ok) {
+      // Quitar la fila de la tabla
+      const row = btn.closest('tr');
+      if (row) row.remove();
+      alert('Borrado exitoso.');
+    } else {
+      const messages = {
+        'cancelled': 'Operación cancelada.',
+        'unauthorized': 'Clave maestra incorrecta. Intentá de nuevo.',
+        'not_archived': 'Solo se pueden borrar equipos ARCHIVADOS.',
+        'not_found': 'Orden no encontrada.',
+        'network': 'Error de conexión. Verificá tu internet.',
+        'server_config_error': 'Error de configuración del servidor.',
+        'unknown': 'No se pudo borrar.'
+      };
+      alert(messages[result.error] || messages.unknown);
+    }
   }
 
-  // Captura el click ANTES de que corra cualquier onclick/confirm viejo
+  // Exponer función globalmente para uso en otros lugares
+  window.deleteHistorial = deleteHistorial;
+  window.getMasterKeyOnce = getMasterKeyOnce;
+  window.clearMasterKey = clearMasterKey;
+
+  // Captura el click ANTES de cualquier handler viejo
   document.addEventListener('click', (e)=>{
     const btn = e.target.closest(
-      // variantes probables del tacho rojo en Historial:
       '[data-action="delete"],' +
       'button.btn-danger,' +
       'a.btn-danger,' +
-      '[title*="Eliminar"],[aria-label*="Eliminar"]'
+      '[title*="Eliminar"],[aria-label*="Eliminar"],' +
+      '[title*="Solo dueño"]'
     );
     if (!btn || !isHistorialView()) return;
 
-    // FRENAR todo lo anterior (confirm() incluido)
+    // Frenar handlers viejos
     e.preventDefault();
     e.stopImmediatePropagation();
     e.stopPropagation();
 
-    // Ir por nuestro flujo con PIN
-    askAndDelete(btn);
-  }, true); // <-- CAPTURA = true (clave para bloquear el handler viejo)
+    // Nuestro flujo seguro
+    handleDeleteClick(btn);
+  }, true);
 })();
 </script>
 
