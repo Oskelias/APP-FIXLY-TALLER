@@ -53,6 +53,12 @@ document.addEventListener("DOMContentLoaded", () => {
         
         .sidebar-item {
             transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            gap: 0.5rem;
+        }
+        .sidebar-item i {
+            width: 1.25rem;
+            text-align: center;
         }
         .sidebar-item:hover {
             background-color: #f3f4f6;
@@ -60,12 +66,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         
         .sidebar-item.active {
-            background-color: #3b82f6;
-            color: white;
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            border-left-color: #2563eb;
+            font-weight: 600;
         }
         
         .sidebar-item.active:hover {
-            background-color: #2563eb;
+            background-color: #dbeafe;
         }
         
         .section {
@@ -78,6 +86,78 @@ document.addEventListener("DOMContentLoaded", () => {
         
         .card {
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-header {
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .table-scroll {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            background: #ffffff;
+            overflow: auto;
+        }
+
+        .data-table thead th {
+            background: #f8fafc;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .data-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .filters-bar {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 0.75rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .app-shell {
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            border-right: 1px solid #e5e7eb;
+        }
+
+        @media (max-width: 1024px) {
+            .app-shell {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e5e7eb;
+            }
+
+            .sidebar nav {
+                display: flex;
+                overflow-x: auto;
+                gap: 0.5rem;
+                padding: 0.5rem 1rem 1rem;
+            }
+
+            .sidebar-item {
+                flex: 0 0 auto;
+                border-left: none;
+                border-bottom: 2px solid transparent;
+            }
+
+            .sidebar-item.active {
+                border-left-color: transparent;
+                border-bottom-color: #2563eb;
+            }
+
+            .section {
+                padding: 1.5rem;
+            }
         }
         
         .status-badge {
@@ -709,9 +789,9 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 <!-- Aplicación Principal -->
 <div class="" id="mainApp">
-<div class="flex h-screen bg-gray-100">
+<div class="flex h-screen bg-gray-100 app-shell">
 <!-- Sidebar -->
-<div class="w-64 bg-white shadow-lg">
+<div class="w-64 bg-white shadow-lg sidebar">
 <div class="p-6 border-b">
 <div class="flex items-center">
 <div class="bg-blue-100 w-10 h-10 rounded-full flex items-center justify-center mr-3">
@@ -771,7 +851,7 @@ document.addEventListener("DOMContentLoaded", () => {
 <!-- Dashboard -->
 <div class="section p-8" id="dashboard">
 <div class="dashboard-container">
-<div class="flex justify-between items-center mb-8">
+<div class="flex justify-between items-center mb-8 section-header">
 <h1 class="text-3xl font-bold text-gray-800">
          Dashboard
         </h1>
@@ -875,7 +955,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 <!-- Reparaciones -->
 <div class="section p-8 active" id="reparaciones">
-<div class="flex justify-between items-center mb-8">
+<div class="flex justify-between items-center mb-8 section-header">
 <h1 class="text-3xl font-bold text-gray-800">
         Reparaciones
        </h1>
@@ -890,7 +970,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 <!-- Lista de Reparaciones -->
 <div class="card bg-white p-6 rounded-xl">
-<div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+<div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4 filters-bar">
 <input class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="filtro-busqueda" placeholder="Buscar por cliente, equipo o orden..." type="text"/>
 <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="filtro-estado">
 <option value="">
@@ -921,8 +1001,8 @@ document.addEventListener("DOMContentLoaded", () => {
          </option>
 </select>
 </div>
-<div class="overflow-x-auto">
-<table class="w-full">
+<div class="overflow-x-auto table-scroll">
+<table class="w-full data-table">
 <thead>
 <tr class="border-b">
 <th class="text-left py-3 px-4 font-semibold text-gray-700">
@@ -1040,7 +1120,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 <!-- HISTORIAL -->
 <div class="section p-8" id="historial">
-<div class="flex justify-between items-center mb-8">
+<div class="flex justify-between items-center mb-8 section-header">
 <h1 class="text-3xl font-bold text-gray-800">
         Historial
        </h1>
@@ -1050,7 +1130,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 <!-- Lista de Historial -->
 <div class="card bg-white p-6 rounded-xl">
-<div class="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4 filters-bar">
 <input class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="filtro-historial" placeholder="Buscar en historial..." type="text"/>
 <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="filtro-mes">
 <option value="">
@@ -1108,8 +1188,8 @@ document.addEventListener("DOMContentLoaded", () => {
          </option>
 </select>
 </div>
-<div class="overflow-x-auto">
-<table class="w-full">
+<div class="overflow-x-auto table-scroll">
+<table class="w-full data-table">
 <thead>
 <tr class="border-b">
 <th class="text-left py-3 px-4 font-semibold text-gray-700">
@@ -1175,13 +1255,214 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 <!-- Clientes -->
 <div class="section p-8" id="clientes">
-<h1 class="text-3xl font-bold text-gray-800 mb-8">
+<div class="flex justify-between items-center mb-8 section-header">
+<div>
+<h1 class="text-3xl font-bold text-gray-800">
        Clientes
       </h1>
-<div class="card bg-white p-6 rounded-xl">
 <p class="text-gray-600">
-        Módulo de clientes en desarrollo...
+        Gestión de tu base de clientes
        </p>
+</div>
+<div class="flex gap-3">
+<button class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200" type="button">
+<i class="fas fa-user-plus mr-2"></i>
+        Nuevo Cliente
+      </button>
+<button class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-200 transition duration-200" type="button">
+<i class="fas fa-file-import mr-2"></i>
+        Importar
+      </button>
+</div>
+</div>
+<div class="card bg-white p-6 rounded-xl">
+<div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4 filters-bar">
+<input class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Buscar por nombre, teléfono o email..." type="text"/>
+<select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+<option value="">
+          Estado
+         </option>
+<option value="activo">
+          Activo
+         </option>
+<option value="inactivo">
+          Inactivo
+         </option>
+</select>
+<select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+<option value="">
+          Etiqueta
+         </option>
+<option value="vip">
+          VIP
+         </option>
+<option value="frecuente">
+          Frecuente
+         </option>
+<option value="nuevo">
+          Nuevo
+         </option>
+</select>
+<select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+<option value="">
+          Ciudad
+         </option>
+<option value="centro">
+          Centro
+         </option>
+<option value="norte">
+          Zona Norte
+         </option>
+<option value="sur">
+          Zona Sur
+         </option>
+</select>
+</div>
+<div class="overflow-x-auto table-scroll">
+<table class="w-full data-table">
+<thead>
+<tr class="border-b">
+<th class="text-left py-3 px-4 font-semibold text-gray-700">
+            Cliente
+           </th>
+<th class="text-left py-3 px-4 font-semibold text-gray-700">
+            Teléfono
+           </th>
+<th class="text-left py-3 px-4 font-semibold text-gray-700">
+            Última Visita
+           </th>
+<th class="text-left py-3 px-4 font-semibold text-gray-700">
+            Órdenes Activas
+           </th>
+<th class="text-left py-3 px-4 font-semibold text-gray-700">
+            Etiqueta
+           </th>
+<th class="text-left py-3 px-4 font-semibold text-gray-700">
+            Acciones
+           </th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b hover:bg-gray-50">
+<td class="py-3 px-4">
+<div class="font-medium text-gray-900">
+              María González
+             </div>
+<div class="text-sm text-gray-500">
+              maria@email.com
+             </div>
+</td>
+<td class="py-3 px-4">
+            +54 9 11 2345-6789
+           </td>
+<td class="py-3 px-4">
+            08/11/2025
+           </td>
+<td class="py-3 px-4">
+<span class="status-badge status-diagnosticando">
+              2 en proceso
+             </span>
+</td>
+<td class="py-3 px-4">
+<span class="status-badge status-listo">
+              VIP
+             </span>
+</td>
+<td class="py-3 px-4">
+<div class="flex gap-2">
+<button class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" title="Ver cliente" type="button">
+<i class="fas fa-eye"></i>
+</button>
+<button class="bg-gray-100 text-gray-700 p-2 rounded hover:bg-gray-200" title="Editar cliente" type="button">
+<i class="fas fa-edit"></i>
+</button>
+<button class="bg-green-600 text-white p-2 rounded hover:bg-green-700" title="WhatsApp" type="button">
+<i class="fab fa-whatsapp"></i>
+</button>
+</div>
+</td>
+</tr>
+<tr class="border-b hover:bg-gray-50">
+<td class="py-3 px-4">
+<div class="font-medium text-gray-900">
+              Carlos López
+             </div>
+<div class="text-sm text-gray-500">
+              carlos@correo.com
+             </div>
+</td>
+<td class="py-3 px-4">
+            +54 9 11 9876-5432
+           </td>
+<td class="py-3 px-4">
+            05/11/2025
+           </td>
+<td class="py-3 px-4">
+<span class="status-badge status-recibido">
+              1 en proceso
+             </span>
+</td>
+<td class="py-3 px-4">
+<span class="status-badge status-no-repuesto">
+              Frecuente
+             </span>
+</td>
+<td class="py-3 px-4">
+<div class="flex gap-2">
+<button class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" title="Ver cliente" type="button">
+<i class="fas fa-eye"></i>
+</button>
+<button class="bg-gray-100 text-gray-700 p-2 rounded hover:bg-gray-200" title="Editar cliente" type="button">
+<i class="fas fa-edit"></i>
+</button>
+<button class="bg-green-600 text-white p-2 rounded hover:bg-green-700" title="WhatsApp" type="button">
+<i class="fab fa-whatsapp"></i>
+</button>
+</div>
+</td>
+</tr>
+<tr class="border-b hover:bg-gray-50">
+<td class="py-3 px-4">
+<div class="font-medium text-gray-900">
+              Sofía Herrera
+             </div>
+<div class="text-sm text-gray-500">
+              sofia.herrera@email.com
+             </div>
+</td>
+<td class="py-3 px-4">
+            +54 9 11 4567-1122
+           </td>
+<td class="py-3 px-4">
+            29/10/2025
+           </td>
+<td class="py-3 px-4">
+<span class="status-badge status-entregado">
+              0 activas
+             </span>
+</td>
+<td class="py-3 px-4">
+<span class="status-badge status-no-reparado">
+              Nuevo
+             </span>
+</td>
+<td class="py-3 px-4">
+<div class="flex gap-2">
+<button class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" title="Ver cliente" type="button">
+<i class="fas fa-eye"></i>
+</button>
+<button class="bg-gray-100 text-gray-700 p-2 rounded hover:bg-gray-200" title="Editar cliente" type="button">
+<i class="fas fa-edit"></i>
+</button>
+<button class="bg-green-600 text-white p-2 rounded hover:bg-green-700" title="WhatsApp" type="button">
+<i class="fab fa-whatsapp"></i>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 </div>
 <!-- WhatsApp -->
@@ -1318,8 +1599,8 @@ document.addEventListener("DOMContentLoaded", () => {
 <h4 class="font-semibold mb-4">
           Historial de Envíos
          </h4>
-<div class="overflow-x-auto">
-<table class="w-full text-sm">
+<div class="overflow-x-auto table-scroll">
+<table class="w-full text-sm data-table">
 <thead>
 <tr class="border-b">
 <th class="text-left py-2">
@@ -1347,7 +1628,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 <!-- Formulario de Pedidos -->
 <div class="section p-8" id="pedidos">
-<div class="flex justify-between items-center mb-8">
+<div class="flex justify-between items-center mb-8 section-header">
 <h1 class="text-3xl font-bold text-gray-800">
         Formulario de Pedidos
        </h1>
@@ -1458,7 +1739,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 <!-- Configuración -->
 <div class="section p-8" id="configuracion">
-<div class="flex justify-between items-center mb-8">
+<div class="flex justify-between items-center mb-8 section-header">
 <h1 class="text-3xl font-bold text-gray-800">
         Configuración
        </h1>
