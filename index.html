@@ -53,6 +53,12 @@ document.addEventListener("DOMContentLoaded", () => {
         
         .sidebar-item {
             transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            gap: 0.5rem;
+        }
+        .sidebar-item i {
+            width: 1.25rem;
+            text-align: center;
         }
         .sidebar-item:hover {
             background-color: #f3f4f6;
@@ -60,12 +66,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         
         .sidebar-item.active {
-            background-color: #3b82f6;
-            color: white;
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            border-left-color: #2563eb;
+            font-weight: 600;
         }
         
         .sidebar-item.active:hover {
-            background-color: #2563eb;
+            background-color: #dbeafe;
         }
         
         .section {
@@ -78,6 +86,78 @@ document.addEventListener("DOMContentLoaded", () => {
         
         .card {
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-header {
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .table-scroll {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            background: #ffffff;
+            overflow: auto;
+        }
+
+        .data-table thead th {
+            background: #f8fafc;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .data-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .filters-bar {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 0.75rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .app-shell {
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            border-right: 1px solid #e5e7eb;
+        }
+
+        @media (max-width: 1024px) {
+            .app-shell {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e5e7eb;
+            }
+
+            .sidebar nav {
+                display: flex;
+                overflow-x: auto;
+                gap: 0.5rem;
+                padding: 0.5rem 1rem 1rem;
+            }
+
+            .sidebar-item {
+                flex: 0 0 auto;
+                border-left: none;
+                border-bottom: 2px solid transparent;
+            }
+
+            .sidebar-item.active {
+                border-left-color: transparent;
+                border-bottom-color: #2563eb;
+            }
+
+            .section {
+                padding: 1.5rem;
+            }
         }
         
         .status-badge {
@@ -709,9 +789,9 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 <!-- Aplicación Principal -->
 <div class="" id="mainApp">
-<div class="flex h-screen bg-gray-100">
+<div class="flex h-screen bg-gray-100 app-shell">
 <!-- Sidebar -->
-<div class="w-64 bg-white shadow-lg">
+<div class="w-64 bg-white shadow-lg sidebar">
 <div class="p-6 border-b">
 <div class="flex items-center">
 <div class="bg-blue-100 w-10 h-10 rounded-full flex items-center justify-center mr-3">
@@ -771,7 +851,7 @@ document.addEventListener("DOMContentLoaded", () => {
 <!-- Dashboard -->
 <div class="section p-8" id="dashboard">
 <div class="dashboard-container">
-<div class="flex justify-between items-center mb-8">
+<div class="flex justify-between items-center mb-8 section-header">
 <h1 class="text-3xl font-bold text-gray-800">
          Dashboard
         </h1>
@@ -875,7 +955,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 <!-- Reparaciones -->
 <div class="section p-8 active" id="reparaciones">
-<div class="flex justify-between items-center mb-8">
+<div class="flex justify-between items-center mb-8 section-header">
 <h1 class="text-3xl font-bold text-gray-800">
         Reparaciones
        </h1>
@@ -890,7 +970,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 <!-- Lista de Reparaciones -->
 <div class="card bg-white p-6 rounded-xl">
-<div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+<div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4 filters-bar">
 <input class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="filtro-busqueda" placeholder="Buscar por cliente, equipo o orden..." type="text"/>
 <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="filtro-estado">
 <option value="">
@@ -921,8 +1001,8 @@ document.addEventListener("DOMContentLoaded", () => {
          </option>
 </select>
 </div>
-<div class="overflow-x-auto">
-<table class="w-full">
+<div class="overflow-x-auto table-scroll">
+<table class="w-full data-table">
 <thead>
 <tr class="border-b">
 <th class="text-left py-3 px-4 font-semibold text-gray-700">
@@ -1040,7 +1120,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 <!-- HISTORIAL -->
 <div class="section p-8" id="historial">
-<div class="flex justify-between items-center mb-8">
+<div class="flex justify-between items-center mb-8 section-header">
 <h1 class="text-3xl font-bold text-gray-800">
         Historial
        </h1>
@@ -1050,7 +1130,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 <!-- Lista de Historial -->
 <div class="card bg-white p-6 rounded-xl">
-<div class="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4 filters-bar">
 <input class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="filtro-historial" placeholder="Buscar en historial..." type="text"/>
 <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="filtro-mes">
 <option value="">
@@ -1108,8 +1188,8 @@ document.addEventListener("DOMContentLoaded", () => {
          </option>
 </select>
 </div>
-<div class="overflow-x-auto">
-<table class="w-full">
+<div class="overflow-x-auto table-scroll">
+<table class="w-full data-table">
 <thead>
 <tr class="border-b">
 <th class="text-left py-3 px-4 font-semibold text-gray-700">
@@ -1318,8 +1398,8 @@ document.addEventListener("DOMContentLoaded", () => {
 <h4 class="font-semibold mb-4">
           Historial de Envíos
          </h4>
-<div class="overflow-x-auto">
-<table class="w-full text-sm">
+<div class="overflow-x-auto table-scroll">
+<table class="w-full text-sm data-table">
 <thead>
 <tr class="border-b">
 <th class="text-left py-2">
@@ -1347,7 +1427,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 <!-- Formulario de Pedidos -->
 <div class="section p-8" id="pedidos">
-<div class="flex justify-between items-center mb-8">
+<div class="flex justify-between items-center mb-8 section-header">
 <h1 class="text-3xl font-bold text-gray-800">
         Formulario de Pedidos
        </h1>
@@ -1458,7 +1538,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 <!-- Configuración -->
 <div class="section p-8" id="configuracion">
-<div class="flex justify-between items-center mb-8">
+<div class="flex justify-between items-center mb-8 section-header">
 <h1 class="text-3xl font-bold text-gray-800">
         Configuración
        </h1>
