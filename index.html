@@ -53,6 +53,12 @@ document.addEventListener("DOMContentLoaded", () => {
         
         .sidebar-item {
             transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            gap: 0.5rem;
+        }
+        .sidebar-item i {
+            width: 1.25rem;
+            text-align: center;
         }
         .sidebar-item:hover {
             background-color: #f3f4f6;
@@ -60,12 +66,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         
         .sidebar-item.active {
-            background-color: #3b82f6;
-            color: white;
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            border-left-color: #2563eb;
+            font-weight: 600;
         }
         
         .sidebar-item.active:hover {
-            background-color: #2563eb;
+            background-color: #dbeafe;
         }
         
         .section {
@@ -78,6 +86,78 @@ document.addEventListener("DOMContentLoaded", () => {
         
         .card {
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-header {
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .table-scroll {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            background: #ffffff;
+            overflow: auto;
+        }
+
+        .data-table thead th {
+            background: #f8fafc;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .data-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .filters-bar {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 0.75rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .app-shell {
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            border-right: 1px solid #e5e7eb;
+        }
+
+        @media (max-width: 1024px) {
+            .app-shell {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e5e7eb;
+            }
+
+            .sidebar nav {
+                display: flex;
+                overflow-x: auto;
+                gap: 0.5rem;
+                padding: 0.5rem 1rem 1rem;
+            }
+
+            .sidebar-item {
+                flex: 0 0 auto;
+                border-left: none;
+                border-bottom: 2px solid transparent;
+            }
+
+            .sidebar-item.active {
+                border-left-color: transparent;
+                border-bottom-color: #2563eb;
+            }
+
+            .section {
+                padding: 1.5rem;
+            }
         }
         
         .status-badge {
@@ -709,9 +789,9 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 <!-- Aplicación Principal -->
 <div class="" id="mainApp">
-<div class="flex h-screen bg-gray-100">
+<div class="flex h-screen bg-gray-100 app-shell">
 <!-- Sidebar -->
-<div class="w-64 bg-white shadow-lg">
+<div class="w-64 bg-white shadow-lg sidebar">
 <div class="p-6 border-b">
 <div class="flex items-center">
 <div class="bg-blue-100 w-10 h-10 rounded-full flex items-center justify-center mr-3">
@@ -771,7 +851,7 @@ document.addEventListener("DOMContentLoaded", () => {
 <!-- Dashboard -->
 <div class="section p-8" id="dashboard">
 <div class="dashboard-container">
-<div class="flex justify-between items-center mb-8">
+<div class="flex justify-between items-center mb-8 section-header">
 <h1 class="text-3xl font-bold text-gray-800">
          Dashboard
         </h1>
@@ -875,7 +955,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 <!-- Reparaciones -->
 <div class="section p-8 active" id="reparaciones">
-<div class="flex justify-between items-center mb-8">
+<div class="flex justify-between items-center mb-8 section-header">
 <h1 class="text-3xl font-bold text-gray-800">
         Reparaciones
        </h1>
@@ -890,7 +970,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 <!-- Lista de Reparaciones -->
 <div class="card bg-white p-6 rounded-xl">
-<div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+<div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4 filters-bar">
 <input class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="filtro-busqueda" placeholder="Buscar por cliente, equipo o orden..." type="text"/>
 <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="filtro-estado">
 <option value="">
@@ -921,8 +1001,8 @@ document.addEventListener("DOMContentLoaded", () => {
          </option>
 </select>
 </div>
-<div class="overflow-x-auto">
-<table class="w-full">
+<div class="overflow-x-auto table-scroll">
+<table class="w-full data-table">
 <thead>
 <tr class="border-b">
 <th class="text-left py-3 px-4 font-semibold text-gray-700">
@@ -1040,7 +1120,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 <!-- HISTORIAL -->
 <div class="section p-8" id="historial">
-<div class="flex justify-between items-center mb-8">
+<div class="flex justify-between items-center mb-8 section-header">
 <h1 class="text-3xl font-bold text-gray-800">
         Historial
        </h1>
@@ -1050,7 +1130,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 <!-- Lista de Historial -->
 <div class="card bg-white p-6 rounded-xl">
-<div class="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4 filters-bar">
 <input class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="filtro-historial" placeholder="Buscar en historial..." type="text"/>
 <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="filtro-mes">
 <option value="">
@@ -1108,8 +1188,8 @@ document.addEventListener("DOMContentLoaded", () => {
          </option>
 </select>
 </div>
-<div class="overflow-x-auto">
-<table class="w-full">
+<div class="overflow-x-auto table-scroll">
+<table class="w-full data-table">
 <thead>
 <tr class="border-b">
 <th class="text-left py-3 px-4 font-semibold text-gray-700">
@@ -1175,13 +1255,215 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 <!-- Clientes -->
 <div class="section p-8" id="clientes">
-<h1 class="text-3xl font-bold text-gray-800 mb-8">
+<div class="flex justify-between items-center mb-8 section-header">
+<div>
+<h1 class="text-3xl font-bold text-gray-800">
        Clientes
       </h1>
-<div class="card bg-white p-6 rounded-xl">
 <p class="text-gray-600">
-        Módulo de clientes en desarrollo...
+        Gestión de tu base de clientes
        </p>
+</div>
+<div class="flex gap-3">
+<button class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200" onclick="showNuevoCliente()" type="button">
+<i class="fas fa-user-plus mr-2"></i>
+        Nuevo Cliente
+      </button>
+<button class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-200 transition duration-200" onclick="triggerImportClientes()" type="button">
+<i class="fas fa-file-import mr-2"></i>
+        Importar
+      </button>
+</div>
+</div>
+<input accept=".csv" class="hidden" id="clientes-import" type="file"/>
+<div class="card bg-white p-6 rounded-xl">
+<div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4 filters-bar">
+<input class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Buscar por nombre, teléfono o email..." type="text"/>
+<select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+<option value="">
+          Estado
+         </option>
+<option value="activo">
+          Activo
+         </option>
+<option value="inactivo">
+          Inactivo
+         </option>
+</select>
+<select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+<option value="">
+          Etiqueta
+         </option>
+<option value="vip">
+          VIP
+         </option>
+<option value="frecuente">
+          Frecuente
+         </option>
+<option value="nuevo">
+          Nuevo
+         </option>
+</select>
+<select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+<option value="">
+          Ciudad
+         </option>
+<option value="centro">
+          Centro
+         </option>
+<option value="norte">
+          Zona Norte
+         </option>
+<option value="sur">
+          Zona Sur
+         </option>
+</select>
+</div>
+<div class="overflow-x-auto table-scroll">
+<table class="w-full data-table">
+<thead>
+<tr class="border-b">
+<th class="text-left py-3 px-4 font-semibold text-gray-700">
+            Cliente
+           </th>
+<th class="text-left py-3 px-4 font-semibold text-gray-700">
+            Teléfono
+           </th>
+<th class="text-left py-3 px-4 font-semibold text-gray-700">
+            Última Visita
+           </th>
+<th class="text-left py-3 px-4 font-semibold text-gray-700">
+            Órdenes Activas
+           </th>
+<th class="text-left py-3 px-4 font-semibold text-gray-700">
+            Etiqueta
+           </th>
+<th class="text-left py-3 px-4 font-semibold text-gray-700">
+            Acciones
+           </th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b hover:bg-gray-50">
+<td class="py-3 px-4">
+<div class="font-medium text-gray-900">
+              María González
+             </div>
+<div class="text-sm text-gray-500">
+              maria@email.com
+             </div>
+</td>
+<td class="py-3 px-4">
+            +54 9 11 2345-6789
+           </td>
+<td class="py-3 px-4">
+            08/11/2025
+           </td>
+<td class="py-3 px-4">
+<span class="status-badge status-diagnosticando">
+              2 en proceso
+             </span>
+</td>
+<td class="py-3 px-4">
+<span class="status-badge status-listo">
+              VIP
+             </span>
+</td>
+<td class="py-3 px-4">
+<div class="flex gap-2">
+<button class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" data-email="maria@email.com" data-etiqueta="VIP" data-nombre="María González" data-ordenes="2 en proceso" data-telefono="+54 9 11 2345-6789" data-ultima="08/11/2025" onclick="showClienteDetalle(this)" title="Ver cliente" type="button">
+<i class="fas fa-eye"></i>
+</button>
+<button class="bg-gray-100 text-gray-700 p-2 rounded hover:bg-gray-200" data-email="maria@email.com" data-etiqueta="VIP" data-nombre="María González" data-ordenes="2 en proceso" data-telefono="+54 9 11 2345-6789" data-ultima="08/11/2025" onclick="editCliente(this)" title="Editar cliente" type="button">
+<i class="fas fa-edit"></i>
+</button>
+<button class="bg-green-600 text-white p-2 rounded hover:bg-green-700" data-nombre="María González" data-telefono="+54 9 11 2345-6789" onclick="contactarClienteWhatsApp(this)" title="WhatsApp" type="button">
+<i class="fab fa-whatsapp"></i>
+</button>
+</div>
+</td>
+</tr>
+<tr class="border-b hover:bg-gray-50">
+<td class="py-3 px-4">
+<div class="font-medium text-gray-900">
+              Carlos López
+             </div>
+<div class="text-sm text-gray-500">
+              carlos@correo.com
+             </div>
+</td>
+<td class="py-3 px-4">
+            +54 9 11 9876-5432
+           </td>
+<td class="py-3 px-4">
+            05/11/2025
+           </td>
+<td class="py-3 px-4">
+<span class="status-badge status-recibido">
+              1 en proceso
+             </span>
+</td>
+<td class="py-3 px-4">
+<span class="status-badge status-no-repuesto">
+              Frecuente
+             </span>
+</td>
+<td class="py-3 px-4">
+<div class="flex gap-2">
+<button class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" data-email="carlos@correo.com" data-etiqueta="Frecuente" data-nombre="Carlos López" data-ordenes="1 en proceso" data-telefono="+54 9 11 9876-5432" data-ultima="05/11/2025" onclick="showClienteDetalle(this)" title="Ver cliente" type="button">
+<i class="fas fa-eye"></i>
+</button>
+<button class="bg-gray-100 text-gray-700 p-2 rounded hover:bg-gray-200" data-email="carlos@correo.com" data-etiqueta="Frecuente" data-nombre="Carlos López" data-ordenes="1 en proceso" data-telefono="+54 9 11 9876-5432" data-ultima="05/11/2025" onclick="editCliente(this)" title="Editar cliente" type="button">
+<i class="fas fa-edit"></i>
+</button>
+<button class="bg-green-600 text-white p-2 rounded hover:bg-green-700" data-nombre="Carlos López" data-telefono="+54 9 11 9876-5432" onclick="contactarClienteWhatsApp(this)" title="WhatsApp" type="button">
+<i class="fab fa-whatsapp"></i>
+</button>
+</div>
+</td>
+</tr>
+<tr class="border-b hover:bg-gray-50">
+<td class="py-3 px-4">
+<div class="font-medium text-gray-900">
+              Sofía Herrera
+             </div>
+<div class="text-sm text-gray-500">
+              sofia.herrera@email.com
+             </div>
+</td>
+<td class="py-3 px-4">
+            +54 9 11 4567-1122
+           </td>
+<td class="py-3 px-4">
+            29/10/2025
+           </td>
+<td class="py-3 px-4">
+<span class="status-badge status-entregado">
+              0 activas
+             </span>
+</td>
+<td class="py-3 px-4">
+<span class="status-badge status-no-reparado">
+              Nuevo
+             </span>
+</td>
+<td class="py-3 px-4">
+<div class="flex gap-2">
+<button class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" data-email="sofia.herrera@email.com" data-etiqueta="Nuevo" data-nombre="Sofía Herrera" data-ordenes="0 activas" data-telefono="+54 9 11 4567-1122" data-ultima="29/10/2025" onclick="showClienteDetalle(this)" title="Ver cliente" type="button">
+<i class="fas fa-eye"></i>
+</button>
+<button class="bg-gray-100 text-gray-700 p-2 rounded hover:bg-gray-200" data-email="sofia.herrera@email.com" data-etiqueta="Nuevo" data-nombre="Sofía Herrera" data-ordenes="0 activas" data-telefono="+54 9 11 4567-1122" data-ultima="29/10/2025" onclick="editCliente(this)" title="Editar cliente" type="button">
+<i class="fas fa-edit"></i>
+</button>
+<button class="bg-green-600 text-white p-2 rounded hover:bg-green-700" data-nombre="Sofía Herrera" data-telefono="+54 9 11 4567-1122" onclick="contactarClienteWhatsApp(this)" title="WhatsApp" type="button">
+<i class="fab fa-whatsapp"></i>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 </div>
 <!-- WhatsApp -->
@@ -1318,8 +1600,8 @@ document.addEventListener("DOMContentLoaded", () => {
 <h4 class="font-semibold mb-4">
           Historial de Envíos
          </h4>
-<div class="overflow-x-auto">
-<table class="w-full text-sm">
+<div class="overflow-x-auto table-scroll">
+<table class="w-full text-sm data-table">
 <thead>
 <tr class="border-b">
 <th class="text-left py-2">
@@ -1347,7 +1629,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 <!-- Formulario de Pedidos -->
 <div class="section p-8" id="pedidos">
-<div class="flex justify-between items-center mb-8">
+<div class="flex justify-between items-center mb-8 section-header">
 <h1 class="text-3xl font-bold text-gray-800">
         Formulario de Pedidos
        </h1>
@@ -1458,7 +1740,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 <!-- Configuración -->
 <div class="section p-8" id="configuracion">
-<div class="flex justify-between items-center mb-8">
+<div class="flex justify-between items-center mb-8 section-header">
 <h1 class="text-3xl font-bold text-gray-800">
         Configuración
        </h1>
@@ -1500,6 +1782,15 @@ document.addEventListener("DOMContentLoaded", () => {
            Email
           </label>
 <input class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" name="email" required="" type="email" value="info@fixlytaller.com"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">
+           Código Maestro
+          </label>
+<input class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" name="codigo_maestro" placeholder="Definir código maestro" type="password"/>
+<p class="text-xs text-gray-500 mt-1">
+          Se solicitará al borrar registros del historial.
+         </p>
 </div>
 <div>
   <label class="block text-sm font-medium text-gray-700 mb-2">Condiciones de garantía (plantilla)</label>
@@ -1645,6 +1936,87 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 </div>
 </div>
+</div>
+</div>
+</div>
+<!-- Modal Cliente -->
+<div class="modal" id="cliente-modal">
+<div class="modal-content">
+<div class="flex justify-between items-center mb-6">
+<h2 class="text-2xl font-bold" id="cliente-modal-title">
+      Cliente
+     </h2>
+<button class="text-gray-500 hover:text-gray-700" onclick="closeClienteModal()" type="button">
+<i class="fas fa-times text-xl"></i>
+</button>
+</div>
+<p class="text-sm text-gray-500 mb-4" id="cliente-modal-subtitle">
+      Completa los datos del cliente para mantener tu base actualizada.
+     </p>
+<form class="grid grid-cols-1 md:grid-cols-2 gap-4" id="cliente-form">
+<div>
+<label class="block text-sm font-medium mb-2">
+       Nombre y apellido *
+      </label>
+<input class="w-full px-4 py-2 border rounded-lg" id="cliente-nombre" required="" type="text"/>
+</div>
+<div>
+<label class="block text-sm font-medium mb-2">
+       Teléfono *
+      </label>
+<input class="w-full px-4 py-2 border rounded-lg" id="cliente-telefono" required="" type="text"/>
+</div>
+<div>
+<label class="block text-sm font-medium mb-2">
+       Email
+      </label>
+<input class="w-full px-4 py-2 border rounded-lg" id="cliente-email" type="email"/>
+</div>
+<div>
+<label class="block text-sm font-medium mb-2">
+       Última visita
+      </label>
+<input class="w-full px-4 py-2 border rounded-lg" id="cliente-ultima" type="text"/>
+</div>
+<div>
+<label class="block text-sm font-medium mb-2">
+       Etiqueta
+      </label>
+<select class="w-full px-4 py-2 border rounded-lg" id="cliente-etiqueta">
+<option value="">
+          Sin etiqueta
+         </option>
+<option value="VIP">
+          VIP
+         </option>
+<option value="Frecuente">
+          Frecuente
+         </option>
+<option value="Nuevo">
+          Nuevo
+         </option>
+</select>
+</div>
+<div>
+<label class="block text-sm font-medium mb-2">
+       Ciudad
+      </label>
+<input class="w-full px-4 py-2 border rounded-lg" id="cliente-ciudad" type="text"/>
+</div>
+<div class="md:col-span-2">
+<label class="block text-sm font-medium mb-2">
+       Notas
+      </label>
+<textarea class="w-full px-4 py-2 border rounded-lg" id="cliente-notas" rows="3"></textarea>
+</div>
+</form>
+<div class="flex justify-end gap-3 mt-6">
+<button class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-200 transition duration-200" onclick="closeClienteModal()" type="button">
+      Cancelar
+     </button>
+<button class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200" id="cliente-save-btn" onclick="saveCliente()" type="button">
+      Guardar
+     </button>
 </div>
 </div>
 </div>
@@ -2160,12 +2532,25 @@ function badgeClassFromText(txt){
             document.getElementById('formEditEstado').addEventListener('submit', function(e) {
                 e.preventDefault();
                 guardarCambiosEstado();
+                setTimeout(() => {
+                    hideEditEstado();
+                }, 300);
             });
             // Configurar formulario de estado del equipo
             document.getElementById('formEstadoEquipo').addEventListener('submit', function(e) {
                 e.preventDefault();
                 guardarEstadoEquipo();
             });
+
+            const clientesImportInput = document.getElementById('clientes-import');
+            if (clientesImportInput) {
+                clientesImportInput.addEventListener('change', function(e) {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    alert(`Archivo "${file.name}" listo para importar. (Función de importación pendiente)`);
+                    e.target.value = '';
+                });
+            }
         });
 
         // FUNCIONES DE NAVEGACIÓN Y SECCIONES
@@ -2185,6 +2570,212 @@ function badgeClassFromText(txt){
             
             (event && event.target ? event.target : document.querySelector(`[onclick*="'${sectionName}'"]`))?.classList?.add('active');
             currentSection = sectionName;
+        }
+
+        // CLIENTES
+        let clienteModalMode = 'view';
+        let clienteRowRef = null;
+
+        function getClienteDataFromButton(button) {
+            return {
+                nombre: button?.dataset?.nombre || '',
+                email: button?.dataset?.email || '',
+                telefono: button?.dataset?.telefono || '',
+                ultima: button?.dataset?.ultima || '',
+                ordenes: button?.dataset?.ordenes || '',
+                etiqueta: button?.dataset?.etiqueta || ''
+            };
+        }
+
+        function setClienteFormValues(data) {
+            document.getElementById('cliente-nombre').value = data.nombre || '';
+            document.getElementById('cliente-email').value = data.email || '';
+            document.getElementById('cliente-telefono').value = data.telefono || '';
+            document.getElementById('cliente-ultima').value = data.ultima || '';
+            document.getElementById('cliente-etiqueta').value = data.etiqueta || '';
+            document.getElementById('cliente-ciudad').value = data.ciudad || '';
+            document.getElementById('cliente-notas').value = data.notas || '';
+        }
+
+        function setClienteFormReadonly(isReadonly) {
+            ['cliente-nombre', 'cliente-email', 'cliente-telefono', 'cliente-ultima', 'cliente-etiqueta', 'cliente-ciudad', 'cliente-notas'].forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                if (el.tagName === 'SELECT' || el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') {
+                    el.disabled = isReadonly;
+                }
+            });
+            const saveBtn = document.getElementById('cliente-save-btn');
+            if (saveBtn) {
+                saveBtn.style.display = isReadonly ? 'none' : 'inline-flex';
+            }
+        }
+
+        function openClienteModal(mode, data = {}, rowRef = null) {
+            clienteModalMode = mode;
+            clienteRowRef = rowRef;
+            const title = document.getElementById('cliente-modal-title');
+            const subtitle = document.getElementById('cliente-modal-subtitle');
+            if (title) title.textContent = mode === 'new' ? 'Nuevo Cliente' : mode === 'edit' ? 'Editar Cliente' : 'Detalle de Cliente';
+            if (subtitle) subtitle.textContent = mode === 'view'
+                ? 'Consulta la información registrada del cliente.'
+                : 'Completa los datos del cliente para mantener tu base actualizada.';
+            setClienteFormValues(data);
+            setClienteFormReadonly(mode === 'view');
+            const modal = document.getElementById('cliente-modal');
+            if (modal) modal.classList.add('show');
+        }
+
+        function closeClienteModal() {
+            const modal = document.getElementById('cliente-modal');
+            if (modal) modal.classList.remove('show');
+            clienteRowRef = null;
+        }
+
+        function showNuevoCliente() {
+            openClienteModal('new', { ultima: new Date().toLocaleDateString('es-ES') });
+        }
+
+        function showClienteDetalle(button) {
+            const data = getClienteDataFromButton(button);
+            const row = button.closest('tr');
+            openClienteModal('view', data, row);
+        }
+
+        function editCliente(button) {
+            const data = getClienteDataFromButton(button);
+            const row = button.closest('tr');
+            openClienteModal('edit', data, row);
+        }
+
+        function triggerImportClientes() {
+            const input = document.getElementById('clientes-import');
+            if (input) input.click();
+        }
+
+        function contactarClienteWhatsApp(button) {
+            const nombre = button?.dataset?.nombre || 'Cliente';
+            const telefono = (button?.dataset?.telefono || '').replace(/\\s+/g, '');
+            if (!telefono) {
+                alert('El teléfono del cliente está vacío o es inválido.');
+                return;
+            }
+            const mensaje = encodeURIComponent(`Hola ${nombre}, te escribimos desde Fixly Taller.`);
+            window.open(`https://wa.me/${telefono.replace(/[^0-9]/g, '')}?text=${mensaje}`, '_blank');
+        }
+
+        function getEtiquetaBadgeClass(etiqueta) {
+            if (etiqueta === 'VIP') return 'status-listo';
+            if (etiqueta === 'Frecuente') return 'status-no-repuesto';
+            if (etiqueta === 'Nuevo') return 'status-no-reparado';
+            return 'status-entregado';
+        }
+
+        function getOrdenBadgeClass(ordenes) {
+            if (!ordenes || ordenes.includes('0')) return 'status-entregado';
+            if (ordenes.includes('1')) return 'status-recibido';
+            return 'status-diagnosticando';
+        }
+
+        function updateClienteRow(row, data) {
+            if (!row) return;
+            row.querySelector('.font-medium')?.replaceChildren(document.createTextNode(data.nombre || '-'));
+            const emailEl = row.querySelector('.text-sm.text-gray-500');
+            if (emailEl) emailEl.textContent = data.email || 'sin email';
+            const cells = row.querySelectorAll('td');
+            if (cells[1]) cells[1].textContent = data.telefono || '-';
+            if (cells[2]) cells[2].textContent = data.ultima || '-';
+            if (cells[3]) {
+                const badge = cells[3].querySelector('.status-badge');
+                if (badge) {
+                    badge.textContent = data.ordenes || '0 activas';
+                    badge.className = `status-badge ${getOrdenBadgeClass(data.ordenes || '')}`;
+                }
+            }
+            if (cells[4]) {
+                const badge = cells[4].querySelector('.status-badge');
+                if (badge) {
+                    badge.textContent = data.etiqueta || 'Sin etiqueta';
+                    badge.className = `status-badge ${getEtiquetaBadgeClass(data.etiqueta || '')}`;
+                }
+            }
+            row.querySelectorAll('button[data-nombre]').forEach(btn => {
+                btn.dataset.nombre = data.nombre || '';
+                btn.dataset.email = data.email || '';
+                btn.dataset.telefono = data.telefono || '';
+                btn.dataset.ultima = data.ultima || '';
+                btn.dataset.ordenes = data.ordenes || '';
+                btn.dataset.etiqueta = data.etiqueta || '';
+            });
+        }
+
+        function createClienteRow(data) {
+            const row = document.createElement('tr');
+            row.className = 'border-b hover:bg-gray-50';
+            row.innerHTML = `
+                <td class="py-3 px-4">
+                    <div class="font-medium text-gray-900">${data.nombre || '-'}</div>
+                    <div class="text-sm text-gray-500">${data.email || 'sin email'}</div>
+                </td>
+                <td class="py-3 px-4">${data.telefono || '-'}</td>
+                <td class="py-3 px-4">${data.ultima || '-'}</td>
+                <td class="py-3 px-4">
+                    <span class="status-badge ${getOrdenBadgeClass(data.ordenes || '')}">${data.ordenes || '0 activas'}</span>
+                </td>
+                <td class="py-3 px-4">
+                    <span class="status-badge ${getEtiquetaBadgeClass(data.etiqueta || '')}">${data.etiqueta || 'Sin etiqueta'}</span>
+                </td>
+                <td class="py-3 px-4">
+                    <div class="flex gap-2">
+                        <button class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" title="Ver cliente" type="button"
+                            data-nombre="${data.nombre || ''}" data-email="${data.email || ''}" data-telefono="${data.telefono || ''}"
+                            data-ultima="${data.ultima || ''}" data-ordenes="${data.ordenes || ''}" data-etiqueta="${data.etiqueta || ''}"
+                            onclick="showClienteDetalle(this)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="bg-gray-100 text-gray-700 p-2 rounded hover:bg-gray-200" title="Editar cliente" type="button"
+                            data-nombre="${data.nombre || ''}" data-email="${data.email || ''}" data-telefono="${data.telefono || ''}"
+                            data-ultima="${data.ultima || ''}" data-ordenes="${data.ordenes || ''}" data-etiqueta="${data.etiqueta || ''}"
+                            onclick="editCliente(this)">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="bg-green-600 text-white p-2 rounded hover:bg-green-700" title="WhatsApp" type="button"
+                            data-nombre="${data.nombre || ''}" data-telefono="${data.telefono || ''}"
+                            onclick="contactarClienteWhatsApp(this)">
+                            <i class="fab fa-whatsapp"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            return row;
+        }
+
+        function saveCliente() {
+            const nombre = document.getElementById('cliente-nombre').value.trim();
+            const telefono = document.getElementById('cliente-telefono').value.trim();
+            if (!nombre || !telefono) {
+                alert('Nombre y teléfono son obligatorios.');
+                return;
+            }
+            const data = {
+                nombre,
+                telefono,
+                email: document.getElementById('cliente-email').value.trim(),
+                ultima: document.getElementById('cliente-ultima').value.trim(),
+                etiqueta: document.getElementById('cliente-etiqueta').value,
+                ciudad: document.getElementById('cliente-ciudad').value.trim(),
+                notas: document.getElementById('cliente-notas').value.trim(),
+                ordenes: clienteModalMode === 'new' ? '0 activas' : (clienteRowRef?.querySelector('td:nth-child(4) .status-badge')?.textContent || '')
+            };
+            if (clienteModalMode === 'new') {
+                const tbody = document.querySelector('#clientes table tbody');
+                if (tbody) tbody.prepend(createClienteRow(data));
+            } else {
+                updateClienteRow(clienteRowRef, data);
+            }
+            setTimeout(() => {
+                closeClienteModal();
+            }, 300);
         }
 
         function mostrarFechaActual() {
@@ -2577,7 +3168,7 @@ function badgeClassFromText(txt){
             }
             setTimeout(() => {
                 hideEstadoEquipo();
-            }, 1500);
+            }, 300);
         }
 
         function verDetalleHistorial(equipoId) {
@@ -2780,7 +3371,7 @@ function badgeClassFromText(txt){
             
             setTimeout(() => {
                 hideNuevaReparacion();
-            }, 1500);
+            }, 300);
         }
 
         function guardarCambiosEstado() {
@@ -2822,7 +3413,7 @@ function badgeClassFromText(txt){
             
             setTimeout(() => {
                 hideEditEstado();
-            }, 1500);
+            }, 300);
         }
 
         // FUNCIONES DE ACCIONES DE REPARACIÓN
@@ -3162,6 +3753,19 @@ function imprimirComprobantePedido(pedidoId){
          * @param {string|number} ordenId Identificador de la reparación entregada
          */
         function eliminarHistorial(ordenId) {
+            let codigoMaestro = '';
+            try {
+                const data = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
+                codigoMaestro = data?.config?.codigo_maestro || '';
+            } catch (_) {}
+            if (codigoMaestro) {
+                const ingresado = prompt('Ingresá el Código Maestro para eliminar este registro:');
+                if (ingresado === null) return;
+                if ((ingresado || '').trim() !== String(codigoMaestro)) {
+                    alert('Código Maestro incorrecto.');
+                    return;
+                }
+            }
             if (confirm('¿Estás seguro de que deseas eliminar este registro del historial? Esta acción no se puede deshacer.')) {
                 const idx = historialEntregados.findIndex(e => String(e.id) === String(ordenId));
                 if (idx !== -1) {
