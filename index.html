@@ -2523,6 +2523,9 @@ function badgeClassFromText(txt){
             document.getElementById('formEditEstado').addEventListener('submit', function(e) {
                 e.preventDefault();
                 guardarCambiosEstado();
+                setTimeout(() => {
+                    hideEditEstado();
+                }, 300);
             });
             // Configurar formulario de estado del equipo
             document.getElementById('formEstadoEquipo').addEventListener('submit', function(e) {
@@ -3741,6 +3744,19 @@ function imprimirComprobantePedido(pedidoId){
          * @param {string|number} ordenId Identificador de la reparación entregada
          */
         function eliminarHistorial(ordenId) {
+            let codigoMaestro = '';
+            try {
+                const data = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
+                codigoMaestro = data?.config?.codigo_maestro || '';
+            } catch (_) {}
+            if (codigoMaestro) {
+                const ingresado = prompt('Ingresá el Código Maestro para eliminar este registro:');
+                if (ingresado === null) return;
+                if ((ingresado || '').trim() !== String(codigoMaestro)) {
+                    alert('Código Maestro incorrecto.');
+                    return;
+                }
+            }
             if (confirm('¿Estás seguro de que deseas eliminar este registro del historial? Esta acción no se puede deshacer.')) {
                 const idx = historialEntregados.findIndex(e => String(e.id) === String(ordenId));
                 if (idx !== -1) {
