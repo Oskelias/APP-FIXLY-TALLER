@@ -1265,16 +1265,17 @@ document.addEventListener("DOMContentLoaded", () => {
        </p>
 </div>
 <div class="flex gap-3">
-<button class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200" type="button">
+<button class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200" onclick="showNuevoCliente()" type="button">
 <i class="fas fa-user-plus mr-2"></i>
         Nuevo Cliente
       </button>
-<button class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-200 transition duration-200" type="button">
+<button class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-200 transition duration-200" onclick="triggerImportClientes()" type="button">
 <i class="fas fa-file-import mr-2"></i>
         Importar
       </button>
 </div>
 </div>
+<input accept=".csv" class="hidden" id="clientes-import" type="file"/>
 <div class="card bg-white p-6 rounded-xl">
 <div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4 filters-bar">
 <input class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Buscar por nombre, teléfono o email..." type="text"/>
@@ -1370,13 +1371,13 @@ document.addEventListener("DOMContentLoaded", () => {
 </td>
 <td class="py-3 px-4">
 <div class="flex gap-2">
-<button class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" title="Ver cliente" type="button">
+<button class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" data-email="maria@email.com" data-etiqueta="VIP" data-nombre="María González" data-ordenes="2 en proceso" data-telefono="+54 9 11 2345-6789" data-ultima="08/11/2025" onclick="showClienteDetalle(this)" title="Ver cliente" type="button">
 <i class="fas fa-eye"></i>
 </button>
-<button class="bg-gray-100 text-gray-700 p-2 rounded hover:bg-gray-200" title="Editar cliente" type="button">
+<button class="bg-gray-100 text-gray-700 p-2 rounded hover:bg-gray-200" data-email="maria@email.com" data-etiqueta="VIP" data-nombre="María González" data-ordenes="2 en proceso" data-telefono="+54 9 11 2345-6789" data-ultima="08/11/2025" onclick="editCliente(this)" title="Editar cliente" type="button">
 <i class="fas fa-edit"></i>
 </button>
-<button class="bg-green-600 text-white p-2 rounded hover:bg-green-700" title="WhatsApp" type="button">
+<button class="bg-green-600 text-white p-2 rounded hover:bg-green-700" data-nombre="María González" data-telefono="+54 9 11 2345-6789" onclick="contactarClienteWhatsApp(this)" title="WhatsApp" type="button">
 <i class="fab fa-whatsapp"></i>
 </button>
 </div>
@@ -1409,13 +1410,13 @@ document.addEventListener("DOMContentLoaded", () => {
 </td>
 <td class="py-3 px-4">
 <div class="flex gap-2">
-<button class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" title="Ver cliente" type="button">
+<button class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" data-email="carlos@correo.com" data-etiqueta="Frecuente" data-nombre="Carlos López" data-ordenes="1 en proceso" data-telefono="+54 9 11 9876-5432" data-ultima="05/11/2025" onclick="showClienteDetalle(this)" title="Ver cliente" type="button">
 <i class="fas fa-eye"></i>
 </button>
-<button class="bg-gray-100 text-gray-700 p-2 rounded hover:bg-gray-200" title="Editar cliente" type="button">
+<button class="bg-gray-100 text-gray-700 p-2 rounded hover:bg-gray-200" data-email="carlos@correo.com" data-etiqueta="Frecuente" data-nombre="Carlos López" data-ordenes="1 en proceso" data-telefono="+54 9 11 9876-5432" data-ultima="05/11/2025" onclick="editCliente(this)" title="Editar cliente" type="button">
 <i class="fas fa-edit"></i>
 </button>
-<button class="bg-green-600 text-white p-2 rounded hover:bg-green-700" title="WhatsApp" type="button">
+<button class="bg-green-600 text-white p-2 rounded hover:bg-green-700" data-nombre="Carlos López" data-telefono="+54 9 11 9876-5432" onclick="contactarClienteWhatsApp(this)" title="WhatsApp" type="button">
 <i class="fab fa-whatsapp"></i>
 </button>
 </div>
@@ -1448,13 +1449,13 @@ document.addEventListener("DOMContentLoaded", () => {
 </td>
 <td class="py-3 px-4">
 <div class="flex gap-2">
-<button class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" title="Ver cliente" type="button">
+<button class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" data-email="sofia.herrera@email.com" data-etiqueta="Nuevo" data-nombre="Sofía Herrera" data-ordenes="0 activas" data-telefono="+54 9 11 4567-1122" data-ultima="29/10/2025" onclick="showClienteDetalle(this)" title="Ver cliente" type="button">
 <i class="fas fa-eye"></i>
 </button>
-<button class="bg-gray-100 text-gray-700 p-2 rounded hover:bg-gray-200" title="Editar cliente" type="button">
+<button class="bg-gray-100 text-gray-700 p-2 rounded hover:bg-gray-200" data-email="sofia.herrera@email.com" data-etiqueta="Nuevo" data-nombre="Sofía Herrera" data-ordenes="0 activas" data-telefono="+54 9 11 4567-1122" data-ultima="29/10/2025" onclick="editCliente(this)" title="Editar cliente" type="button">
 <i class="fas fa-edit"></i>
 </button>
-<button class="bg-green-600 text-white p-2 rounded hover:bg-green-700" title="WhatsApp" type="button">
+<button class="bg-green-600 text-white p-2 rounded hover:bg-green-700" data-nombre="Sofía Herrera" data-telefono="+54 9 11 4567-1122" onclick="contactarClienteWhatsApp(this)" title="WhatsApp" type="button">
 <i class="fab fa-whatsapp"></i>
 </button>
 </div>
@@ -1926,6 +1927,87 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 </div>
 </div>
+</div>
+</div>
+</div>
+<!-- Modal Cliente -->
+<div class="modal" id="cliente-modal">
+<div class="modal-content">
+<div class="flex justify-between items-center mb-6">
+<h2 class="text-2xl font-bold" id="cliente-modal-title">
+      Cliente
+     </h2>
+<button class="text-gray-500 hover:text-gray-700" onclick="closeClienteModal()" type="button">
+<i class="fas fa-times text-xl"></i>
+</button>
+</div>
+<p class="text-sm text-gray-500 mb-4" id="cliente-modal-subtitle">
+      Completa los datos del cliente para mantener tu base actualizada.
+     </p>
+<form class="grid grid-cols-1 md:grid-cols-2 gap-4" id="cliente-form">
+<div>
+<label class="block text-sm font-medium mb-2">
+       Nombre y apellido *
+      </label>
+<input class="w-full px-4 py-2 border rounded-lg" id="cliente-nombre" required="" type="text"/>
+</div>
+<div>
+<label class="block text-sm font-medium mb-2">
+       Teléfono *
+      </label>
+<input class="w-full px-4 py-2 border rounded-lg" id="cliente-telefono" required="" type="text"/>
+</div>
+<div>
+<label class="block text-sm font-medium mb-2">
+       Email
+      </label>
+<input class="w-full px-4 py-2 border rounded-lg" id="cliente-email" type="email"/>
+</div>
+<div>
+<label class="block text-sm font-medium mb-2">
+       Última visita
+      </label>
+<input class="w-full px-4 py-2 border rounded-lg" id="cliente-ultima" type="text"/>
+</div>
+<div>
+<label class="block text-sm font-medium mb-2">
+       Etiqueta
+      </label>
+<select class="w-full px-4 py-2 border rounded-lg" id="cliente-etiqueta">
+<option value="">
+          Sin etiqueta
+         </option>
+<option value="VIP">
+          VIP
+         </option>
+<option value="Frecuente">
+          Frecuente
+         </option>
+<option value="Nuevo">
+          Nuevo
+         </option>
+</select>
+</div>
+<div>
+<label class="block text-sm font-medium mb-2">
+       Ciudad
+      </label>
+<input class="w-full px-4 py-2 border rounded-lg" id="cliente-ciudad" type="text"/>
+</div>
+<div class="md:col-span-2">
+<label class="block text-sm font-medium mb-2">
+       Notas
+      </label>
+<textarea class="w-full px-4 py-2 border rounded-lg" id="cliente-notas" rows="3"></textarea>
+</div>
+</form>
+<div class="flex justify-end gap-3 mt-6">
+<button class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-200 transition duration-200" onclick="closeClienteModal()" type="button">
+      Cancelar
+     </button>
+<button class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200" id="cliente-save-btn" onclick="saveCliente()" type="button">
+      Guardar
+     </button>
 </div>
 </div>
 </div>
@@ -2447,6 +2529,16 @@ function badgeClassFromText(txt){
                 e.preventDefault();
                 guardarEstadoEquipo();
             });
+
+            const clientesImportInput = document.getElementById('clientes-import');
+            if (clientesImportInput) {
+                clientesImportInput.addEventListener('change', function(e) {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    alert(`Archivo "${file.name}" listo para importar. (Función de importación pendiente)`);
+                    e.target.value = '';
+                });
+            }
         });
 
         // FUNCIONES DE NAVEGACIÓN Y SECCIONES
@@ -2466,6 +2558,210 @@ function badgeClassFromText(txt){
             
             (event && event.target ? event.target : document.querySelector(`[onclick*="'${sectionName}'"]`))?.classList?.add('active');
             currentSection = sectionName;
+        }
+
+        // CLIENTES
+        let clienteModalMode = 'view';
+        let clienteRowRef = null;
+
+        function getClienteDataFromButton(button) {
+            return {
+                nombre: button?.dataset?.nombre || '',
+                email: button?.dataset?.email || '',
+                telefono: button?.dataset?.telefono || '',
+                ultima: button?.dataset?.ultima || '',
+                ordenes: button?.dataset?.ordenes || '',
+                etiqueta: button?.dataset?.etiqueta || ''
+            };
+        }
+
+        function setClienteFormValues(data) {
+            document.getElementById('cliente-nombre').value = data.nombre || '';
+            document.getElementById('cliente-email').value = data.email || '';
+            document.getElementById('cliente-telefono').value = data.telefono || '';
+            document.getElementById('cliente-ultima').value = data.ultima || '';
+            document.getElementById('cliente-etiqueta').value = data.etiqueta || '';
+            document.getElementById('cliente-ciudad').value = data.ciudad || '';
+            document.getElementById('cliente-notas').value = data.notas || '';
+        }
+
+        function setClienteFormReadonly(isReadonly) {
+            ['cliente-nombre', 'cliente-email', 'cliente-telefono', 'cliente-ultima', 'cliente-etiqueta', 'cliente-ciudad', 'cliente-notas'].forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                if (el.tagName === 'SELECT' || el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') {
+                    el.disabled = isReadonly;
+                }
+            });
+            const saveBtn = document.getElementById('cliente-save-btn');
+            if (saveBtn) {
+                saveBtn.style.display = isReadonly ? 'none' : 'inline-flex';
+            }
+        }
+
+        function openClienteModal(mode, data = {}, rowRef = null) {
+            clienteModalMode = mode;
+            clienteRowRef = rowRef;
+            const title = document.getElementById('cliente-modal-title');
+            const subtitle = document.getElementById('cliente-modal-subtitle');
+            if (title) title.textContent = mode === 'new' ? 'Nuevo Cliente' : mode === 'edit' ? 'Editar Cliente' : 'Detalle de Cliente';
+            if (subtitle) subtitle.textContent = mode === 'view'
+                ? 'Consulta la información registrada del cliente.'
+                : 'Completa los datos del cliente para mantener tu base actualizada.';
+            setClienteFormValues(data);
+            setClienteFormReadonly(mode === 'view');
+            const modal = document.getElementById('cliente-modal');
+            if (modal) modal.classList.add('show');
+        }
+
+        function closeClienteModal() {
+            const modal = document.getElementById('cliente-modal');
+            if (modal) modal.classList.remove('show');
+            clienteRowRef = null;
+        }
+
+        function showNuevoCliente() {
+            openClienteModal('new', { ultima: new Date().toLocaleDateString('es-ES') });
+        }
+
+        function showClienteDetalle(button) {
+            const data = getClienteDataFromButton(button);
+            const row = button.closest('tr');
+            openClienteModal('view', data, row);
+        }
+
+        function editCliente(button) {
+            const data = getClienteDataFromButton(button);
+            const row = button.closest('tr');
+            openClienteModal('edit', data, row);
+        }
+
+        function triggerImportClientes() {
+            const input = document.getElementById('clientes-import');
+            if (input) input.click();
+        }
+
+        function contactarClienteWhatsApp(button) {
+            const nombre = button?.dataset?.nombre || 'Cliente';
+            const telefono = (button?.dataset?.telefono || '').replace(/\\s+/g, '');
+            if (!telefono) {
+                alert('El teléfono del cliente está vacío o es inválido.');
+                return;
+            }
+            const mensaje = encodeURIComponent(`Hola ${nombre}, te escribimos desde Fixly Taller.`);
+            window.open(`https://wa.me/${telefono.replace(/[^0-9]/g, '')}?text=${mensaje}`, '_blank');
+        }
+
+        function getEtiquetaBadgeClass(etiqueta) {
+            if (etiqueta === 'VIP') return 'status-listo';
+            if (etiqueta === 'Frecuente') return 'status-no-repuesto';
+            if (etiqueta === 'Nuevo') return 'status-no-reparado';
+            return 'status-entregado';
+        }
+
+        function getOrdenBadgeClass(ordenes) {
+            if (!ordenes || ordenes.includes('0')) return 'status-entregado';
+            if (ordenes.includes('1')) return 'status-recibido';
+            return 'status-diagnosticando';
+        }
+
+        function updateClienteRow(row, data) {
+            if (!row) return;
+            row.querySelector('.font-medium')?.replaceChildren(document.createTextNode(data.nombre || '-'));
+            const emailEl = row.querySelector('.text-sm.text-gray-500');
+            if (emailEl) emailEl.textContent = data.email || 'sin email';
+            const cells = row.querySelectorAll('td');
+            if (cells[1]) cells[1].textContent = data.telefono || '-';
+            if (cells[2]) cells[2].textContent = data.ultima || '-';
+            if (cells[3]) {
+                const badge = cells[3].querySelector('.status-badge');
+                if (badge) {
+                    badge.textContent = data.ordenes || '0 activas';
+                    badge.className = `status-badge ${getOrdenBadgeClass(data.ordenes || '')}`;
+                }
+            }
+            if (cells[4]) {
+                const badge = cells[4].querySelector('.status-badge');
+                if (badge) {
+                    badge.textContent = data.etiqueta || 'Sin etiqueta';
+                    badge.className = `status-badge ${getEtiquetaBadgeClass(data.etiqueta || '')}`;
+                }
+            }
+            row.querySelectorAll('button[data-nombre]').forEach(btn => {
+                btn.dataset.nombre = data.nombre || '';
+                btn.dataset.email = data.email || '';
+                btn.dataset.telefono = data.telefono || '';
+                btn.dataset.ultima = data.ultima || '';
+                btn.dataset.ordenes = data.ordenes || '';
+                btn.dataset.etiqueta = data.etiqueta || '';
+            });
+        }
+
+        function createClienteRow(data) {
+            const row = document.createElement('tr');
+            row.className = 'border-b hover:bg-gray-50';
+            row.innerHTML = `
+                <td class="py-3 px-4">
+                    <div class="font-medium text-gray-900">${data.nombre || '-'}</div>
+                    <div class="text-sm text-gray-500">${data.email || 'sin email'}</div>
+                </td>
+                <td class="py-3 px-4">${data.telefono || '-'}</td>
+                <td class="py-3 px-4">${data.ultima || '-'}</td>
+                <td class="py-3 px-4">
+                    <span class="status-badge ${getOrdenBadgeClass(data.ordenes || '')}">${data.ordenes || '0 activas'}</span>
+                </td>
+                <td class="py-3 px-4">
+                    <span class="status-badge ${getEtiquetaBadgeClass(data.etiqueta || '')}">${data.etiqueta || 'Sin etiqueta'}</span>
+                </td>
+                <td class="py-3 px-4">
+                    <div class="flex gap-2">
+                        <button class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700" title="Ver cliente" type="button"
+                            data-nombre="${data.nombre || ''}" data-email="${data.email || ''}" data-telefono="${data.telefono || ''}"
+                            data-ultima="${data.ultima || ''}" data-ordenes="${data.ordenes || ''}" data-etiqueta="${data.etiqueta || ''}"
+                            onclick="showClienteDetalle(this)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="bg-gray-100 text-gray-700 p-2 rounded hover:bg-gray-200" title="Editar cliente" type="button"
+                            data-nombre="${data.nombre || ''}" data-email="${data.email || ''}" data-telefono="${data.telefono || ''}"
+                            data-ultima="${data.ultima || ''}" data-ordenes="${data.ordenes || ''}" data-etiqueta="${data.etiqueta || ''}"
+                            onclick="editCliente(this)">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="bg-green-600 text-white p-2 rounded hover:bg-green-700" title="WhatsApp" type="button"
+                            data-nombre="${data.nombre || ''}" data-telefono="${data.telefono || ''}"
+                            onclick="contactarClienteWhatsApp(this)">
+                            <i class="fab fa-whatsapp"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            return row;
+        }
+
+        function saveCliente() {
+            const nombre = document.getElementById('cliente-nombre').value.trim();
+            const telefono = document.getElementById('cliente-telefono').value.trim();
+            if (!nombre || !telefono) {
+                alert('Nombre y teléfono son obligatorios.');
+                return;
+            }
+            const data = {
+                nombre,
+                telefono,
+                email: document.getElementById('cliente-email').value.trim(),
+                ultima: document.getElementById('cliente-ultima').value.trim(),
+                etiqueta: document.getElementById('cliente-etiqueta').value,
+                ciudad: document.getElementById('cliente-ciudad').value.trim(),
+                notas: document.getElementById('cliente-notas').value.trim(),
+                ordenes: clienteModalMode === 'new' ? '0 activas' : (clienteRowRef?.querySelector('td:nth-child(4) .status-badge')?.textContent || '')
+            };
+            if (clienteModalMode === 'new') {
+                const tbody = document.querySelector('#clientes table tbody');
+                if (tbody) tbody.prepend(createClienteRow(data));
+            } else {
+                updateClienteRow(clienteRowRef, data);
+            }
+            closeClienteModal();
         }
 
         function mostrarFechaActual() {
