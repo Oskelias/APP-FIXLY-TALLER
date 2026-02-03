@@ -1876,30 +1876,33 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 </div>
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-<!-- Sistema y Seguridad -->
+<!-- Roles y Permisos -->
 <div class="card bg-white p-4 rounded-xl">
-<h3 class="text-xl font-semibold mb-6 flex items-center">
-<i class="fas fa-shield-alt text-orange-600 mr-2">
+<h3 class="text-xl font-semibold mb-4 flex items-center">
+<i class="fas fa-user-shield text-orange-600 mr-2">
 </i>
-         Sistema y Seguridad
+         Roles y Permisos
         </h3>
+<p class="text-sm text-gray-500 mb-4">
+         Definí qué tareas y accesos tiene cada rol del equipo.
+        </p>
 <div class="space-y-4">
 <div>
-<label class="block text-sm font-medium text-gray-700 mb-2">
-           Cambiar Contraseña
+<label class="block text-sm font-medium text-gray-700 mb-2" for="roles-select">
+           Rol
           </label>
-<input class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500" id="nueva-password" placeholder="Nueva contraseña" type="password"/>
+<select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500" id="roles-select">
+</select>
 </div>
-<div>
-<label class="block text-sm font-medium text-gray-700 mb-2">
-           Confirmar Contraseña
-          </label>
-<input class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500" id="confirmar-password" placeholder="Confirmar nueva contraseña" type="password"/>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="roles-permissions">
 </div>
-<button class="w-full bg-orange-600 text-white py-3 px-4 rounded-lg hover:bg-orange-700 transition duration-200 flex items-center justify-center" onclick="cambiarPassword()">
-<i class="fas fa-key mr-2">
+<p class="text-xs text-gray-500">
+          Consejo: para evitar errores, desactivá el permiso de borrar historial a perfiles operativos.
+         </p>
+<button class="w-full bg-orange-600 text-white py-3 px-4 rounded-lg hover:bg-orange-700 transition duration-200 flex items-center justify-center" onclick="guardarPermisosRol()">
+<i class="fas fa-save mr-2">
 </i>
-          Cambiar Contraseña
+          Guardar permisos del rol
          </button>
 </div>
 </div>
@@ -2340,6 +2343,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let currentSection = 'dashboard';
         let reparaciones = [];
         let tecnicos = [];
+        let rolesConfig = {};
         let proximoOrden = 1003;
         let statusChart, revenueChart;
         let reparacionSeleccionada = null;
@@ -2371,6 +2375,22 @@ function badgeClassFromText(txt){
 
 
         // Datos iniciales
+        const rolesCatalogo = [
+            { id: 'administrador', nombre: 'Administrador', descripcion: 'Acceso total y decisiones del taller.' },
+            { id: 'encargado', nombre: 'Encargado', descripcion: 'Coordina técnicos y operaciones diarias.' },
+            { id: 'tecnico', nombre: 'Técnico', descripcion: 'Gestiona reparaciones asignadas.' },
+            { id: 'recepcion', nombre: 'Recepción', descripcion: 'Registra ingresos y clientes.' }
+        ];
+
+        const permisosCatalogo = [
+            { id: 'reparaciones_editar', label: 'Editar reparaciones' },
+            { id: 'reparaciones_borrar', label: 'Borrar reparaciones' },
+            { id: 'historial_borrar', label: 'Borrar historial' },
+            { id: 'tecnicos_gestionar', label: 'Gestionar técnicos' },
+            { id: 'configuracion_gestionar', label: 'Editar configuración' },
+            { id: 'datos_exportar_importar', label: 'Exportar / Importar datos' }
+        ];
+
         const datosIniciales = {
             reparaciones: [
                 {
@@ -2409,10 +2429,11 @@ function badgeClassFromText(txt){
                 }
             ],
             tecnicos: [
-                { id: '1', nombre: 'Ana Silva', especialidad: 'iPhone y Samsung' },
-                { id: '2', nombre: 'Juan Pérez', especialidad: 'Xiaomi y Motorola' },
-                { id: '3', nombre: 'Luis Rodríguez', especialidad: 'Tablets y Notebooks' }
+                { id: '1', nombre: 'Ana Silva', especialidad: 'iPhone y Samsung', rol: 'tecnico' },
+                { id: '2', nombre: 'Juan Pérez', especialidad: 'Xiaomi y Motorola', rol: 'tecnico' },
+                { id: '3', nombre: 'Luis Rodríguez', especialidad: 'Tablets y Notebooks', rol: 'encargado' }
             ],
+            rolesConfig: {},
             historialEntregados: [
                 {
                     id: '1000',
@@ -2447,6 +2468,7 @@ function badgeClassFromText(txt){
             initializeCharts();
             configurarFiltros();
             mostrarFechaActual();
+            inicializarRolesPermisos();
 
         // --- Guard: asegurar que renderListaPedidos exista para evitar ReferenceError
         function __ensureRenderListaPedidos(){
@@ -2793,6 +2815,124 @@ function badgeClassFromText(txt){
             document.getElementById('fecha-actual').textContent = fecha;
         }
 
+        function obtenerConfigRolesPorDefecto() {
+            const base = {};
+            permisosCatalogo.forEach(permiso => {
+                base[permiso.id] = false;
+            });
+            return {
+                administrador: permisosCatalogo.reduce((acc, permiso) => {
+                    acc[permiso.id] = true;
+                    return acc;
+                }, {}),
+                encargado: {
+                    ...base,
+                    reparaciones_editar: true,
+                    tecnicos_gestionar: true,
+                    datos_exportar_importar: true
+                },
+                tecnico: {
+                    ...base,
+                    reparaciones_editar: true
+                },
+                recepcion: {
+                    ...base,
+                    reparaciones_editar: true
+                }
+            };
+        }
+
+        function normalizarRolId(rol) {
+            if (!rol) return 'tecnico';
+            const normalizado = String(rol).toLowerCase().trim();
+            const rolMatch = rolesCatalogo.find(item => item.id === normalizado || item.nombre.toLowerCase() === normalizado);
+            return rolMatch ? rolMatch.id : 'tecnico';
+        }
+
+        function obtenerNombreRol(rolId) {
+            const rol = rolesCatalogo.find(item => item.id === rolId);
+            return rol ? rol.nombre : 'Técnico';
+        }
+
+        function normalizarRolesConfig(configActual) {
+            const base = obtenerConfigRolesPorDefecto();
+            if (!configActual || typeof configActual !== 'object') {
+                return base;
+            }
+            const normalizado = { ...base };
+            Object.keys(configActual).forEach(rolId => {
+                const rolNormalizado = normalizarRolId(rolId);
+                normalizado[rolNormalizado] = {
+                    ...base[rolNormalizado],
+                    ...configActual[rolId]
+                };
+            });
+            return normalizado;
+        }
+
+        function inicializarRolesPermisos() {
+            const select = document.getElementById('roles-select');
+            const permisosContainer = document.getElementById('roles-permissions');
+            if (!select || !permisosContainer) return;
+
+            select.innerHTML = '';
+            rolesCatalogo.forEach(rol => {
+                const option = document.createElement('option');
+                option.value = rol.id;
+                option.textContent = rol.nombre;
+                select.appendChild(option);
+            });
+
+            permisosContainer.innerHTML = '';
+            permisosCatalogo.forEach(permiso => {
+                const wrapper = document.createElement('label');
+                wrapper.className = 'flex items-start gap-2 border border-gray-200 rounded-lg p-3 hover:bg-gray-50';
+                wrapper.innerHTML = `
+                    <input type="checkbox" class="mt-1" data-permiso="${permiso.id}" />
+                    <div>
+                        <p class="text-sm font-medium text-gray-800">${permiso.label}</p>
+                        <p class="text-xs text-gray-500">Controla la acción: ${permiso.label.toLowerCase()}.</p>
+                    </div>
+                `;
+                permisosContainer.appendChild(wrapper);
+            });
+
+            select.addEventListener('change', actualizarPermisosRol);
+            actualizarPermisosRol();
+        }
+
+        function actualizarPermisosRol() {
+            const select = document.getElementById('roles-select');
+            const permisosContainer = document.getElementById('roles-permissions');
+            if (!select || !permisosContainer) return;
+            const rolId = select.value;
+            const permisos = rolesConfig[rolId] || {};
+            permisosContainer.querySelectorAll('input[data-permiso]').forEach(input => {
+                const permisoId = input.getAttribute('data-permiso');
+                input.checked = Boolean(permisos[permisoId]);
+            });
+        }
+
+        function guardarPermisosRol() {
+            const select = document.getElementById('roles-select');
+            const permisosContainer = document.getElementById('roles-permissions');
+            if (!select || !permisosContainer) return;
+            const rolId = select.value;
+            const permisos = {};
+            permisosContainer.querySelectorAll('input[data-permiso]').forEach(input => {
+                permisos[input.getAttribute('data-permiso')] = input.checked;
+            });
+            rolesConfig = {
+                ...rolesConfig,
+                [rolId]: {
+                    ...rolesConfig[rolId],
+                    ...permisos
+                }
+            };
+            guardarDatos();
+            mostrarMensaje('success', `Permisos actualizados para el rol ${obtenerNombreRol(rolId)}.`, 'config-messages');
+        }
+
         // FUNCIONES DE DATOS
         function cargarDatos() {
             const datosGuardados = localStorage.getItem('fixlytallerData');
@@ -2806,6 +2946,7 @@ function badgeClassFromText(txt){
                 proximoOrden = datos.proximoOrden || 1003;
                 historialEntregados = datos.historialEntregados || datosIniciales.historialEntregados;
                 historialMensajes = datos.historialMensajes || [];
+                rolesConfig = normalizarRolesConfig(datos.rolesConfig);
             } else {
                 reparaciones = [...datosIniciales.reparaciones];
                 tecnicos = [...datosIniciales.tecnicos];
@@ -2814,17 +2955,25 @@ function badgeClassFromText(txt){
                 historialMensajes = [];
                 window.pedidos = [];
                 pedidos = window.pedidos;
+                rolesConfig = normalizarRolesConfig(null);
                 guardarDatos();
             }
+            tecnicos = tecnicos.map(tecnico => ({
+                ...tecnico,
+                rol: normalizarRolId(tecnico.rol || tecnico.rolNombre || tecnico.rol_nombre)
+            }));
         }
 
         function guardarDatos() {
+            const datosPrevios = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
             const datos = {
+                ...datosPrevios,
                 reparaciones: reparaciones,
                 tecnicos: tecnicos,
                 proximoOrden: proximoOrden,
                 historialEntregados: historialEntregados,
-                historialMensajes: historialMensajes
+                historialMensajes: historialMensajes,
+                rolesConfig: rolesConfig
             };
             datos.pedidos = pedidos;
             localStorage.setItem('fixlytallerData', JSON.stringify(datos));
@@ -4185,6 +4334,7 @@ function imprimirComprobantePedido(pedidoId){
             }
             
             tecnicos.forEach((tecnico, index) => {
+                const rolId = normalizarRolId(tecnico.rol);
                 const tecnicoDiv = document.createElement('div');
                 tecnicoDiv.className = 'border border-gray-200 rounded-lg p-3 hover:bg-gray-50';
                 tecnicoDiv.innerHTML = `
@@ -4192,6 +4342,7 @@ function imprimirComprobantePedido(pedidoId){
                         <div>
                             <h4 class="font-semibold text-gray-800">${tecnico.nombre}</h4>
                             <p class="text-sm text-gray-600">${tecnico.especialidad}</p>
+                            <p class="text-xs text-gray-500 mt-1">Rol: <span class="font-medium text-gray-700">${obtenerNombreRol(rolId)}</span></p>
                         </div>
                         <button onclick="eliminarTecnico(${index})" class="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700">
                             <i class="fas fa-trash"></i>
@@ -4208,8 +4359,12 @@ function imprimirComprobantePedido(pedidoId){
             
             const especialidad = prompt('Especialidad del técnico:');
             if (!especialidad) return;
+
+            const rolesDisponibles = rolesCatalogo.map(rol => rol.nombre).join(', ');
+            const rolInput = prompt(`Rol del técnico (${rolesDisponibles}):`, 'Técnico');
+            const rolId = normalizarRolId(rolInput || 'tecnico');
             
-            tecnicos.push({ nombre: nombre.trim(), especialidad: especialidad.trim() });
+            tecnicos.push({ nombre: nombre.trim(), especialidad: especialidad.trim(), rol: rolId });
             guardarDatos();
             cargarTecnicos();
             cargarListaTecnicos();
@@ -4226,35 +4381,7 @@ function imprimirComprobantePedido(pedidoId){
             }
         }
 
-        function cambiarPassword() {
-            const nuevaPassword = document.getElementById('nueva-password').value;
-            const confirmarPassword = document.getElementById('confirmar-password').value;
-            
-            if (!nuevaPassword || !confirmarPassword) {
-                mostrarMensaje('error', 'Por favor complete ambos campos de contraseña.', 'config-messages');
-                return;
-            }
-            
-            if (nuevaPassword !== confirmarPassword) {
-                mostrarMensaje('error', 'Las contraseñas no coinciden.', 'config-messages');
-                return;
-            }
-            
-            if (nuevaPassword.length < 6) {
-                mostrarMensaje('error', 'La contraseña debe tener al menos 6 caracteres.', 'config-messages');
-                return;
-            }
-            
-            // Guardar nueva contraseña en localStorage
-            const datos = JSON.parse(localStorage.getItem('fixlytallerData') || '{}');
-            datos.password = nuevaPassword;
-            localStorage.setItem('fixlytallerData', JSON.stringify(datos));
-            
-            document.getElementById('nueva-password').value = '';
-            document.getElementById('confirmar-password').value = '';
-            
-            mostrarMensaje('success', 'Contraseña cambiada exitosamente.', 'config-messages');
-        }
+        
 
         function exportarDatos() {
             const datos = localStorage.getItem('fixlytallerData');
