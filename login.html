@@ -5,6 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - Fixly Taller</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    (function() {
+      const loggedIn =
+        !!localStorage.getItem('fixlyAuthToken') ||
+        localStorage.getItem('fixlytallerLoggedIn') === '1' ||
+        !!localStorage.getItem('fixlySessionJti');
+      if (loggedIn) {
+        window.location.replace('/dashboard');
+      }
+    })();
+  </script>
 </head>
 
 <body class="bg-gradient-to-br from-blue-500 to-purple-600 min-h-screen flex items-center justify-center">
