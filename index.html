@@ -186,7 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.5);
+            background-color: rgba(92, 77, 224, 0.92);
         }
         
         .modal.show {
@@ -203,6 +203,10 @@ document.addEventListener("DOMContentLoaded", () => {
             max-width: 600px;
             max-height: 90vh;
             overflow-y: auto;
+        }
+
+        body.register-active {
+            background-color: #5c4de0;
         }
         
         .edit-mode-indicator {
@@ -616,6 +620,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const appDiv = document.getElementById('mainApp');
     if (loginDiv) loginDiv.classList.add('hidden');
     if (appDiv) appDiv.classList.remove('hidden');
+    if (window.location.pathname !== '/dashboard') {
+      history.replaceState({}, '', '/dashboard');
+    }
   }
   function cerrarSesion() {
     try {
@@ -646,6 +653,12 @@ document.addEventListener("DOMContentLoaded", () => {
     cfg.headers = cfg.headers || {};
     if (token) cfg.headers['Authorization'] = 'Bearer ' + token;
     return fetch(API_BASE + path, cfg);
+  };
+
+  window.FixlyAuthFlow = {
+    loginMultiUser,
+    postLogin,
+    hasToken: () => !!localStorage.getItem('fixlyAuthToken')
   };
 })();
 </script>
@@ -778,15 +791,278 @@ document.addEventListener("DOMContentLoaded", () => {
      </button>
 </form>
     <div class="mt-4 text-center">
-      <!-- Botón de registro que abre la página de landing en una pestaña nueva -->
+      <!-- Botón de registro dentro de la app -->
       <button type="button"
-              onclick="window.open('https://fixlytaller.com/', '_blank')"
+              onclick="return handleRegisterClick();"
               class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition duration-200">
         Registrarse
       </button>
     </div>
 </div>
 </div>
+<!-- Modal de Registro -->
+<div class="modal" id="registerModal" aria-hidden="true">
+  <div class="modal-content w-full max-w-lg">
+    <div class="text-center mb-6">
+      <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-user-plus text-green-600 text-2xl"></i>
+      </div>
+      <h2 class="text-2xl font-bold text-gray-800">Crear cuenta</h2>
+      <p class="text-gray-600">Registrá tu taller para comenzar</p>
+    </div>
+    <div id="registerError" class="hidden mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"></div>
+    <form id="registerForm">
+      <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-bold mb-2">Nombre del taller</label>
+        <input
+          id="registerWorkshop"
+          type="text"
+          class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-green-500"
+          placeholder="Ej: Fixly Taller"
+          required
+        />
+      </div>
+      <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-bold mb-2">Nombre del propietario</label>
+        <input
+          id="registerOwner"
+          type="text"
+          class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-green-500"
+          placeholder="Ej: Juan Pérez"
+          required
+        />
+      </div>
+      <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-bold mb-2">Email</label>
+        <input
+          id="registerEmail"
+          type="email"
+          class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-green-500"
+          placeholder="taller@correo.com"
+          required
+        />
+      </div>
+      <div class="mb-6">
+        <label class="block text-gray-700 text-sm font-bold mb-2">Teléfono</label>
+        <input
+          id="registerPhone"
+          type="tel"
+          class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-green-500"
+          placeholder="+54 11 1234-5678"
+          required
+        />
+      </div>
+      <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-bold mb-2">Localidad</label>
+        <input
+          id="registerCity"
+          type="text"
+          class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-green-500"
+          placeholder="Ej: Palermo"
+          required
+        />
+      </div>
+      <div class="mb-6">
+        <label class="block text-gray-700 text-sm font-bold mb-2">País</label>
+        <input
+          id="registerCountry"
+          type="text"
+          class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-green-500"
+          placeholder="Ej: Argentina"
+          required
+        />
+      </div>
+      <button
+        type="submit"
+        id="registerBtn"
+        class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition duration-200"
+      >
+        Crear cuenta
+      </button>
+    </form>
+  </div>
+</div>
+<script>
+  function isFixlyLoggedIn() {
+    return (
+      !!localStorage.getItem('fixlyAuthToken') ||
+      localStorage.getItem('fixlytallerLoggedIn') === '1' ||
+      !!localStorage.getItem('fixlySessionJti')
+    );
+  }
+
+  function showLoginScreen() {
+    const loginDiv = document.getElementById('loginScreen');
+    const appDiv = document.getElementById('mainApp');
+    const registerModal = document.getElementById('registerModal');
+    if (registerModal) registerModal.classList.remove('show');
+    if (appDiv) appDiv.classList.add('hidden');
+    if (loginDiv) loginDiv.classList.remove('hidden');
+    document.body.classList.remove('register-active');
+  }
+
+  function showRegisterModal() {
+    const loginDiv = document.getElementById('loginScreen');
+    const appDiv = document.getElementById('mainApp');
+    const registerModal = document.getElementById('registerModal');
+    if (loginDiv) loginDiv.classList.add('hidden');
+    if (appDiv) appDiv.classList.add('hidden');
+    if (registerModal) registerModal.classList.add('show');
+    document.body.classList.add('register-active');
+  }
+
+  function showMainApp() {
+    const loginDiv = document.getElementById('loginScreen');
+    const appDiv = document.getElementById('mainApp');
+    const registerModal = document.getElementById('registerModal');
+    if (registerModal) registerModal.classList.remove('show');
+    if (loginDiv) loginDiv.classList.add('hidden');
+    if (appDiv) appDiv.classList.remove('hidden');
+    document.body.classList.remove('register-active');
+  }
+
+  function redirectToDashboard() {
+    if (window.location.pathname !== '/dashboard') {
+      history.replaceState({}, '', '/dashboard');
+    }
+    showMainApp();
+  }
+
+  function handleRouteChange() {
+    const path = (window.location.pathname || '/').toLowerCase();
+    const loggedIn = isFixlyLoggedIn();
+
+    if (loggedIn && (path.includes('/login') || path.includes('/register'))) {
+      redirectToDashboard();
+      return;
+    }
+
+    if (!loggedIn && path.includes('/register')) {
+      showRegisterModal();
+      return;
+    }
+
+    if (loggedIn) {
+      showMainApp();
+      return;
+    }
+
+    if (path.includes('/dashboard')) {
+      history.replaceState({}, '', '/login');
+    }
+    showLoginScreen();
+  }
+
+  function handleRegisterClick() {
+    if (isFixlyLoggedIn()) {
+      redirectToDashboard();
+    } else {
+      history.pushState({}, '', '/register');
+      showRegisterModal();
+    }
+    return false;
+  }
+
+  function goToLogin() {
+    history.pushState({}, '', '/login');
+    showLoginScreen();
+    return false;
+  }
+
+  async function submitRegisterForm(event) {
+    event.preventDefault();
+    const registerBtn = document.getElementById('registerBtn');
+    const errorBox = document.getElementById('registerError');
+    const workshopName = document.getElementById('registerWorkshop')?.value.trim();
+    const ownerName = document.getElementById('registerOwner')?.value.trim();
+    const email = document.getElementById('registerEmail')?.value.trim();
+    const phone = document.getElementById('registerPhone')?.value.trim();
+    const city = document.getElementById('registerCity')?.value.trim();
+    const country = document.getElementById('registerCountry')?.value.trim();
+
+    if (errorBox) {
+      errorBox.classList.add('hidden');
+      errorBox.textContent = '';
+    }
+
+    if (!workshopName || !ownerName || !email || !phone || !city || !country) {
+      if (errorBox) {
+        errorBox.textContent = 'Completá todos los campos para continuar.';
+        errorBox.classList.remove('hidden');
+      }
+      return;
+    }
+
+    if (registerBtn) {
+      registerBtn.disabled = true;
+      registerBtn.textContent = 'Creando cuenta...';
+    }
+
+    try {
+      const resp = await fetch(`${window.FIXLY_API_BASE || ''}/auth/public/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          workshopName,
+          ownerName,
+          email,
+          phone,
+          city,
+          country
+        })
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error || 'No se pudo crear la cuenta');
+      }
+
+      const data = await resp.json().catch(() => ({}));
+      const token = data.token || data.jwt || data.accessToken;
+      if (!token) {
+        throw new Error('La cuenta se creó pero no se pudo iniciar sesión automáticamente.');
+      }
+
+      localStorage.setItem('fixlyAuthToken', token);
+      if (window.FixlyAuthFlow?.postLogin) {
+        await window.FixlyAuthFlow.postLogin(token);
+      }
+      redirectToDashboard();
+    } catch (error) {
+      if (errorBox) {
+        errorBox.textContent = error.message || 'Ocurrió un error al registrar.';
+        errorBox.classList.remove('hidden');
+      } else {
+        alert(error.message || 'Ocurrió un error al registrar.');
+      }
+    } finally {
+      if (registerBtn) {
+        registerBtn.disabled = false;
+        registerBtn.textContent = 'Crear cuenta';
+      }
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) {
+      registerForm.addEventListener('submit', submitRegisterForm);
+    }
+
+    const registerModal = document.getElementById('registerModal');
+    if (registerModal) {
+      registerModal.addEventListener('click', (event) => {
+        if (event.target === registerModal) {
+          goToLogin();
+        }
+      });
+    }
+
+    handleRouteChange();
+  });
+
+  window.addEventListener('popstate', handleRouteChange);
+</script>
 <!-- Aplicación Principal -->
 <div class="" id="mainApp">
 <div class="flex h-screen bg-gray-100 app-shell">
