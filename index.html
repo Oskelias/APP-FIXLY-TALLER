@@ -186,7 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.5);
+            background-color: rgba(92, 77, 224, 0.92);
         }
         
         .modal.show {
@@ -203,6 +203,10 @@ document.addEventListener("DOMContentLoaded", () => {
             max-width: 600px;
             max-height: 90vh;
             overflow-y: auto;
+        }
+
+        body.register-active {
+            background-color: #5c4de0;
         }
         
         .edit-mode-indicator {
@@ -848,6 +852,26 @@ document.addEventListener("DOMContentLoaded", () => {
           required
         />
       </div>
+      <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-bold mb-2">Localidad</label>
+        <input
+          id="registerCity"
+          type="text"
+          class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-green-500"
+          placeholder="Ej: Palermo"
+          required
+        />
+      </div>
+      <div class="mb-6">
+        <label class="block text-gray-700 text-sm font-bold mb-2">País</label>
+        <input
+          id="registerCountry"
+          type="text"
+          class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-green-500"
+          placeholder="Ej: Argentina"
+          required
+        />
+      </div>
       <button
         type="submit"
         id="registerBtn"
@@ -856,11 +880,6 @@ document.addEventListener("DOMContentLoaded", () => {
         Crear cuenta
       </button>
     </form>
-    <div class="mt-4 text-center">
-      <button type="button" class="text-blue-600 hover:underline" onclick="return goToLogin();">
-        Ya tengo cuenta
-      </button>
-    </div>
   </div>
 </div>
 <script>
@@ -879,6 +898,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (registerModal) registerModal.classList.remove('show');
     if (appDiv) appDiv.classList.add('hidden');
     if (loginDiv) loginDiv.classList.remove('hidden');
+    document.body.classList.remove('register-active');
   }
 
   function showRegisterModal() {
@@ -888,6 +908,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (loginDiv) loginDiv.classList.add('hidden');
     if (appDiv) appDiv.classList.add('hidden');
     if (registerModal) registerModal.classList.add('show');
+    document.body.classList.add('register-active');
   }
 
   function showMainApp() {
@@ -897,6 +918,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (registerModal) registerModal.classList.remove('show');
     if (loginDiv) loginDiv.classList.add('hidden');
     if (appDiv) appDiv.classList.remove('hidden');
+    document.body.classList.remove('register-active');
   }
 
   function redirectToDashboard() {
@@ -955,13 +977,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const ownerName = document.getElementById('registerOwner')?.value.trim();
     const email = document.getElementById('registerEmail')?.value.trim();
     const phone = document.getElementById('registerPhone')?.value.trim();
+    const city = document.getElementById('registerCity')?.value.trim();
+    const country = document.getElementById('registerCountry')?.value.trim();
 
     if (errorBox) {
       errorBox.classList.add('hidden');
       errorBox.textContent = '';
     }
 
-    if (!workshopName || !ownerName || !email || !phone) {
+    if (!workshopName || !ownerName || !email || !phone || !city || !country) {
       if (errorBox) {
         errorBox.textContent = 'Completá todos los campos para continuar.';
         errorBox.classList.remove('hidden');
@@ -982,7 +1006,9 @@ document.addEventListener("DOMContentLoaded", () => {
           workshopName,
           ownerName,
           email,
-          phone
+          phone,
+          city,
+          country
         })
       });
 
