@@ -851,13 +851,31 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
       <div class="mb-6">
         <label class="block text-gray-700 text-sm font-bold mb-2">Teléfono</label>
-        <input
-          id="registerPhone"
-          type="tel"
-          class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-green-500"
-          placeholder="+54 11 1234-5678"
-          required
-        />
+        <div class="flex gap-2">
+          <select
+            id="registerPhoneCode"
+            class="w-28 px-3 py-2 border rounded-lg focus:outline-none focus:border-green-500 bg-white"
+            required
+          >
+            <option value="+54">🇦🇷 +54</option>
+            <option value="+56">🇨🇱 +56</option>
+            <option value="+598">🇺🇾 +598</option>
+            <option value="+595">🇵🇾 +595</option>
+            <option value="+591">🇧🇴 +591</option>
+            <option value="+51">🇵🇪 +51</option>
+            <option value="+52">🇲🇽 +52</option>
+            <option value="+57">🇨🇴 +57</option>
+            <option value="+1">🇺🇸 +1</option>
+            <option value="+34">🇪🇸 +34</option>
+          </select>
+          <input
+            id="registerPhone"
+            type="tel"
+            class="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:border-green-500"
+            placeholder="11 1234-5678"
+            required
+          />
+        </div>
       </div>
       <div class="mb-4">
         <label class="block text-gray-700 text-sm font-bold mb-2">Localidad</label>
@@ -1084,7 +1102,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const workshopName = document.getElementById('registerWorkshop')?.value.trim();
     const ownerName = document.getElementById('registerOwner')?.value.trim();
     const email = document.getElementById('registerEmail')?.value.trim();
-    const phone = document.getElementById('registerPhone')?.value.trim();
+    const phoneCode = document.getElementById('registerPhoneCode')?.value.trim();
+    const phoneNumber = document.getElementById('registerPhone')?.value.trim();
     const city = document.getElementById('registerCity')?.value.trim();
     const country = document.getElementById('registerCountry')?.value.trim();
 
@@ -1093,7 +1112,7 @@ document.addEventListener("DOMContentLoaded", () => {
       errorBox.textContent = '';
     }
 
-    if (!workshopName || !ownerName || !email || !phone || !city || !country) {
+    if (!workshopName || !ownerName || !email || !phoneNumber || !phoneCode || !city || !country) {
       if (errorBox) {
         errorBox.textContent = 'Completá todos los campos para continuar.';
         errorBox.classList.remove('hidden');
@@ -1107,6 +1126,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
+      const phone = `${phoneCode} ${phoneNumber}`;
       const resp = await fetch(`${window.FIXLY_API_BASE || ''}/auth/public/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
