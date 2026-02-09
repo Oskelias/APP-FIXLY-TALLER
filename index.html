@@ -2977,10 +2977,7 @@ function badgeClassFromText(txt){
             // Configurar formulario de edición de estado
             document.getElementById('formEditEstado').addEventListener('submit', function(e) {
                 e.preventDefault();
-                const saved = guardarCambiosEstado();
-                if (saved) {
-                    closeModalAfterSave(hideEditEstado);
-                }
+                guardarCambiosEstado();
             });
             // Configurar formulario de estado del equipo
             document.getElementById('formEstadoEquipo').addEventListener('submit', function(e) {
@@ -3727,6 +3724,13 @@ function badgeClassFromText(txt){
             }, delay);
         }
 
+        function forceCloseModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (!modal) return;
+            modal.classList.remove('show');
+            modal.style.display = 'none';
+        }
+
         // Abrir el modal de estado del equipo desde las acciones
         function editarEstadoEquipo(ordenId) {
             showEstadoEquipo(ordenId);
@@ -3749,6 +3753,10 @@ function badgeClassFromText(txt){
             if (typeof actualizarKPIs === 'function') {
                 actualizarKPIs();
             }
+            closeModalAfterSave(() => {
+                hideEstadoEquipo();
+                forceCloseModal('estado-equipo-modal');
+            });
             return true;
         }
 
@@ -3950,6 +3958,10 @@ function badgeClassFromText(txt){
             
             mostrarMensaje('success', 'Reparación guardada exitosamente.', 'nueva-messages');
 
+            closeModalAfterSave(() => {
+                hideNuevaReparacion();
+                forceCloseModal('nueva-reparacion-modal');
+            });
             return true;
         }
 
@@ -3990,6 +4002,10 @@ function badgeClassFromText(txt){
             cargarReparacionesEnSelect();
             actualizarKPIs();
 
+            closeModalAfterSave(() => {
+                hideEditEstado();
+                forceCloseModal('edit-estado-modal');
+            });
             return true;
         }
 
