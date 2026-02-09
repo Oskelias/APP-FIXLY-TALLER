@@ -4650,6 +4650,7 @@ function imprimirComprobantePedido(pedidoId){
         // FUNCIÓN DE UTILIDAD PARA MOSTRAR MENSAJES
         function mostrarMensaje(tipo, mensaje, containerId) {
             const container = document.getElementById(containerId);
+            if (!container) return;
             const alertDiv = document.createElement('div');
             
             const colorClass = tipo === 'success' ? 'bg-green-100 border-green-500 text-green-700' : 'bg-red-100 border-red-500 text-red-700';
