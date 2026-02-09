@@ -2968,21 +2968,27 @@ function badgeClassFromText(txt){
             // Configurar formulario de nueva reparación
             document.getElementById('formNuevaReparacion').addEventListener('submit', function(e) {
                 e.preventDefault();
-                guardarNuevaReparacion();
+                const saved = guardarNuevaReparacion();
+                if (saved) {
+                    closeModalAfterSave(hideNuevaReparacion);
+                }
             });
 
             // Configurar formulario de edición de estado
             document.getElementById('formEditEstado').addEventListener('submit', function(e) {
                 e.preventDefault();
-                guardarCambiosEstado();
-                setTimeout(() => {
-                    hideEditEstado();
-                }, 300);
+                const saved = guardarCambiosEstado();
+                if (saved) {
+                    closeModalAfterSave(hideEditEstado);
+                }
             });
             // Configurar formulario de estado del equipo
             document.getElementById('formEstadoEquipo').addEventListener('submit', function(e) {
                 e.preventDefault();
-                guardarEstadoEquipo();
+                const saved = guardarEstadoEquipo();
+                if (saved) {
+                    closeModalAfterSave(hideEstadoEquipo);
+                }
             });
 
             const clientesImportInput = document.getElementById('clientes-import');
@@ -3714,6 +3720,13 @@ function badgeClassFromText(txt){
             reparacionEditandoEstado = null;
         }
 
+        function closeModalAfterSave(closeFn, delay = 300) {
+            if (typeof closeFn !== 'function') return;
+            setTimeout(() => {
+                closeFn();
+            }, delay);
+        }
+
         // Abrir el modal de estado del equipo desde las acciones
         function editarEstadoEquipo(ordenId) {
             showEstadoEquipo(ordenId);
@@ -3721,7 +3734,7 @@ function badgeClassFromText(txt){
 
         // Guardar el resultado del estado del equipo
         function guardarEstadoEquipo() {
-            if (!reparacionEditandoEstado) return;
+            if (!reparacionEditandoEstado) return false;
             const resultado = document.getElementById('estado-equipo-resultado').value;
             // Asignar la propiedad estadoEquipo al objeto
             reparacionEditandoEstado.estadoEquipo = resultado;
@@ -3736,9 +3749,7 @@ function badgeClassFromText(txt){
             if (typeof actualizarKPIs === 'function') {
                 actualizarKPIs();
             }
-            setTimeout(() => {
-                hideEstadoEquipo();
-            }, 300);
+            return true;
         }
 
         function verDetalleHistorial(equipoId) {
@@ -3938,14 +3949,12 @@ function badgeClassFromText(txt){
             actualizarKPIs();
             
             mostrarMensaje('success', 'Reparación guardada exitosamente.', 'nueva-messages');
-            
-            setTimeout(() => {
-                hideNuevaReparacion();
-            }, 300);
+
+            return true;
         }
 
         function guardarCambiosEstado() {
-            if (!reparacionEditando) return;
+            if (!reparacionEditando) return false;
 
             const nuevoEstado = document.getElementById('edit-estado').value;
             const nuevoTecnico = document.getElementById('edit-tecnico').value;
@@ -3980,10 +3989,8 @@ function badgeClassFromText(txt){
             cargarTablaHistorial();
             cargarReparacionesEnSelect();
             actualizarKPIs();
-            
-            setTimeout(() => {
-                hideEditEstado();
-            }, 300);
+
+            return true;
         }
 
         // FUNCIONES DE ACCIONES DE REPARACIÓN
