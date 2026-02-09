@@ -3765,6 +3765,20 @@ function badgeClassFromText(txt){
             if (form) form.reset();
         }
 
+        function closeModalAfterSave(closeFn, delay = 300) {
+            if (typeof closeFn !== 'function') return;
+            setTimeout(() => {
+                closeFn();
+            }, delay);
+        }
+
+        function forceCloseModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (!modal) return;
+            modal.classList.remove('show');
+            modal.style.display = 'none';
+        }
+
         // Abrir el modal de estado del equipo desde las acciones
         function editarEstadoEquipo(ordenId) {
             showEstadoEquipo(ordenId);
