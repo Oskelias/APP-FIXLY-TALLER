@@ -2771,6 +2771,10 @@ document.addEventListener("DOMContentLoaded", () => {
         let historialEntregados = [];
         let historialMensajes = [];
         let equipoDetalleActual = null;
+        let isSavingNuevaReparacion = false;
+        let isSavingEditEstado = false;
+        let isSavingEstadoEquipo = false;
+        let isSavingCliente = false;
 
 // === Helper: clase CSS para badge según texto de estado ===
 function badgeClassFromText(txt){
@@ -2966,23 +2970,20 @@ function badgeClassFromText(txt){
 })();
 
             // Configurar formulario de nueva reparación
-            document.getElementById('formNuevaReparacion').addEventListener('submit', function(e) {
+            document.getElementById('formNuevaReparacion').addEventListener('submit', async function(e) {
                 e.preventDefault();
-                guardarNuevaReparacion();
+                await guardarNuevaReparacion();
             });
 
             // Configurar formulario de edición de estado
-            document.getElementById('formEditEstado').addEventListener('submit', function(e) {
+            document.getElementById('formEditEstado').addEventListener('submit', async function(e) {
                 e.preventDefault();
-                guardarCambiosEstado();
-                setTimeout(() => {
-                    hideEditEstado();
-                }, 300);
+                await guardarCambiosEstado();
             });
             // Configurar formulario de estado del equipo
-            document.getElementById('formEstadoEquipo').addEventListener('submit', function(e) {
+            document.getElementById('formEstadoEquipo').addEventListener('submit', async function(e) {
                 e.preventDefault();
-                guardarEstadoEquipo();
+                await guardarEstadoEquipo();
             });
 
             const clientesImportInput = document.getElementById('clientes-import');
@@ -3065,14 +3066,13 @@ function badgeClassFromText(txt){
                 : 'Completa los datos del cliente para mantener tu base actualizada.';
             setClienteFormValues(data);
             setClienteFormReadonly(mode === 'view');
-            const modal = document.getElementById('cliente-modal');
-            if (modal) modal.classList.add('show');
+            setModalVisibility('cliente-modal', true);
         }
 
         function closeClienteModal() {
-            const modal = document.getElementById('cliente-modal');
-            if (modal) modal.classList.remove('show');
+            setModalVisibility('cliente-modal', false);
             clienteRowRef = null;
+            resetFormById('cliente-form');
         }
 
         function showNuevoCliente() {
@@ -3193,32 +3193,43 @@ function badgeClassFromText(txt){
             return row;
         }
 
-        function saveCliente() {
+        async function saveCliente() {
+            if (isSavingCliente) return;
             const nombre = document.getElementById('cliente-nombre').value.trim();
             const telefono = document.getElementById('cliente-telefono').value.trim();
             if (!nombre || !telefono) {
                 alert('Nombre y teléfono son obligatorios.');
                 return;
             }
-            const data = {
-                nombre,
-                telefono,
-                email: document.getElementById('cliente-email').value.trim(),
-                ultima: document.getElementById('cliente-ultima').value.trim(),
-                etiqueta: document.getElementById('cliente-etiqueta').value,
-                ciudad: document.getElementById('cliente-ciudad').value.trim(),
-                notas: document.getElementById('cliente-notas').value.trim(),
-                ordenes: clienteModalMode === 'new' ? '0 activas' : (clienteRowRef?.querySelector('td:nth-child(4) .status-badge')?.textContent || '')
-            };
-            if (clienteModalMode === 'new') {
-                const tbody = document.querySelector('#clientes table tbody');
-                if (tbody) tbody.prepend(createClienteRow(data));
-            } else {
-                updateClienteRow(clienteRowRef, data);
+            const saveButton = document.getElementById('cliente-save-btn');
+            isSavingCliente = true;
+            setSubmitButtonState(saveButton, true);
+            try {
+                const data = {
+                    nombre,
+                    telefono,
+                    email: document.getElementById('cliente-email').value.trim(),
+                    ultima: document.getElementById('cliente-ultima').value.trim(),
+                    etiqueta: document.getElementById('cliente-etiqueta').value,
+                    ciudad: document.getElementById('cliente-ciudad').value.trim(),
+                    notas: document.getElementById('cliente-notas').value.trim(),
+                    ordenes: clienteModalMode === 'new' ? '0 activas' : (clienteRowRef?.querySelector('td:nth-child(4) .status-badge')?.textContent || '')
+                };
+                if (clienteModalMode === 'new') {
+                    const tbody = document.querySelector('#clientes table tbody');
+                    if (tbody) tbody.prepend(createClienteRow(data));
+                } else {
+                    updateClienteRow(clienteRowRef, data);
+                }
+                closeModalAfterSave(() => {
+                    closeClienteModal();
+                });
+            } catch (error) {
+                alert('No se pudo guardar el cliente. Intenta nuevamente.');
+            } finally {
+                isSavingCliente = false;
+                setSubmitButtonState(saveButton, false);
             }
-            setTimeout(() => {
-                closeClienteModal();
-            }, 300);
         }
 
         function mostrarFechaActual() {
@@ -3660,17 +3671,30 @@ function badgeClassFromText(txt){
         }
 
         // FUNCIONES DE MODALES
+        function setModalVisibility(modalId, isOpen) {
+            const modal = document.getElementById(modalId);
+            if (!modal) return;
+            if (isOpen) {
+                modal.classList.add('show');
+                modal.style.display = 'flex';
+            } else {
+                modal.classList.remove('show');
+                modal.style.display = 'none';
+            }
+        }
+
         function showNuevaReparacion() {
-            document.getElementById('nueva-reparacion-modal').classList.add('show');
+            setModalVisibility('nueva-reparacion-modal', true);
             // Resetear scroll del modal
             const modalContent = document.querySelector('#nueva-reparacion-modal .modal-content');
-            modalContent.scrollTop = 0;
+            if (modalContent) modalContent.scrollTop = 0;
         }
 
         function hideNuevaReparacion() {
-            document.getElementById('nueva-reparacion-modal').classList.remove('show');
-            document.getElementById('formNuevaReparacion').reset();
-            document.getElementById('nueva-messages').innerHTML = '';
+            setModalVisibility('nueva-reparacion-modal', false);
+            resetFormById('formNuevaReparacion');
+            const messages = document.getElementById('nueva-messages');
+            if (messages) messages.innerHTML = '';
         }
 
         function showEditEstado(ordenId) {
@@ -3688,12 +3712,15 @@ function badgeClassFromText(txt){
             // Resetear mensajes
             document.getElementById('edit-messages').innerHTML = '';
             
-            document.getElementById('edit-estado-modal').classList.add('show');
+            setModalVisibility('edit-estado-modal', true);
         }
 
         function hideEditEstado() {
-            document.getElementById('edit-estado-modal').classList.remove('show');
+            setModalVisibility('edit-estado-modal', false);
             reparacionEditando = null;
+            resetFormById('formEditEstado');
+            const messages = document.getElementById('edit-messages');
+            if (messages) messages.innerHTML = '';
         }
 
         // Mostrar el modal de estado del equipo
@@ -3704,14 +3731,47 @@ function badgeClassFromText(txt){
             document.getElementById('estado-equipo-cliente').value = reparacion.cliente;
             document.getElementById('estado-equipo-equipo').value = reparacion.equipo;
             document.getElementById('estado-equipo-resultado').value = reparacion.estadoEquipo || '';
-            document.getElementById('estado-equipo-messages').innerHTML = '';
-            document.getElementById('estado-equipo-modal').classList.add('show');
+            const messages = document.getElementById('estado-equipo-messages');
+            if (messages) messages.innerHTML = '';
+            setModalVisibility('estado-equipo-modal', true);
         }
 
         // Ocultar el modal de estado del equipo
         function hideEstadoEquipo() {
-            document.getElementById('estado-equipo-modal').classList.remove('show');
+            setModalVisibility('estado-equipo-modal', false);
             reparacionEditandoEstado = null;
+            resetFormById('formEstadoEquipo');
+            const messages = document.getElementById('estado-equipo-messages');
+            if (messages) messages.innerHTML = '';
+        }
+
+        function closeModalAfterSave(closeFn, delay = 0) {
+            if (typeof closeFn !== 'function') return;
+            setTimeout(() => {
+                closeFn();
+            }, delay);
+        }
+
+        function setSubmitButtonState(button, isSubmitting, loadingText = 'Guardando...') {
+            if (!button) return;
+            if (!button.dataset.defaultText) {
+                button.dataset.defaultText = button.innerHTML;
+            }
+            button.disabled = isSubmitting;
+            button.innerHTML = isSubmitting
+                ? `<i class="fas fa-spinner fa-spin mr-2"></i>${loadingText}`
+                : button.dataset.defaultText;
+        }
+
+        function pickSubmitButton(formId) {
+            const form = document.getElementById(formId);
+            if (!form) return null;
+            return form.querySelector('button[type="submit"]');
+        }
+
+        function resetFormById(formId) {
+            const form = document.getElementById(formId);
+            if (form) form.reset();
         }
 
         // Abrir el modal de estado del equipo desde las acciones
@@ -3720,25 +3780,38 @@ function badgeClassFromText(txt){
         }
 
         // Guardar el resultado del estado del equipo
-        function guardarEstadoEquipo() {
-            if (!reparacionEditandoEstado) return;
-            const resultado = document.getElementById('estado-equipo-resultado').value;
-            // Asignar la propiedad estadoEquipo al objeto
-            reparacionEditandoEstado.estadoEquipo = resultado;
-            // Mensaje de confirmación
-            mostrarMensaje('success', 'Estado del equipo actualizado exitosamente.', 'estado-equipo-messages');
-            guardarDatos();
-            cargarTablaReparaciones();
-            cargarTablaHistorial();
-            if (typeof cargarReparacionesEnSelect === 'function') {
-                cargarReparacionesEnSelect();
+        async function guardarEstadoEquipo() {
+            if (isSavingEstadoEquipo || !reparacionEditandoEstado) return false;
+            const submitButton = pickSubmitButton('formEstadoEquipo');
+            isSavingEstadoEquipo = true;
+            setSubmitButtonState(submitButton, true, 'Guardando...');
+            try {
+                const resultado = document.getElementById('estado-equipo-resultado').value;
+                // Asignar la propiedad estadoEquipo al objeto
+                reparacionEditandoEstado.estadoEquipo = resultado;
+                await Promise.resolve();
+                // Mensaje de confirmación
+                mostrarMensaje('success', 'Estado del equipo actualizado exitosamente.', 'estado-equipo-messages');
+                guardarDatos();
+                cargarTablaReparaciones();
+                cargarTablaHistorial();
+                if (typeof cargarReparacionesEnSelect === 'function') {
+                    cargarReparacionesEnSelect();
+                }
+                if (typeof actualizarKPIs === 'function') {
+                    actualizarKPIs();
+                }
+                closeModalAfterSave(() => {
+                    hideEstadoEquipo();
+                });
+                return true;
+            } catch (error) {
+                mostrarMensaje('error', 'No se pudo guardar el estado del equipo.', 'estado-equipo-messages');
+                return false;
+            } finally {
+                isSavingEstadoEquipo = false;
+                setSubmitButtonState(submitButton, false);
             }
-            if (typeof actualizarKPIs === 'function') {
-                actualizarKPIs();
-            }
-            setTimeout(() => {
-                hideEstadoEquipo();
-            }, 300);
         }
 
         function verDetalleHistorial(equipoId) {
@@ -3906,84 +3979,111 @@ function badgeClassFromText(txt){
         });
 
         // FUNCIONES DE GUARDADO
-        function guardarNuevaReparacion() {
+        async function guardarNuevaReparacion() {
+            if (isSavingNuevaReparacion) return false;
+            const submitButton = pickSubmitButton('formNuevaReparacion');
+            isSavingNuevaReparacion = true;
+            setSubmitButtonState(submitButton, true, 'Guardando...');
             const formData = new FormData(document.getElementById('formNuevaReparacion'));
             
-            const nuevaReparacion = {
-                id: proximoOrden.toString(),
-                cliente: formData.get('cliente'),
-                dni: formData.get('dni') || '',
-                telefono: formData.get('telefono'),
-                email: formData.get('email') || '',
-                direccion: formData.get('direccion') || '',
-                equipo: formData.get('equipo'),
-                imei: formData.get('imei') || '',
-                estado: 'recibido',
-                tecnico: formData.get('tecnico') || '',
-                fecha: obtenerFechaActual(),
-                problema: formData.get('problema'),
-                anticipo: parseInt(formData.get('anticipo')) || 0,
-                costoEstimado: 0,
-                accesorios: formData.get('accesorios') || '',
-                observaciones: (formData.get('observaciones') || '').trim()
+            try {
+                const nuevaReparacion = {
+                    id: proximoOrden.toString(),
+                    cliente: formData.get('cliente'),
+                    dni: formData.get('dni') || '',
+                    telefono: formData.get('telefono'),
+                    email: formData.get('email') || '',
+                    direccion: formData.get('direccion') || '',
+                    equipo: formData.get('equipo'),
+                    imei: formData.get('imei') || '',
+                    estado: 'recibido',
+                    tecnico: formData.get('tecnico') || '',
+                    fecha: obtenerFechaActual(),
+                    problema: formData.get('problema'),
+                    anticipo: parseInt(formData.get('anticipo')) || 0,
+                    costoEstimado: 0,
+                    accesorios: formData.get('accesorios') || '',
+                    observaciones: (formData.get('observaciones') || '').trim()
 
-            };
-            
-            reparaciones.push(nuevaReparacion);
-            proximoOrden++;
-            
-            guardarDatos();
-            cargarTablaReparaciones();
-            cargarReparacionesEnSelect();
-            actualizarKPIs();
-            
-            mostrarMensaje('success', 'Reparación guardada exitosamente.', 'nueva-messages');
-            
-            setTimeout(() => {
-                hideNuevaReparacion();
-            }, 300);
+                };
+                await Promise.resolve();
+
+                reparaciones.push(nuevaReparacion);
+                proximoOrden++;
+                
+                guardarDatos();
+                cargarTablaReparaciones();
+                cargarReparacionesEnSelect();
+                actualizarKPIs();
+                
+                mostrarMensaje('success', 'Reparación guardada exitosamente.', 'nueva-messages');
+
+                closeModalAfterSave(() => {
+                    hideNuevaReparacion();
+                });
+                return true;
+            } catch (error) {
+                mostrarMensaje('error', 'No se pudo guardar la reparación.', 'nueva-messages');
+                return false;
+            } finally {
+                isSavingNuevaReparacion = false;
+                setSubmitButtonState(submitButton, false);
+            }
         }
 
-        function guardarCambiosEstado() {
-            if (!reparacionEditando) return;
+        async function guardarCambiosEstado() {
+            if (isSavingEditEstado || !reparacionEditando) return false;
+            const submitButton = pickSubmitButton('formEditEstado');
+            isSavingEditEstado = true;
+            setSubmitButtonState(submitButton, true, 'Guardando...');
 
-            const nuevoEstado = document.getElementById('edit-estado').value;
-            const nuevoTecnico = document.getElementById('edit-tecnico').value;
-            const nuevoCosto = parseInt(document.getElementById('edit-costo').value) || reparacionEditando.costoEstimado;
+            try {
+                const nuevoEstado = document.getElementById('edit-estado').value;
+                const nuevoTecnico = document.getElementById('edit-tecnico').value;
+                const nuevoCosto = parseInt(document.getElementById('edit-costo').value) || reparacionEditando.costoEstimado;
+                await Promise.resolve();
 
-            // Actualizar la reparación
-            reparacionEditando.estado = nuevoEstado;
-            if (nuevoTecnico) reparacionEditando.tecnico = nuevoTecnico;
-            reparacionEditando.costoEstimado = nuevoCosto;
+                // Actualizar la reparación
+                reparacionEditando.estado = nuevoEstado;
+                if (nuevoTecnico) reparacionEditando.tecnico = nuevoTecnico;
+                reparacionEditando.costoEstimado = nuevoCosto;
 
-            // Si el estado cambia a 'entregado', mover al historial
-            if (nuevoEstado === 'entregado') {
-                // Agregar fecha de entrega
-                reparacionEditando.fechaEntrega = obtenerFechaActual();
-                
-                // Mover al historial
-                historialEntregados.push({ ...reparacionEditando });;
-                
-                // Remover de reparaciones activas
-                const index = reparaciones.findIndex(r => r.id === reparacionEditando.id);
-                if (index !== -1) {
-                    reparaciones.splice(index, 1);
+                // Si el estado cambia a 'entregado', mover al historial
+                if (nuevoEstado === 'entregado') {
+                    // Agregar fecha de entrega
+                    reparacionEditando.fechaEntrega = obtenerFechaActual();
+                    
+                    // Mover al historial
+                    historialEntregados.push({ ...reparacionEditando });;
+                    
+                    // Remover de reparaciones activas
+                    const index = reparaciones.findIndex(r => r.id === reparacionEditando.id);
+                    if (index !== -1) {
+                        reparaciones.splice(index, 1);
+                    }
+                    
+                    mostrarMensaje('success', 'Reparación marcada como entregada y archivada en el historial.', 'edit-messages');
+                } else {
+                    mostrarMensaje('success', 'Estado actualizado exitosamente.', 'edit-messages');
                 }
-                
-                mostrarMensaje('success', 'Reparación marcada como entregada y archivada en el historial.', 'edit-messages');
-            } else {
-                mostrarMensaje('success', 'Estado actualizado exitosamente.', 'edit-messages');
-            }
 
-            guardarDatos();
-            cargarTablaReparaciones();
-            cargarTablaHistorial();
-            cargarReparacionesEnSelect();
-            actualizarKPIs();
-            
-            setTimeout(() => {
-                hideEditEstado();
-            }, 300);
+                guardarDatos();
+                cargarTablaReparaciones();
+                cargarTablaHistorial();
+                cargarReparacionesEnSelect();
+                actualizarKPIs();
+
+                closeModalAfterSave(() => {
+                    hideEditEstado();
+                });
+                return true;
+            } catch (error) {
+                mostrarMensaje('error', 'No se pudieron guardar los cambios.', 'edit-messages');
+                return false;
+            } finally {
+                isSavingEditEstado = false;
+                setSubmitButtonState(submitButton, false);
+            }
         }
 
         // FUNCIONES DE ACCIONES DE REPARACIÓN
