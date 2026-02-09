@@ -2968,7 +2968,10 @@ function badgeClassFromText(txt){
             // Configurar formulario de nueva reparación
             document.getElementById('formNuevaReparacion').addEventListener('submit', function(e) {
                 e.preventDefault();
-                guardarNuevaReparacion();
+                const saved = guardarNuevaReparacion();
+                if (saved) {
+                    closeModalAfterSave(hideNuevaReparacion);
+                }
             });
 
             // Configurar formulario de edición de estado
@@ -2979,7 +2982,10 @@ function badgeClassFromText(txt){
             // Configurar formulario de estado del equipo
             document.getElementById('formEstadoEquipo').addEventListener('submit', function(e) {
                 e.preventDefault();
-                guardarEstadoEquipo();
+                const saved = guardarEstadoEquipo();
+                if (saved) {
+                    closeModalAfterSave(hideEstadoEquipo);
+                }
             });
 
             const clientesImportInput = document.getElementById('clientes-import');
