@@ -3066,13 +3066,11 @@ function badgeClassFromText(txt){
                 : 'Completa los datos del cliente para mantener tu base actualizada.';
             setClienteFormValues(data);
             setClienteFormReadonly(mode === 'view');
-            const modal = document.getElementById('cliente-modal');
-            if (modal) modal.classList.add('show');
+            setModalVisibility('cliente-modal', true);
         }
 
         function closeClienteModal() {
-            const modal = document.getElementById('cliente-modal');
-            if (modal) modal.classList.remove('show');
+            setModalVisibility('cliente-modal', false);
             clienteRowRef = null;
             resetFormById('cliente-form');
         }
@@ -3673,17 +3671,30 @@ function badgeClassFromText(txt){
         }
 
         // FUNCIONES DE MODALES
+        function setModalVisibility(modalId, isOpen) {
+            const modal = document.getElementById(modalId);
+            if (!modal) return;
+            if (isOpen) {
+                modal.classList.add('show');
+                modal.style.display = 'flex';
+            } else {
+                modal.classList.remove('show');
+                modal.style.display = 'none';
+            }
+        }
+
         function showNuevaReparacion() {
-            document.getElementById('nueva-reparacion-modal').classList.add('show');
+            setModalVisibility('nueva-reparacion-modal', true);
             // Resetear scroll del modal
             const modalContent = document.querySelector('#nueva-reparacion-modal .modal-content');
-            modalContent.scrollTop = 0;
+            if (modalContent) modalContent.scrollTop = 0;
         }
 
         function hideNuevaReparacion() {
-            document.getElementById('nueva-reparacion-modal').classList.remove('show');
-            document.getElementById('formNuevaReparacion').reset();
-            document.getElementById('nueva-messages').innerHTML = '';
+            setModalVisibility('nueva-reparacion-modal', false);
+            resetFormById('formNuevaReparacion');
+            const messages = document.getElementById('nueva-messages');
+            if (messages) messages.innerHTML = '';
         }
 
         function showEditEstado(ordenId) {
@@ -3701,13 +3712,15 @@ function badgeClassFromText(txt){
             // Resetear mensajes
             document.getElementById('edit-messages').innerHTML = '';
             
-            document.getElementById('edit-estado-modal').classList.add('show');
+            setModalVisibility('edit-estado-modal', true);
         }
 
         function hideEditEstado() {
-            document.getElementById('edit-estado-modal').classList.remove('show');
+            setModalVisibility('edit-estado-modal', false);
             reparacionEditando = null;
             resetFormById('formEditEstado');
+            const messages = document.getElementById('edit-messages');
+            if (messages) messages.innerHTML = '';
         }
 
         // Mostrar el modal de estado del equipo
@@ -3718,29 +3731,25 @@ function badgeClassFromText(txt){
             document.getElementById('estado-equipo-cliente').value = reparacion.cliente;
             document.getElementById('estado-equipo-equipo').value = reparacion.equipo;
             document.getElementById('estado-equipo-resultado').value = reparacion.estadoEquipo || '';
-            document.getElementById('estado-equipo-messages').innerHTML = '';
-            document.getElementById('estado-equipo-modal').classList.add('show');
+            const messages = document.getElementById('estado-equipo-messages');
+            if (messages) messages.innerHTML = '';
+            setModalVisibility('estado-equipo-modal', true);
         }
 
         // Ocultar el modal de estado del equipo
         function hideEstadoEquipo() {
-            document.getElementById('estado-equipo-modal').classList.remove('show');
+            setModalVisibility('estado-equipo-modal', false);
             reparacionEditandoEstado = null;
             resetFormById('formEstadoEquipo');
+            const messages = document.getElementById('estado-equipo-messages');
+            if (messages) messages.innerHTML = '';
         }
 
-        function closeModalAfterSave(closeFn, delay = 300) {
+        function closeModalAfterSave(closeFn, delay = 0) {
             if (typeof closeFn !== 'function') return;
             setTimeout(() => {
                 closeFn();
             }, delay);
-        }
-
-        function forceCloseModal(modalId) {
-            const modal = document.getElementById(modalId);
-            if (!modal) return;
-            modal.classList.remove('show');
-            modal.style.display = 'none';
         }
 
         function setSubmitButtonState(button, isSubmitting, loadingText = 'Guardando...') {
@@ -3763,20 +3772,6 @@ function badgeClassFromText(txt){
         function resetFormById(formId) {
             const form = document.getElementById(formId);
             if (form) form.reset();
-        }
-
-        function closeModalAfterSave(closeFn, delay = 300) {
-            if (typeof closeFn !== 'function') return;
-            setTimeout(() => {
-                closeFn();
-            }, delay);
-        }
-
-        function forceCloseModal(modalId) {
-            const modal = document.getElementById(modalId);
-            if (!modal) return;
-            modal.classList.remove('show');
-            modal.style.display = 'none';
         }
 
         // Abrir el modal de estado del equipo desde las acciones
@@ -3808,7 +3803,6 @@ function badgeClassFromText(txt){
                 }
                 closeModalAfterSave(() => {
                     hideEstadoEquipo();
-                    forceCloseModal('estado-equipo-modal');
                 });
                 return true;
             } catch (error) {
@@ -4026,7 +4020,6 @@ function badgeClassFromText(txt){
 
                 closeModalAfterSave(() => {
                     hideNuevaReparacion();
-                    forceCloseModal('nueva-reparacion-modal');
                 });
                 return true;
             } catch (error) {
@@ -4082,7 +4075,6 @@ function badgeClassFromText(txt){
 
                 closeModalAfterSave(() => {
                     hideEditEstado();
-                    forceCloseModal('edit-estado-modal');
                 });
                 return true;
             } catch (error) {
