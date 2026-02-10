@@ -7,6 +7,7 @@
 <head>
  <script>window.FIXLY_API_BASE = "https://api.fixlytaller.com";</script>
 <script src="./auth.js"></script>
+<script src="./api.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   // NO ejecutar guard en la página de login
@@ -14,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
   FixlyAuth.requireAuth();
 });
 </script>
-
+<script>window.__FIXLY_LEGACY_MODE__ = window.__FIXLY_LEGACY_MODE__ === true;</script>
 
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
@@ -492,7 +493,7 @@ document.addEventListener("DOMContentLoaded", () => {
 <!-- === MULTIUSUARIO Y SESIONES (LOGIN VIA API) === -->
 <script>
 (() => {
-  const API_BASE = window.FIXLY_API_BASE || '';
+  const API_BASE = window.API_ORIGIN || window.FIXLY_API_BASE || '';
   // Maneja el envío de login contra el backend multiusuario
   async function loginMultiUser(event) {
     try {
@@ -648,7 +649,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   // authFetch: agrega Authorization automáticamente
   window.authFetch = function(path, options = {}) {
-    const token = localStorage.getItem('fixlyAuthToken');
+    const token = localStorage.getItem('fixly_token') || localStorage.getItem('fixlyAuthToken');
     const cfg = options || {};
     cfg.headers = cfg.headers || {};
     if (token) cfg.headers['Authorization'] = 'Bearer ' + token;
@@ -6033,6 +6034,7 @@ window.imprimirPedido = function(id){
 <script>
    // ======== LOGIN ESTRICTO (sin auto-ingreso) ========
 (function(){
+  if (!window.__FIXLY_LEGACY_MODE__) return;
   // Contenedores (con fallbacks)
   var form = document.getElementById('loginForm') || document.querySelector('form[data-login], form#formLogin, form.login-form');
   var loginScreen = document.getElementById('loginScreen') || document.querySelector('#login, .login, .login-screen');
