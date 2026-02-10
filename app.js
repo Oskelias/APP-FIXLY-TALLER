@@ -1,7 +1,7 @@
 // JavaScript para WebApp - Versión Estática
 console.log('🚀 WebApp estática cargada correctamente!');
 
-const API_ORIGIN = window.FIXLY_API_BASE || window.API_ORIGIN || 'https://api.fixlytaller.com';
+const API_ORIGIN = (window.FIXLY_API_BASE && String(window.FIXLY_API_BASE).trim()) || 'https://api.fixlytaller.com';
 window.FIXLY_API_BASE = API_ORIGIN;
 window.API_ORIGIN = API_ORIGIN;
 

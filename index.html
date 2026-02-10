@@ -649,7 +649,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   // authFetch: agrega Authorization automáticamente
   window.authFetch = function(path, options = {}) {
-    const token = window.FixlyAuth?.getAnyToken?.() || localStorage.getItem('fixlyAuthToken');
+    const token = localStorage.getItem('fixly_token') || localStorage.getItem('fixlyAuthToken');
     const cfg = options || {};
     cfg.headers = cfg.headers || {};
     if (token) cfg.headers['Authorization'] = 'Bearer ' + token;

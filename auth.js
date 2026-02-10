@@ -6,7 +6,7 @@
 (function() {
   'use strict';
 
-  const API_ORIGIN = window.FIXLY_API_BASE || window.API_ORIGIN || 'https://api.fixlytaller.com';
+  const API_ORIGIN = (window.FIXLY_API_BASE && String(window.FIXLY_API_BASE).trim()) || 'https://api.fixlytaller.com';
   window.FIXLY_API_BASE = API_ORIGIN;
   window.API_ORIGIN = API_ORIGIN;
 
@@ -62,8 +62,7 @@
       const data = await response.json();
 
       // Compatibilidad: guardar token en ambas claves
-      localStorage.setItem(TOKEN_KEY, data.token);
-      localStorage.setItem(LEGACY_TOKEN_KEY, data.token);
+      window.FixlyAuth.setToken(data.token);
       localStorage.setItem(USER_KEY, JSON.stringify(data.user));
 
       return data;
@@ -87,7 +86,7 @@
         }
       }
 
-      clearAuthStorage();
+      window.FixlyAuth.clearAuthStorage();
 
       if (showLoginUI()) {
         if (window.location.pathname !== '/login') {
@@ -144,8 +143,25 @@
      * Obtener token
      */
     getToken() {
-      return localStorage.getItem(TOKEN_KEY);
+      return localStorage.getItem(TOKEN_KEY) || localStorage.getItem(LEGACY_TOKEN_KEY) || '';
     },
+
+    /**
+     * Guardar token en ambas keys (compatibilidad)
+     */
+    setToken(token) {
+      if (!token) return;
+      localStorage.setItem(TOKEN_KEY, token);
+      localStorage.setItem(LEGACY_TOKEN_KEY, token);
+    },
+
+    /**
+     * Limpiar almacenamiento de autenticación
+     */
+    clearAuthStorage() {
+      clearAuthStorage();
+    },
+
 
     /**
      * Obtener token (compatibilidad)
