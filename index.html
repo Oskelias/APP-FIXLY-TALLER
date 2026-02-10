@@ -7,6 +7,7 @@
 <head>
  <script>window.FIXLY_API_BASE = "https://api.fixlytaller.com";</script>
 <script src="./auth.js"></script>
+<script src="./api.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   // NO ejecutar guard en la página de login
@@ -14,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
   FixlyAuth.requireAuth();
 });
 </script>
-
+<script>window.__FIXLY_LEGACY_MODE__ = window.__FIXLY_LEGACY_MODE__ === true;</script>
 
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
@@ -492,7 +493,7 @@ document.addEventListener("DOMContentLoaded", () => {
 <!-- === MULTIUSUARIO Y SESIONES (LOGIN VIA API) === -->
 <script>
 (() => {
-  const API_BASE = window.FIXLY_API_BASE || '';
+  const API_BASE = window.API_ORIGIN || window.FIXLY_API_BASE || '';
   // Maneja el envío de login contra el backend multiusuario
   async function loginMultiUser(event) {
     try {
@@ -520,6 +521,7 @@ document.addEventListener("DOMContentLoaded", () => {
         alert('No se obtuvo token');
         return false;
       }
+      localStorage.setItem('fixly_token', token);
       localStorage.setItem('fixlyAuthToken', token);
       await postLogin(token);
     } catch (e) {
@@ -535,10 +537,12 @@ document.addEventListener("DOMContentLoaded", () => {
       headers: { 'Authorization': 'Bearer ' + token }
     });
     if (!meResp.ok) {
+      localStorage.removeItem('fixly_me_valid');
       alert('Error al obtener información del usuario');
       return;
     }
     const meData = await meResp.json().catch(() => ({}));
+    localStorage.setItem('fixly_me_valid', '1');
     const tenants = meData.tenants || [];
     let tenantId;
     let locationId;
@@ -625,18 +629,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
   function cerrarSesion() {
-    try {
-      localStorage.removeItem('fixlyAuthToken');
-      localStorage.removeItem('fixlyTenantId');
-      localStorage.removeItem('fixlyLocationId');
-      localStorage.removeItem('fixlyDeviceId');
-      localStorage.removeItem('fixlySessionJti');
-    } catch (_) {}
-    if (window._fixlyHeartbeat) clearInterval(window._fixlyHeartbeat);
-    const loginDiv = document.getElementById('loginScreen');
-    const appDiv = document.getElementById('mainApp');
-    if (appDiv) appDiv.classList.add('hidden');
-    if (loginDiv) loginDiv.classList.remove('hidden');
+    if (window.FixlyAuth?.logout) {
+      window.FixlyAuth.logout({ reload: false });
+      return;
+    }
+    showLoginScreen();
   }
   // Interceptar el submit y sustituir el login por el multiusuario
   document.addEventListener('DOMContentLoaded', () => {
@@ -648,7 +645,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   // authFetch: agrega Authorization automáticamente
   window.authFetch = function(path, options = {}) {
-    const token = localStorage.getItem('fixlyAuthToken');
+    const token = localStorage.getItem('fixly_token') || localStorage.getItem('fixlyAuthToken');
     const cfg = options || {};
     cfg.headers = cfg.headers || {};
     if (token) cfg.headers['Authorization'] = 'Bearer ' + token;
@@ -948,11 +945,8 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 <script>
   function isFixlyLoggedIn() {
-    return (
-      !!localStorage.getItem('fixlyAuthToken') ||
-      localStorage.getItem('fixlytallerLoggedIn') === '1' ||
-      !!localStorage.getItem('fixlySessionJti')
-    );
+    const token = localStorage.getItem('fixly_token') || localStorage.getItem('fixlyAuthToken');
+    return !!token && localStorage.getItem('fixly_me_valid') === '1';
   }
 
   function showLoginScreen() {
@@ -989,6 +983,30 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.classList.remove('register-active');
   }
 
+
+  function resetUIAfterLogout() {
+    try { hideEditEstado(); } catch (_) {}
+    try { hideEstadoEquipo(); } catch (_) {}
+    try { hideNuevaReparacion(); } catch (_) {}
+    const appDiv = document.getElementById('mainApp');
+    if (appDiv) appDiv.classList.add('hidden');
+    document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+    const defaultSection = document.getElementById('reparaciones');
+    if (defaultSection) defaultSection.classList.add('active');
+    document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+    const firstNav = document.querySelector(".sidebar-item[onclick*='reparaciones']");
+    if (firstNav) firstNav.classList.add('active');
+    if (typeof window.currentSection !== 'undefined') {
+      window.currentSection = 'reparaciones';
+    }
+    if (typeof window.reparacionEditando !== 'undefined') window.reparacionEditando = null;
+    if (typeof window.reparacionEditandoEstado !== 'undefined') window.reparacionEditandoEstado = null;
+    if (typeof window.clienteRowRef !== 'undefined') window.clienteRowRef = null;
+    if (typeof window.clienteModalMode !== 'undefined') window.clienteModalMode = 'view';
+    showLoginScreen();
+  }
+  window.resetUIAfterLogout = resetUIAfterLogout;
+
   function redirectToDashboard() {
     if (window.location.pathname !== '/dashboard') {
       history.replaceState({}, '', '/dashboard');
@@ -1019,6 +1037,43 @@ document.addEventListener("DOMContentLoaded", () => {
       history.replaceState({}, '', '/login');
     }
     showLoginScreen();
+  }
+
+
+  async function initializeAuthBoot() {
+    const token = localStorage.getItem('fixly_token') || localStorage.getItem('fixlyAuthToken');
+    if (!token) {
+      if (window.FixlyAuth?.clearAuthStorage) window.FixlyAuth.clearAuthStorage();
+      showLoginScreen();
+      return;
+    }
+
+    try {
+      if (window.FixlyAuth?.setToken) window.FixlyAuth.setToken(token);
+      const meResp = await fetch(`${window.API_ORIGIN || window.FIXLY_API_BASE || 'https://api.fixlytaller.com'}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!meResp.ok) {
+        if (meResp.status === 401 || meResp.status === 403) {
+          if (window.FixlyAuth?.clearAuthStorage) window.FixlyAuth.clearAuthStorage();
+          showLoginScreen();
+          return;
+        }
+        showLoginScreen();
+        return;
+      }
+      const meData = await meResp.json().catch(() => ({}));
+      try { localStorage.setItem('fixly_user', JSON.stringify(meData.user || {})); } catch (_) {}
+      localStorage.setItem('fixly_me_valid', '1');
+      showMainApp();
+      const path = (window.location.pathname || '/').toLowerCase();
+      if (path.includes('/login') || path.includes('/register')) {
+        history.replaceState({}, '', '/dashboard');
+      }
+    } catch (_) {
+      if (window.FixlyAuth?.clearAuthStorage) window.FixlyAuth.clearAuthStorage();
+      showLoginScreen();
+    }
   }
 
   function handleRegisterClick() {
@@ -1151,6 +1206,7 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error('La cuenta se creó pero no se pudo iniciar sesión automáticamente.');
       }
 
+      localStorage.setItem('fixly_token', token);
       localStorage.setItem('fixlyAuthToken', token);
       if (window.FixlyAuthFlow?.postLogin) {
         await window.FixlyAuthFlow.postLogin(token);
@@ -1198,7 +1254,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    handleRouteChange();
+    initializeAuthBoot();
   });
 
   window.addEventListener('popstate', handleRouteChange);
@@ -2918,6 +2974,7 @@ function badgeClassFromText(txt){
             
 // Login robusto con persistencia y credenciales fallback
 (function(){
+  if (!window.__FIXLY_LEGACY_MODE__) return;
   const form = document.getElementById('loginForm');
   const loginScreen = document.getElementById('loginScreen');
   const mainApp = document.getElementById('mainApp');
@@ -2999,6 +3056,10 @@ function badgeClassFromText(txt){
 
         // FUNCIONES DE NAVEGACIÓN Y SECCIONES
         function showSection(event, sectionName) {
+            if (!window.FixlyAuth || !window.FixlyAuth.isAuthenticated()) {
+                if (typeof window.resetUIAfterLogout === 'function') window.resetUIAfterLogout();
+                return;
+            }
             // Ocultar todas las secciones
             document.querySelectorAll('.section').forEach(section => {
                 section.classList.remove('active');
@@ -4041,6 +4102,25 @@ function badgeClassFromText(txt){
                 const nuevoEstado = document.getElementById('edit-estado').value;
                 const nuevoTecnico = document.getElementById('edit-tecnico').value;
                 const nuevoCosto = parseInt(document.getElementById('edit-costo').value) || reparacionEditando.costoEstimado;
+
+                const mapEstadoToBackend = (estadoUi) => {
+                    const v = String(estadoUi || '').toLowerCase();
+                    if (v.includes('ingres') || v.includes('recib')) return 'received';
+                    if (v.includes('revis') || v.includes('proceso') || v.includes('diagnostic')) return 'in_progress';
+                    if (v.includes('listo')) return 'ready';
+                    if (v.includes('entregado')) return 'delivered';
+                    if (v.includes('cancel')) return 'cancelled';
+                    return 'in_progress';
+                };
+
+                const backendStatus = mapEstadoToBackend(nuevoEstado);
+                if (window.apiFetch && reparacionEditando.id) {
+                    await window.apiFetch(`/api/tickets/${encodeURIComponent(reparacionEditando.id)}/status`, {
+                        method: 'POST',
+                        auth: true,
+                        body: { status: backendStatus, note: '' }
+                    });
+                }
                 await Promise.resolve();
 
                 // Actualizar la reparación
@@ -4078,6 +4158,10 @@ function badgeClassFromText(txt){
                 });
                 return true;
             } catch (error) {
+                if (error && (error.status === 401 || error.status === 403) && window.FixlyAuth?.logout) {
+                    await window.FixlyAuth.logout({ reload: false });
+                    return false;
+                }
                 mostrarMensaje('error', 'No se pudieron guardar los cambios.', 'edit-messages');
                 return false;
             } finally {
@@ -6033,6 +6117,7 @@ window.imprimirPedido = function(id){
 <script>
    // ======== LOGIN ESTRICTO (sin auto-ingreso) ========
 (function(){
+  if (!window.__FIXLY_LEGACY_MODE__) return;
   // Contenedores (con fallbacks)
   var form = document.getElementById('loginForm') || document.querySelector('form[data-login], form#formLogin, form.login-form');
   var loginScreen = document.getElementById('loginScreen') || document.querySelector('#login, .login, .login-screen');
