@@ -7,10 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     (function() {
-      const loggedIn =
-        !!localStorage.getItem('fixlyAuthToken') ||
-        localStorage.getItem('fixlytallerLoggedIn') === '1' ||
-        !!localStorage.getItem('fixlySessionJti');
+      const loggedIn = !!(localStorage.getItem('fixly_token') || localStorage.getItem('fixlyAuthToken')) && localStorage.getItem('fixly_me_valid') === '1';
       if (loggedIn) {
         window.location.replace('/dashboard');
       }

@@ -25,6 +25,7 @@
     localStorage.removeItem(LEGACY_TOKEN_KEY);
     localStorage.removeItem('fixlytallerLoggedIn');
     localStorage.removeItem('fixlySessionJti');
+    localStorage.removeItem('fixly_me_valid');
   }
 
   function showLoginUI() {
@@ -64,6 +65,7 @@
       // Compatibilidad: guardar token en ambas claves
       window.FixlyAuth.setToken(data.token);
       localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+      localStorage.setItem('fixly_me_valid', '1');
 
       return data;
     },
@@ -87,6 +89,12 @@
       }
 
       window.FixlyAuth.clearAuthStorage();
+
+      try {
+        if (typeof window.resetUIAfterLogout === 'function') {
+          window.resetUIAfterLogout();
+        }
+      } catch (_) {}
 
       if (showLoginUI()) {
         if (window.location.pathname !== '/login') {
@@ -115,11 +123,14 @@
       });
 
       if (!response.ok) {
-        throw new Error('Token inválido');
+        const err = new Error('Token inválido');
+        err.status = response.status;
+        throw err;
       }
 
       const data = await response.json();
       localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+      localStorage.setItem('fixly_me_valid', '1');
 
       return data.user;
     },
@@ -128,7 +139,7 @@
      * Verificar si está autenticado
      */
     isAuthenticated() {
-      return !!getAnyToken();
+      return !!getAnyToken() && localStorage.getItem('fixly_me_valid') === '1';
     },
 
     /**
@@ -213,16 +224,26 @@
   // PROTECCIÓN AUTOMÁTICA
   // ============================================
 
-  document.addEventListener('DOMContentLoaded', function() {
-    // Si estamos en la página de login, no hacer nada (más robusto)
+  document.addEventListener('DOMContentLoaded', async function() {
     const p = (window.location.pathname || '').toLowerCase();
-    if (p.includes('login') || document.getElementById('loginForm')) {
+    if (p.endsWith('/login.html')) {
       return;
     }
 
-    // Si no está autenticado, redirigir a login
-    if (!window.FixlyAuth.isAuthenticated()) {
+    const token = getAnyToken();
+    if (!token) {
       window.FixlyAuth.requireAuth();
+      return;
+    }
+
+    try {
+      await window.FixlyAuth.getMe();
+    } catch (error) {
+      if (error && (error.status === 401 || error.status === 403)) {
+        window.FixlyAuth.clearAuthStorage();
+        window.FixlyAuth.requireAuth();
+        return;
+      }
     }
   });
 
