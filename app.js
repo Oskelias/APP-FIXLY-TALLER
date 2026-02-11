@@ -1,29 +1,9 @@
 // JavaScript para WebApp - Versión Estática
 console.log('🚀 WebApp estática cargada correctamente!');
 
-const API_ORIGIN = window.API_ORIGIN || 'https://api.fixlytaller.com';
-const TOKEN_KEYS = ['fixly_token', 'fixlyAuthToken'];
-
-function getToken() {
-  for (const key of TOKEN_KEYS) {
-    const value = localStorage.getItem(key);
-    if (value) return value;
-  }
-  return null;
-}
-
-function getRequestConfig(endpoint) {
-  const config = { timeout: 10000 };
-
-  if (endpoint.startsWith('/api/')) {
-    const token = getToken();
-    if (token) {
-      config.headers = { Authorization: `Bearer ${token}` };
-    }
-  }
-
-  return config;
-}
+const API_ORIGIN = (window.FIXLY_API_BASE && String(window.FIXLY_API_BASE).trim()) || 'https://api.fixlytaller.com';
+window.FIXLY_API_BASE = API_ORIGIN;
+window.API_ORIGIN = API_ORIGIN;
 
 // Función para mostrar resultados de API
 function showResult(result, isError = false) {
@@ -59,26 +39,16 @@ async function callAPI(endpoint, buttonId) {
     const fullURL = `${API_ORIGIN}${endpoint}`;
     console.log(`🔍 Llamando a: ${fullURL}`);
 
-    const response = await axios.get(fullURL, getRequestConfig(endpoint));
+    const responseData = await window.apiFetch(endpoint, { auth: true });
 
-    showResult(response.data, false);
-    console.log(`✅ API ${endpoint}:`, response.data);
+    showResult(responseData, false);
+    console.log(`✅ API ${endpoint}:`, responseData);
 
     // Mostrar información adicional
     showConnectionInfo(fullURL, true);
 
   } catch (error) {
-    let errorMsg;
-
-    if (error.code === 'ECONNABORTED') {
-      errorMsg = 'Error: Timeout - La solicitud tardó demasiado tiempo';
-    } else if (error.response) {
-      errorMsg = `Error ${error.response.status}: ${error.response.data?.message || error.response.statusText}`;
-    } else if (error.request) {
-      errorMsg = `Error de conexión: No se pudo conectar a ${API_ORIGIN}`;
-    } else {
-      errorMsg = `Error: ${error.message}`;
-    }
+    const errorMsg = `Error${error.status ? ` ${error.status}` : ''}: ${error.message}`;
 
     showResult(errorMsg, true);
     console.error(`❌ Error en API ${endpoint}:`, error);
@@ -158,8 +128,8 @@ window.webappDebug = {
   testAdminStats: () => callAPI('/api/admin/stats', null),
   checkConnection: async () => {
     try {
-      const response = await axios.get(`${API_ORIGIN}/api/tickets`, getRequestConfig('/api/tickets'));
-      console.log('🟢 Conexión OK:', response.data);
+      const response = await window.apiFetch('/api/tickets', { auth: true });
+      console.log('🟢 Conexión OK:', response);
       return true;
     } catch (error) {
       console.log('🔴 Conexión falló:', error.message);
