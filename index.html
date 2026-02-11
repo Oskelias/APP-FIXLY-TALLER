@@ -487,15 +487,21 @@ document.addEventListener("DOMContentLoaded", () => {
       width: 100%;
     }
   </style>
-<script src="https://cdn.tailwindcss.com">
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- CONFIG GLOBAL FIXLY -->
+<script>
+  window.API_ORIGIN = "https://api.fixlytaller.com";
 </script>
 
-<!-- === MULTIUSUARIO Y SESIONES (LOGIN VIA API) === -->
+<!-- MULTIUSUARIO Y SESIONES -->
 <script>
 (() => {
   const API_BASE = window.API_ORIGIN || window.FIXLY_API_BASE || '';
-  // Maneja el envío de login contra el backend multiusuario
+
   async function loginMultiUser(event) {
+    ...
+
     try {
       if (event) event.preventDefault();
       const usernameField = document.getElementById('username') || document.getElementById('email');
