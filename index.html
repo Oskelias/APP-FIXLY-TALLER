@@ -498,46 +498,29 @@ document.addEventListener("DOMContentLoaded", () => {
   async function loginMultiUser(event) {
     try {
       if (event) event.preventDefault();
-      const usernameField = document.getElementById('username');
+      const usernameField = document.getElementById('username') || document.getElementById('email');
       const passwordField = document.getElementById('password');
       const username = (usernameField?.value || '').trim();
       const password = passwordField?.value || '';
       if (!username || !password) {
-        alert('Ingresá usuario y contraseña');
+        alert('Credenciales incorrectas');
         return false;
       }
-      const resp = await fetch(API_BASE + '/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-      if (!resp.ok) {
-        if (resp.status === 401 || resp.status === 403) {
-          alert('Credenciales incorrectas');
-        } else {
-          alert('No se pudo conectar con el servidor');
-        }
-        return false;
-      }
-      const data = await resp.json().catch(() => ({}));
-      const token = data.token || data.jwt || data.accessToken;
+
+      const data = await window.FixlyAuth.login(username, password);
+      const token = data?.token || data?.jwt || data?.accessToken;
       if (!token) {
-        alert('No se obtuvo token');
+        alert('Credenciales incorrectas');
         return false;
-      }
-      if (window.FixlyAuth?.setToken) {
-        window.FixlyAuth.setToken(token);
-      } else {
-        localStorage.setItem('fixly_token', token);
-        localStorage.setItem('fixlyAuthToken', token);
-      }
-      if (data.user) {
-        localStorage.setItem('fixly_user', JSON.stringify(data.user));
       }
       await postLogin(token);
     } catch (e) {
       console.error(e);
-      alert('No se pudo conectar con el servidor');
+      if (e?.message === 'Credenciales incorrectas') {
+        alert('Credenciales incorrectas');
+      } else {
+        alert('No se pudo conectar con el servidor');
+      }
     }
     return false;
   }

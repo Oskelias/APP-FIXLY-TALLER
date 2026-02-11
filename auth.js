@@ -49,25 +49,44 @@
      * Login
      */
     async login(username, password) {
-      const response = await fetch(`${API_ORIGIN}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
+      const url = `${API_ORIGIN}/auth/login`;
+      const payload = { username, password };
+      console.log('LOGIN_REQUEST', url, { username });
+
+      let response;
+      try {
+        response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (_) {
+        throw new Error('No se pudo conectar con el servidor');
+      }
+
+      console.log('LOGIN_RESPONSE_STATUS', response.status);
+      const body = await response.json().catch(() => ({}));
+      console.log('LOGIN_RESPONSE_BODY_KEYS', Object.keys(body || {}));
 
       if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
+        if ((response.status === 401 || response.status === 403) && username === 'admin' && password === 'admin123') {
+          console.error('ADMIN_SEED_LOGIN_FAILED', { status: response.status, message: body?.error || body?.message || null });
+        }
         if (response.status === 401 || response.status === 403) {
           throw new Error('Credenciales incorrectas');
         }
-        throw new Error(error.error || 'Error al iniciar sesión');
+        throw new Error(body.error || 'Error al iniciar sesión');
       }
 
-      const data = await response.json();
+      const data = body || {};
+      const token = data.token || data.jwt || data.accessToken;
+      if (!token) {
+        throw new Error('Error al iniciar sesión');
+      }
 
       // Compatibilidad: guardar token en ambas claves
-      window.FixlyAuth.setToken(data.token);
-      localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+      window.FixlyAuth.setToken(token);
+      localStorage.setItem(USER_KEY, JSON.stringify(data.user || {}));
       localStorage.setItem('fixly_me_valid', '1');
 
       return data;
