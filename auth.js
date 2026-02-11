@@ -6,9 +6,15 @@
 (function() {
   'use strict';
 
-  const API_ORIGIN = (window.FIXLY_API_BASE && String(window.FIXLY_API_BASE).trim()) || 'https://api.fixlytaller.com';
+  const API_ORIGIN = 'https://api.fixlytaller.com';
   window.FIXLY_API_BASE = API_ORIGIN;
   window.API_ORIGIN = API_ORIGIN;
+
+  function joinUrl(base, path) {
+    const b = String(base || '').trim().replace(/\/+$/, '');
+    const p = String(path || '').startsWith('/') ? String(path || '') : `/${String(path || '')}`;
+    return `${b}${p}`;
+  }
 
   // Keys de localStorage
   const TOKEN_KEY = 'fixly_token';
@@ -49,7 +55,8 @@
      * Login
      */
     async login(username, password) {
-      const url = `${API_ORIGIN}/auth/login`;
+      const url = joinUrl(API_ORIGIN, '/auth/login');
+      console.log('LOGIN_URL', url);
       const payload = { username, password };
       console.log('LOGIN_REQUEST', url, { username });
 
@@ -101,7 +108,7 @@
 
       if (token) {
         try {
-          await fetch(`${API_ORIGIN}/auth/logout`, {
+          await fetch(joinUrl(API_ORIGIN, '/auth/logout'), {
             method: 'POST',
             headers: { Authorization: `Bearer ${token}` }
           });
@@ -140,7 +147,7 @@
         throw new Error('No hay token');
       }
 
-      const response = await fetch(`${API_ORIGIN}/auth/me`, {
+      const response = await fetch(joinUrl(API_ORIGIN, '/auth/me'), {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -234,7 +241,7 @@
       headers.Authorization = `Bearer ${token}`;
     }
 
-    const requestURL = /^https?:\/\//i.test(url) ? url : `${API_ORIGIN}${url}`;
+    const requestURL = /^https?:\/\//i.test(url) ? url : joinUrl(API_ORIGIN, url);
 
     return fetch(requestURL, {
       ...options,
@@ -248,6 +255,11 @@
 
   document.addEventListener('DOMContentLoaded', async function() {
     const p = (window.location.pathname || '').toLowerCase();
+    fetch(joinUrl(API_ORIGIN, '/health'))
+      .then(r => r.json())
+      .then(j => console.log('HEALTH', j))
+      .catch(e => console.error('HEALTH_FAIL', e));
+
     if (p.endsWith('/login.html')) {
       return;
     }
