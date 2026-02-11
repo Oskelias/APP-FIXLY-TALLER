@@ -1,14 +1,18 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - Fixly Taller</title>
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
+    // Si ya hay un token y está validado, redireccionar automáticamente al panel
     (function() {
-      const loggedIn = !!(localStorage.getItem('fixly_token') || localStorage.getItem('fixlyAuthToken')) && localStorage.getItem('fixly_me_valid') === '1';
-      if (loggedIn) {
+      const hasToken = !!(localStorage.getItem('fixly_token') || localStorage.getItem('fixlyAuthToken'));
+      const validFlag = localStorage.getItem('fixly_me_valid') === '1';
+      if (hasToken && validFlag) {
         window.location.replace('/dashboard');
       }
     })();
@@ -16,24 +20,19 @@
 </head>
 
 <body class="bg-gradient-to-br from-blue-500 to-purple-600 min-h-screen flex items-center justify-center">
-  
   <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
-    
     <div class="text-center mb-8">
       <h1 class="text-3xl font-bold text-gray-800">Fixly Taller</h1>
       <p class="text-gray-600 mt-2">Iniciar Sesión</p>
     </div>
-    
-    <!-- Error -->
+    <!-- Contenedor de errores -->
     <div id="errorMsg" class="hidden mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"></div>
-    
-    <!-- FORM -->
+    <!-- Formulario de login -->
     <form id="loginForm">
-
-      <!-- TENANT -->
+      <!-- Código de taller (tenant) -->
       <div class="mb-4">
         <label class="block text-gray-700 text-sm font-bold mb-2">Código de taller</label>
-        <input 
+        <input
           id="tenant"
           type="text"
           class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
@@ -41,11 +40,10 @@
           required
         />
       </div>
-
-      <!-- USER -->
+      <!-- Usuario -->
       <div class="mb-4">
         <label class="block text-gray-700 text-sm font-bold mb-2">Usuario</label>
-        <input 
+        <input
           id="email"
           type="text"
           class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
@@ -53,11 +51,10 @@
           required
         />
       </div>
-
-      <!-- PASS -->
+      <!-- Contraseña -->
       <div class="mb-6">
         <label class="block text-gray-700 text-sm font-bold mb-2">Contraseña</label>
-        <input 
+        <input
           id="password"
           type="password"
           class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
@@ -65,63 +62,53 @@
           required
         />
       </div>
-      
-      <button 
+      <button
         type="submit"
         id="loginBtn"
         class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition"
       >
         Iniciar Sesión
       </button>
-
     </form>
   </div>
-  
-  <!-- API CONFIG -->
+  <!-- Configuración de la API -->
   <script>
-    window.FIXLY_API_BASE = 'https://api.fixlytaller.com';
+    // Si ya existe window.FIXLY_API_BASE, respétalo; en caso contrario usa el valor almacenado o la URL por defecto
+    window.FIXLY_API_BASE = window.FIXLY_API_BASE || localStorage.getItem('fixly_api_base') || 'https://api.fixlytaller.com';
   </script>
-
+  <!-- Cargar librería de autenticación -->
   <script src="./auth.js"></script>
-  
-  <!-- LOGIN SCRIPT -->
+  <!-- Lógica de login -->
   <script>
     (function() {
       const form = document.getElementById('loginForm');
       const errorMsg = document.getElementById('errorMsg');
       const loginBtn = document.getElementById('loginBtn');
       if (!form) return;
-
       function showError(msg) {
         if (!errorMsg) return;
         errorMsg.textContent = msg;
         errorMsg.classList.remove('hidden');
       }
-
       function clearError() {
         if (!errorMsg) return;
         errorMsg.textContent = '';
         errorMsg.classList.add('hidden');
       }
-
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         clearError();
-
         const username = (document.getElementById('email')?.value || '').trim();
         const password = document.getElementById('password')?.value || '';
-
         if (!username || !password) {
           showError('Credenciales incorrectas');
           return;
         }
-
         const originalText = loginBtn ? loginBtn.textContent : '';
         if (loginBtn) {
           loginBtn.disabled = true;
           loginBtn.textContent = 'Ingresando...';
         }
-
         try {
           const data = await window.FixlyAuth.login(username, password);
           if (data?.user) {
