@@ -7,10 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     (function() {
-      const loggedIn =
-        !!localStorage.getItem('fixlyAuthToken') ||
-        localStorage.getItem('fixlytallerLoggedIn') === '1' ||
-        !!localStorage.getItem('fixlySessionJti');
+      const loggedIn = !!(localStorage.getItem('fixly_token') || localStorage.getItem('fixlyAuthToken')) && localStorage.getItem('fixly_me_valid') === '1';
       if (loggedIn) {
         window.location.replace('/dashboard');
       }
@@ -89,5 +86,63 @@
   
   <!-- LOGIN SCRIPT -->
   <script>
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefau
+    (function() {
+      const form = document.getElementById('loginForm');
+      const errorMsg = document.getElementById('errorMsg');
+      const loginBtn = document.getElementById('loginBtn');
+      if (!form) return;
+
+      function showError(msg) {
+        if (!errorMsg) return;
+        errorMsg.textContent = msg;
+        errorMsg.classList.remove('hidden');
+      }
+
+      function clearError() {
+        if (!errorMsg) return;
+        errorMsg.textContent = '';
+        errorMsg.classList.add('hidden');
+      }
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearError();
+
+        const username = (document.getElementById('email')?.value || '').trim();
+        const password = document.getElementById('password')?.value || '';
+
+        if (!username || !password) {
+          showError('Credenciales incorrectas');
+          return;
+        }
+
+        const originalText = loginBtn ? loginBtn.textContent : '';
+        if (loginBtn) {
+          loginBtn.disabled = true;
+          loginBtn.textContent = 'Ingresando...';
+        }
+
+        try {
+          const data = await window.FixlyAuth.login(username, password);
+          if (data?.user) {
+            localStorage.setItem('fixly_user', JSON.stringify(data.user));
+          }
+          localStorage.setItem('fixly_me_valid', '1');
+          window.location.replace('/dashboard');
+        } catch (error) {
+          if (error?.message === 'Credenciales incorrectas') {
+            showError('Credenciales incorrectas');
+          } else {
+            showError('No se pudo conectar con el servidor');
+          }
+        } finally {
+          if (loginBtn) {
+            loginBtn.disabled = false;
+            loginBtn.textContent = originalText || 'Iniciar Sesión';
+          }
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
