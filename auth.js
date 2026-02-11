@@ -48,15 +48,18 @@
     /**
      * Login
      */
-    async login(email, password) {
+    async login(username, password) {
       const response = await fetch(`${API_ORIGIN}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ username, password })
       });
 
       if (!response.ok) {
         const error = await response.json().catch(() => ({}));
+        if (response.status === 401 || response.status === 403) {
+          throw new Error('Credenciales incorrectas');
+        }
         throw new Error(error.error || 'Error al iniciar sesión');
       }
 

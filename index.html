@@ -498,21 +498,25 @@ document.addEventListener("DOMContentLoaded", () => {
   async function loginMultiUser(event) {
     try {
       if (event) event.preventDefault();
-      const emailField = document.getElementById('username');
+      const usernameField = document.getElementById('username');
       const passwordField = document.getElementById('password');
-      const email = (emailField?.value || '').trim();
+      const username = (usernameField?.value || '').trim();
       const password = passwordField?.value || '';
-      if (!email || !password) {
-        alert('Ingresá email y contraseña');
+      if (!username || !password) {
+        alert('Ingresá usuario y contraseña');
         return false;
       }
-      const resp = await fetch(API_BASE + '/auth/public/login', {
+      const resp = await fetch(API_BASE + '/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ username, password })
       });
       if (!resp.ok) {
-        alert('Credenciales incorrectas');
+        if (resp.status === 401 || resp.status === 403) {
+          alert('Credenciales incorrectas');
+        } else {
+          alert('No se pudo conectar con el servidor');
+        }
         return false;
       }
       const data = await resp.json().catch(() => ({}));
@@ -521,12 +525,19 @@ document.addEventListener("DOMContentLoaded", () => {
         alert('No se obtuvo token');
         return false;
       }
-      localStorage.setItem('fixly_token', token);
-      localStorage.setItem('fixlyAuthToken', token);
+      if (window.FixlyAuth?.setToken) {
+        window.FixlyAuth.setToken(token);
+      } else {
+        localStorage.setItem('fixly_token', token);
+        localStorage.setItem('fixlyAuthToken', token);
+      }
+      if (data.user) {
+        localStorage.setItem('fixly_user', JSON.stringify(data.user));
+      }
       await postLogin(token);
     } catch (e) {
       console.error(e);
-      alert('Error al iniciar sesión');
+      alert('No se pudo conectar con el servidor');
     }
     return false;
   }
@@ -1159,15 +1170,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const email = document.getElementById('registerEmail')?.value.trim();
     const phoneCode = document.getElementById('registerPhoneCode')?.value.trim();
     const phoneNumber = document.getElementById('registerPhone')?.value.trim();
-    const city = document.getElementById('registerCity')?.value.trim();
-    const country = document.getElementById('registerCountry')?.value.trim();
+    const passwordField = document.getElementById('registerPassword')?.value.trim();
+    const password = passwordField || ownerName || '';
 
     if (errorBox) {
       errorBox.classList.add('hidden');
       errorBox.textContent = '';
     }
 
-    if (!workshopName || !ownerName || !email || !phoneNumber || !phoneCode || !city || !country) {
+    if (!workshopName || !email || !password) {
       if (errorBox) {
         errorBox.textContent = 'Completá todos los campos para continuar.';
         errorBox.classList.remove('hidden');
@@ -1181,18 +1192,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      const phone = `${phoneCode} ${phoneNumber}`;
-      const resp = await fetch(`${window.FIXLY_API_BASE || ''}/auth/public/register`, {
+      const phone = (phoneCode && phoneNumber) ? `${phoneCode} ${phoneNumber}` : undefined;
+      const payload = {
+        email,
+        password,
+        businessName: workshopName
+      };
+      if (phone) payload.phone = phone;
+      const resp = await fetch(`${window.FIXLY_API_BASE || ''}/auth/public/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          workshopName,
-          ownerName,
-          email,
-          phone,
-          city,
-          country
-        })
+        body: JSON.stringify(payload)
       });
 
       if (!resp.ok) {
@@ -1206,8 +1216,15 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error('La cuenta se creó pero no se pudo iniciar sesión automáticamente.');
       }
 
-      localStorage.setItem('fixly_token', token);
-      localStorage.setItem('fixlyAuthToken', token);
+      if (window.FixlyAuth?.setToken) {
+        window.FixlyAuth.setToken(token);
+      } else {
+        localStorage.setItem('fixly_token', token);
+        localStorage.setItem('fixlyAuthToken', token);
+      }
+      if (data.user) {
+        localStorage.setItem('fixly_user', JSON.stringify(data.user));
+      }
       if (window.FixlyAuthFlow?.postLogin) {
         await window.FixlyAuthFlow.postLogin(token);
       }
