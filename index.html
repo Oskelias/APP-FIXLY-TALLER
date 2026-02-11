@@ -6,7 +6,7 @@
 
 <html lang="es">
 <head>
- <script>window.FIXLY_API_BASE = "https://api.fixlytaller.com";</script>
+ <script>window.FIXLY_API_BASE = window.FIXLY_API_BASE || localStorage.getItem("fixly_api_base") || "https://api.fixlytaller.com";</script>
 <script src="./auth.js"></script>
 <script src="./api.js"></script>
 <script>
@@ -488,21 +488,15 @@ document.addEventListener("DOMContentLoaded", () => {
       width: 100%;
     }
   </style>
-<script src="https://cdn.tailwindcss.com"></script>
-
-<!-- CONFIG GLOBAL FIXLY -->
-<script>
-  window.API_ORIGIN = "https://api.fixlytaller.com";
+<script src="https://cdn.tailwindcss.com">
 </script>
 
-<!-- MULTIUSUARIO Y SESIONES -->
+<!-- === MULTIUSUARIO Y SESIONES (LOGIN VIA API) === -->
 <script>
 (() => {
   const API_BASE = window.API_ORIGIN || window.FIXLY_API_BASE || '';
-
+  // Maneja el envío de login contra el backend multiusuario
   async function loginMultiUser(event) {
-    ...
-
     try {
       if (event) event.preventDefault();
       const usernameField = document.getElementById('username') || document.getElementById('email');
